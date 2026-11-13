@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/*
+ * Design-System „Landhaus“ als Tailwind-Theme.
+ * Farben, Abstände, Radien und Schatten 1:1 aus tokens.json.
+ * Schriften: Outfit (Display) und DM Sans (Text), über next/font selbst gehostet.
+ */
+@theme {
+  --color-neutral-100: #ffffff;
+  --color-neutral-200: #fdfaf9;
+  --color-neutral-300: #e7e5e4;
+  --color-neutral-400: #cdc9c6;
+  --color-neutral-500: #b6afaa;
+  --color-neutral-600: #867c74;
+  --color-neutral-700: #49433f;
+  --color-neutral-800: #0f0b08;
+
+  --color-overlay-40: #49433f66;
+  --color-overlay-65: #49433fa6;
+
+  --color-abendrot: #e8501f;
+  --color-eisenhut: #4331c9;
+  --color-wiese: #3f6b23;
+  --color-herbstgold: #e0a21a;
+  --color-rose: #f4b6bf;
+  /* Dunklere Fehlerfarbe für Text (Kontrast ≥ 4,5:1 auf neutral-100/200) */
+  --color-fehler: #b3361a;
+
+  /* Farben des Stiftungssymbols */
+  --color-symbol-blau: #1c3f73;
+  --color-symbol-gold: #c9a23a;
+
+  --font-display: var(--font-outfit), "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
+
+  --radius-sm: 4px;
+  --radius-pill: 100px;
+
+  --shadow-button: 0 1px 4px 0 #19213d14;
+  --shadow-card: 0 2px 6px 0 #19213d14;
+
+  --spacing-section: 200px;
+  --spacing-section-sm: 80px;
+  --spacing-hero: 250px;
+
+  --container-site: 1338px;
+  --container-inner: 1200px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+    -webkit-text-size-adjust: 100%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  body {
+    background: var(--color-neutral-200);
+    color: var(--color-neutral-700);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-neutral-800);
+    font-family: var(--font-display);
+    font-weight: 200;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-eisenhut);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-rose);
+    color: var(--color-neutral-800);
+  }
+}
+
+@layer components {
+  .container-site {
+    max-width: var(--container-site);
+    margin-inline: auto;
+    padding-inline: 24px;
+  }
+  .section {
+    padding-block: var(--spacing-section-sm);
+  }
+  @media (min-width: 1024px) {
+    .section {
+      padding-block: var(--spacing-section);
+    }
+  }
+  .caps {
+    text-transform: uppercase;
+    letter-spacing: 0.96px;
+  }
+  /* Haarlinien-Tabelle */
+  .tabelle th {
+    text-align: left;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0.96px;
+    text-transform: uppercase;
+    color: var(--color-neutral-700);
+    padding: 0 12px 12px 0;
+    border-bottom: 1px solid var(--color-neutral-400);
+  }
+  .tabelle td {
+    padding: 16px 12px 16px 0;
+    border-bottom: 1px solid var(--color-neutral-400);
+    vertical-align: top;
+  }
+  .prose-recht h2 {
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 56px 0 16px;
+  }
+  .prose-recht h3 {
+    font-size: 20px;
+    line-height: 1.4;
+    margin: 32px 0 8px;
+  }
+  .prose-recht p,
+  .prose-recht li {
+    margin: 0 0 12px;
+    max-width: 72ch;
+  }
+  .prose-recht ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+  .prose-recht a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .platzhalter {
+    background: #f6e3b4;
+    color: var(--color-neutral-800);
+    border-bottom: 1px dashed var(--color-neutral-700);
+    padding: 0 2px;
+  }
+}
