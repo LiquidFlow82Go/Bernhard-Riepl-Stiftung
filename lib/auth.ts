@@ -12,6 +12,8 @@ export type AuthErgebnis = { ok: true; benutzer: Benutzer } | { ok: false; fehle
 export function authFehlerText(e: AuthError | Error | null | undefined): string {
   const code = (e as AuthError | undefined)?.code ?? "";
   const msg = e?.message ?? "";
+  if (/nicht konfiguriert/i.test(msg))
+    return "Die Anmeldung ist auf dieser Seite noch nicht eingerichtet (Supabase-Zugangsdaten fehlen). Bitte wenden Sie sich an die Stiftung.";
   if (code === "invalid_credentials" || /invalid login credentials/i.test(msg))
     return "E-Mail-Adresse oder Passwort sind nicht korrekt.";
   if (code === "email_not_confirmed" || /email not confirmed/i.test(msg))
@@ -40,11 +42,15 @@ export async function aktuellerBenutzer(): Promise<Benutzer | null> {
 }
 
 export async function anmelden(email: string, passwort: string): Promise<AuthErgebnis> {
-  const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password: passwort });
-  if (error) return { ok: false, fehler: authFehlerText(error) };
-  const b = await aktuellerBenutzer();
-  if (!b) return { ok: false, fehler: "Ihr Profil konnte nicht geladen werden. Bitte wenden Sie sich an die Stiftung." };
-  return { ok: true, benutzer: b };
+  try {
+    const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password: passwort });
+    if (error) return { ok: false, fehler: authFehlerText(error) };
+    const b = await aktuellerBenutzer();
+    if (!b) return { ok: false, fehler: "Ihr Profil konnte nicht geladen werden. Bitte wenden Sie sich an die Stiftung." };
+    return { ok: true, benutzer: b };
+  } catch (e) {
+    return { ok: false, fehler: authFehlerText(e as Error) };
+  }
 }
 
 function ruecksprung(weiter: string): string {
@@ -61,34 +67,46 @@ export async function registrieren(d: {
   email: string;
   passwort: string;
 }): Promise<RegistrierErgebnis> {
-  const { data, error } = await supabase().auth.signUp({
-    email: d.email.trim(),
-    password: d.passwort,
-    options: {
-      data: { name: d.name.trim(), institution: d.institution.trim() },
-      emailRedirectTo: ruecksprung("/konto"),
-    },
-  });
-  if (error) return { ok: false, fehler: authFehlerText(error) };
-  // Supabase meldet bei bereits bestehender Adresse aus Datenschutzgründen keinen Fehler,
-  // sondern einen Benutzer ohne Identitäten.
-  if (data.user && data.user.identities && data.user.identities.length === 0)
-    return { ok: false, fehler: "Für diese E-Mail-Adresse besteht bereits ein Konto." };
-  return { ok: true, bestaetigungNoetig: !data.session };
+  try {
+    const { data, error } = await supabase().auth.signUp({
+      email: d.email.trim(),
+      password: d.passwort,
+      options: {
+        data: { name: d.name.trim(), institution: d.institution.trim() },
+        emailRedirectTo: ruecksprung("/konto"),
+      },
+    });
+    if (error) return { ok: false, fehler: authFehlerText(error) };
+    // Supabase meldet bei bereits bestehender Adresse aus Datenschutzgründen keinen Fehler,
+    // sondern einen Benutzer ohne Identitäten.
+    if (data.user && data.user.identities && data.user.identities.length === 0)
+      return { ok: false, fehler: "Für diese E-Mail-Adresse besteht bereits ein Konto." };
+    return { ok: true, bestaetigungNoetig: !data.session };
+  } catch (e) {
+    return { ok: false, fehler: authFehlerText(e as Error) };
+  }
 }
 
 export async function passwortZuruecksetzen(email: string): Promise<{ ok: true } | { ok: false; fehler: string }> {
-  const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), { redirectTo: ruecksprung("/passwort-neu") });
-  // Nur echte Störungen melden; ob das Konto existiert, bleibt aus Datenschutzgründen offen.
-  if (error && (error.code === "over_email_send_rate_limit" || /rate limit|fetch|network/i.test(error.message)))
-    return { ok: false, fehler: authFehlerText(error) };
-  return { ok: true };
+  try {
+    const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), { redirectTo: ruecksprung("/passwort-neu") });
+    // Nur echte Störungen melden; ob das Konto existiert, bleibt aus Datenschutzgründen offen.
+    if (error && (error.code === "over_email_send_rate_limit" || /rate limit|fetch|network/i.test(error.message)))
+      return { ok: false, fehler: authFehlerText(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, fehler: authFehlerText(e as Error) };
+  }
 }
 
 export async function neuesPasswortSetzen(passwort: string): Promise<{ ok: true } | { ok: false; fehler: string }> {
-  const { error } = await supabase().auth.updateUser({ password: passwort });
-  if (error) return { ok: false, fehler: authFehlerText(error) };
-  return { ok: true };
+  try {
+    const { error } = await supabase().auth.updateUser({ password: passwort });
+    if (error) return { ok: false, fehler: authFehlerText(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, fehler: authFehlerText(e as Error) };
+  }
 }
 
 export async function abmelden(): Promise<void> {
