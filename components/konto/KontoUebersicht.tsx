@@ -15,9 +15,10 @@ export function KontoUebersicht() {
   const { benutzer } = useAuth();
   const neu = useSearchParams().get("neu");
   const [liste, setListe] = useState<Antrag[] | null>(null);
+  const [ladefehler, setLadefehler] = useState(false);
 
   useEffect(() => {
-    if (benutzer) ladeEigeneAntraege(benutzer.id).then(setListe);
+    if (benutzer) ladeEigeneAntraege(benutzer.id).then(setListe).catch(() => setLadefehler(true));
   }, [benutzer]);
 
   return (
@@ -40,7 +41,9 @@ export function KontoUebersicht() {
         </div>
       )}
 
-      {!liste ? (
+      {ladefehler ? (
+        <Hinweisbox art="fehler" rolle="alert">Ihre Anträge konnten nicht geladen werden. Bitte laden Sie die Seite neu.</Hinweisbox>
+      ) : !liste ? (
         <Laden />
       ) : liste.length === 0 ? (
         <p className="py-16 text-lg border-y border-neutral-400">

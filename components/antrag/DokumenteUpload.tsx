@@ -112,7 +112,7 @@ export function DokumenteUpload() {
         Drag-and-drop ablegen.
       </p>
       <p className="mt-3 text-sm text-neutral-700 max-w-[70ch]">
-        Hinweis für die Testphase: Die Dateien bleiben nur in diesem Browserfenster und werden noch nicht gespeichert.
+        Die Dateien werden beim Absenden des Antrags übertragen. Nach einem Neuladen der Seite wählen Sie sie bitte erneut aus.
       </p>
       <div className="mt-6 border-t border-neutral-400">
         {KATEGORIEN.map((x) => (

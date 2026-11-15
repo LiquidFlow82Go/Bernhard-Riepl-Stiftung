@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { reicheAntragEin } from "@/lib/antraege";
 import { feldId, labelFuer, PFLICHTFELDER, validiere, type Fehler } from "@/lib/antragSchema";
-import { merkeDatei, ladeBlobHerunter } from "@/lib/dokumente";
+import { ladeBlobHerunter } from "@/lib/dokumente";
 import { sendeEingangsbestaetigung } from "@/lib/email";
 import { erzeugeAntragPdf, pdfDateiname } from "@/lib/pdf";
 import { leererAntrag, type Antrag, type AntragDaten, type DokumentKategorie } from "@/lib/types";
@@ -46,7 +46,8 @@ export function AntragWizard() {
   const [geladen, setGeladen] = useState(false);
   const [hinweis, setHinweis] = useState("");
   const [sendet, setSendet] = useState(false);
-  const [ergebnis, setErgebnis] = useState<Antrag | null>(null);
+  const [ergebnis, setErgebnis] = useState<{ antrag: Antrag; fehlgeschlagen: string[] } | null>(null);
+  const [sendeFehler, setSendeFehler] = useState("");
   const titelRef = useRef<HTMLHeadingElement>(null);
   const uebersichtRef = useRef<HTMLDivElement>(null);
   const fokusNach = useRef<string | null>(null);
@@ -140,26 +141,22 @@ export function AntragWizard() {
     if (!benutzer || sendet) return;
     if (!pruefe()) return;
     setSendet(true);
+    setSendeFehler("");
     try {
-      const meta = Object.entries(dateien).flatMap(([kategorie, fs]) =>
-        fs.map((f) => ({
-          kategorie: kategorie as DokumentKategorie,
-          dateiname: f.name,
-          mimeType: f.type || "application/octet-stream",
-          groesse: f.size,
-          hochgeladenAm: new Date().toISOString(),
-        })),
+      const dokumente = Object.entries(dateien).flatMap(([kategorie, fs]) =>
+        fs.map((datei) => ({ kategorie: kategorie as DokumentKategorie, datei })),
       );
-      const { antrag } = await reicheAntragEin(benutzer.id, daten, meta);
-      const alle = Object.values(dateien).flat();
-      antrag.dokumente.forEach((d, i) => alle[i] && merkeDatei(d.id, alle[i]));
-      await sendeEingangsbestaetigung(daten.antragsteller.email, antrag.nummer);
+      const erg = await reicheAntragEin(daten, dokumente);
+      await sendeEingangsbestaetigung(daten.antragsteller.email, erg.antrag.nummer);
       try { localStorage.removeItem(ENTWURF_KEY); } catch {}
-      setErgebnis(antrag);
+      setErgebnis(erg);
       requestAnimationFrame(() => {
         window.scrollTo({ top: 0 });
         document.getElementById("erfolg-titel")?.focus();
       });
+    } catch {
+      setSendeFehler("Der Antrag konnte nicht gesendet werden. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut. Ihre Eingaben bleiben erhalten.");
+      requestAnimationFrame(() => document.getElementById("sende-fehler")?.focus());
     } finally {
       setSendet(false);
     }
@@ -189,7 +186,7 @@ export function AntragWizard() {
 
   const kontext = useMemo(() => ({ daten, setze, fehler, dateien, setDateien, geheZu }), [daten, setze, fehler, dateien, setDateien, geheZu]);
 
-  if (ergebnis) return <Erfolg antrag={ergebnis} />;
+  if (ergebnis) return <Erfolg antrag={ergebnis.antrag} fehlgeschlagen={ergebnis.fehlgeschlagen} />;
   if (!geladen) return null;
 
   const aktuell = SCHRITTE[schritt - 1];
@@ -283,6 +280,11 @@ export function AntragWizard() {
               </motion.div>
             </AnimatePresence>
 
+            {sendeFehler && (
+              <div id="sende-fehler" tabIndex={-1} role="alert" className="mt-12 border-l-4 border-fehler bg-[#b3361a12] px-5 py-4 text-neutral-800 focus:outline-none">
+                {sendeFehler}
+              </div>
+            )}
             <div className="mt-16 pt-8 border-t border-neutral-400 flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap gap-3">
                 {schritt > 1 && (
@@ -310,7 +312,7 @@ export function AntragWizard() {
   );
 }
 
-function Erfolg({ antrag }: { antrag: Antrag }) {
+function Erfolg({ antrag, fehlgeschlagen }: { antrag: Antrag; fehlgeschlagen: string[] }) {
   const [laedt, setLaedt] = useState(false);
   async function pdf() {
     setLaedt(true);
@@ -337,9 +339,12 @@ function Erfolg({ antrag }: { antrag: Antrag }) {
           jederzeit in Ihrem Konto.
         </p>
       </div>
-      <p className="mt-6 text-sm text-neutral-700">
-        Testphase: Es wurde noch keine Eingangsbestätigung per E-Mail versendet. Der Antrag liegt in den Beispieldaten dieses Browsers.
-      </p>
+      {fehlgeschlagen.length > 0 && (
+        <div role="alert" className="mt-6 border-l-4 border-herbstgold bg-[#e0a21a29] px-5 py-4 text-neutral-800">
+          Folgende Dateien konnten nicht hochgeladen werden: {fehlgeschlagen.join(", ")}. Ihr Antrag ist trotzdem eingegangen.
+          Bitte senden Sie die fehlenden Unterlagen unter Angabe der Antragsnummer an die Stiftung.
+        </div>
+      )}
       <div className="mt-10 flex flex-wrap gap-4">
         <Button onClick={pdf} gross disabled={laedt}>
           {laedt ? "PDF wird erstellt …" : "Antrag als PDF herunterladen"}

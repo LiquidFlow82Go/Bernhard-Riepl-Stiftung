@@ -144,6 +144,13 @@ export const registrierenSchema = z
   })
   .refine((d) => d.passwort === d.passwort2, { path: ["passwort2"], message: "Die Passwörter stimmen nicht überein." });
 
+export const passwortNeuSchema = z
+  .object({
+    passwort: z.string().min(10, "Das Passwort muss mindestens 10 Zeichen lang sein."),
+    passwort2: z.string().min(1, "Bitte wiederholen Sie das Passwort."),
+  })
+  .refine((d) => d.passwort === d.passwort2, { path: ["passwort2"], message: "Die Passwörter stimmen nicht überein." });
+
 export const passwortVergessenSchema = z.object({
   email: z.string().trim().min(1, "Bitte geben Sie Ihre E-Mail-Adresse an.").email("Bitte geben Sie eine gültige E-Mail-Adresse an."),
 });

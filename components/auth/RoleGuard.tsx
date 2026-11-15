@@ -8,9 +8,8 @@ import { Laden } from "../ui/Diverses";
 import { useAuth } from "./AuthProvider";
 
 /**
- * Zentrale Rollenprüfung. Phase 1: Sitzung aus der Testanmeldung.
- * Phase 2: zusätzlich serverseitig per Supabase (Middleware + Row Level Security);
- * diese Komponente bleibt als Oberflächen-Schutz bestehen.
+ * Zentrale Rollenprüfung in der Oberfläche. Serverseitig schützen zusätzlich
+ * middleware.ts (Weiterleitung nach Rolle) und Row Level Security (Daten).
  */
 export function RoleGuard({ rollen, children }: { rollen: Rolle[]; children: ReactNode }) {
   const { benutzer, bereit } = useAuth();

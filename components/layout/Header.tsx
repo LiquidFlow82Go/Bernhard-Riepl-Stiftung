@@ -51,6 +51,7 @@ export function Header() {
   async function raus() {
     await abmelden();
     router.push("/");
+    router.refresh();
   }
 
   return (

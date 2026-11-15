@@ -55,11 +55,16 @@ export function AbsageDialog({
     if (!vorlage) return;
     setSendet(true);
     const versand = await sendeAbsage({ an, betreff, text, antragId: antrag.id });
-    if (versand.ok) {
-      const neu = await lehneAntragAb(antrag.id, { grundId: vorlage.id, grundTitel: vorlage.titel, betreff, text, empfaenger: an });
-      onGesendet(neu);
+    try {
+      if (versand.ok) {
+        const neu = await lehneAntragAb(antrag.id, { grundId: vorlage.id, grundTitel: vorlage.titel, betreff, text, empfaenger: an });
+        onGesendet(neu);
+      }
+    } catch {
+      setFehler({ text: "Die Absage konnte nicht gespeichert werden. Bitte versuchen Sie es erneut." });
+    } finally {
+      setSendet(false);
     }
-    setSendet(false);
   }
 
   const offenerPlatzhalter = /\[[^\]]+\]/.test(text);
@@ -74,7 +79,7 @@ export function AbsageDialog({
           <Hinweisbox art="warn">Der Text enthält noch einen Platzhalter in eckigen Klammern. Bitte ergänzen oder entfernen.</Hinweisbox>
         )}
         <p className="text-sm text-neutral-700">
-          Testphase: „Senden“ setzt den Status auf „Abgelehnt“ und speichert Grund, Text und Datum. Die E-Mail wird erst ab Phase 4 über das Stiftungspostfach versendet.
+          „Absage senden“ setzt den Status auf „Abgelehnt“ und speichert Grund, Text und Datum. Der E-Mail-Versand über das Stiftungspostfach folgt in Phase 4 – bis dahin bitte die Absage zusätzlich manuell versenden.
         </p>
         <div className="flex flex-wrap justify-end gap-3">
           <Button variante="ghost" onClick={onSchliessen}>Abbrechen</Button>

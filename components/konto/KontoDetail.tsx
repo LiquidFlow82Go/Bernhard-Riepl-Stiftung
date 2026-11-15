@@ -17,7 +17,9 @@ export function KontoDetail() {
   const [antrag, setAntrag] = useState<Antrag | null | undefined>(undefined);
 
   useEffect(() => {
-    ladeAntrag(id).then((a) => setAntrag(a && a.benutzerId === benutzer?.id ? a : null));
+    ladeAntrag(id)
+      .then((a) => setAntrag(a && a.benutzerId === benutzer?.id ? a : null))
+      .catch(() => setAntrag(null));
   }, [id, benutzer]);
 
   if (antrag === undefined) return <Laden />;

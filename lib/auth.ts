@@ -1,82 +1,96 @@
 /**
- * Anmeldung und Sitzung.
- * Phase 1: Testanmeldung mit Beispielkonten, Sitzung im localStorage.
- * Phase 2: Supabase Auth (signInWithPassword, signUp, resetPasswordForEmail);
- * die Rolle kommt aus der Tabelle profiles. Die Funktionssignaturen bleiben.
+ * Anmeldung und Sitzung über Supabase Auth.
+ * Die Rolle steht in public.profiles und wird nur per SQL auf „stiftungsrat“ gesetzt.
  */
-import { BEISPIEL_BENUTZER, TEST_PASSWORT } from "./beispieldaten";
-import { db, speichern, warte } from "./mockDb";
-import type { Benutzer, Rolle } from "./types";
-
-const SITZUNG_KEY = "brs-sitzung-v1";
-
-export function aktuelleSitzung(): Benutzer | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(SITZUNG_KEY);
-    return raw ? (JSON.parse(raw) as Benutzer) : null;
-  } catch {
-    return null;
-  }
-}
-
-function setzeSitzung(b: Benutzer | null) {
-  try {
-    if (b) window.localStorage.setItem(SITZUNG_KEY, JSON.stringify(b));
-    else window.localStorage.removeItem(SITZUNG_KEY);
-  } catch {
-    /* ignorieren */
-  }
-  window.dispatchEvent(new Event("brs-sitzung"));
-}
+import type { AuthError } from "@supabase/supabase-js";
+import { supabase } from "./supabase/client";
+import type { Benutzer } from "./types";
 
 export type AuthErgebnis = { ok: true; benutzer: Benutzer } | { ok: false; fehler: string };
 
+/** Übersetzt Fehlermeldungen von Supabase Auth ins Deutsche. */
+export function authFehlerText(e: AuthError | Error | null | undefined): string {
+  const code = (e as AuthError | undefined)?.code ?? "";
+  const msg = e?.message ?? "";
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(msg))
+    return "E-Mail-Adresse oder Passwort sind nicht korrekt.";
+  if (code === "email_not_confirmed" || /email not confirmed/i.test(msg))
+    return "Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse über den Link in unserer E-Mail.";
+  if (code === "user_already_exists" || /already registered/i.test(msg))
+    return "Für diese E-Mail-Adresse besteht bereits ein Konto.";
+  if (code === "weak_password" || /password should/i.test(msg))
+    return "Das Passwort ist zu schwach. Bitte wählen Sie ein längeres Passwort mit Buchstaben und Ziffern.";
+  if (code === "same_password") return "Das neue Passwort muss sich vom bisherigen unterscheiden.";
+  if (code === "over_email_send_rate_limit" || /rate limit/i.test(msg))
+    return "Es wurden gerade zu viele E-Mails angefordert. Bitte versuchen Sie es in einigen Minuten erneut.";
+  if (/fetch|network/i.test(msg)) return "Keine Verbindung zum Server. Bitte prüfen Sie Ihre Internetverbindung.";
+  return "Das hat leider nicht geklappt. Bitte versuchen Sie es erneut.";
+}
+
+/** Lädt das Profil des angemeldeten Benutzers (oder null). */
+export async function aktuellerBenutzer(): Promise<Benutzer | null> {
+  const sb = supabase();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return null;
+  const { data: p } = await sb.from("profiles").select("id, email, name, institution, rolle").eq("id", user.id).single();
+  if (!p) return null;
+  return { id: p.id, email: p.email, name: p.name, institution: p.institution || undefined, rolle: p.rolle };
+}
+
 export async function anmelden(email: string, passwort: string): Promise<AuthErgebnis> {
-  await warte(300);
-  const b = db().benutzer.find((x) => x.email.toLowerCase() === email.trim().toLowerCase());
-  if (!b || passwort !== TEST_PASSWORT)
-    return { ok: false, fehler: "E-Mail-Adresse oder Passwort sind nicht korrekt." };
-  setzeSitzung(b);
+  const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password: passwort });
+  if (error) return { ok: false, fehler: authFehlerText(error) };
+  const b = await aktuellerBenutzer();
+  if (!b) return { ok: false, fehler: "Ihr Profil konnte nicht geladen werden. Bitte wenden Sie sich an die Stiftung." };
   return { ok: true, benutzer: b };
 }
 
-/** Testanmeldung per Schalter (nur Phase 1). */
-export async function testAnmeldung(rolle: Rolle): Promise<Benutzer> {
-  const b = BEISPIEL_BENUTZER.find((x) => x.rolle === rolle)!;
-  setzeSitzung(b);
-  return b;
+function ruecksprung(weiter: string): string {
+  return `${window.location.origin}/auth/confirm?weiter=${encodeURIComponent(weiter)}`;
 }
+
+export type RegistrierErgebnis =
+  | { ok: true; bestaetigungNoetig: boolean }
+  | { ok: false; fehler: string };
 
 export async function registrieren(d: {
   name: string;
   institution: string;
   email: string;
   passwort: string;
-}): Promise<AuthErgebnis> {
-  await warte(400);
-  if (db().benutzer.some((x) => x.email.toLowerCase() === d.email.toLowerCase()))
+}): Promise<RegistrierErgebnis> {
+  const { data, error } = await supabase().auth.signUp({
+    email: d.email.trim(),
+    password: d.passwort,
+    options: {
+      data: { name: d.name.trim(), institution: d.institution.trim() },
+      emailRedirectTo: ruecksprung("/konto"),
+    },
+  });
+  if (error) return { ok: false, fehler: authFehlerText(error) };
+  // Supabase meldet bei bereits bestehender Adresse aus Datenschutzgründen keinen Fehler,
+  // sondern einen Benutzer ohne Identitäten.
+  if (data.user && data.user.identities && data.user.identities.length === 0)
     return { ok: false, fehler: "Für diese E-Mail-Adresse besteht bereits ein Konto." };
-  const b: Benutzer = {
-    id: `u-${Date.now()}`,
-    email: d.email,
-    name: d.name,
-    institution: d.institution,
-    rolle: "antragsteller",
-  };
-  db().benutzer.push(b);
-  speichern();
-  // Phase 2: Bestätigungs-E-Mail durch Supabase; bis dahin direkte Anmeldung.
-  setzeSitzung(b);
-  return { ok: true, benutzer: b };
+  return { ok: true, bestaetigungNoetig: !data.session };
 }
 
-export async function passwortZuruecksetzen(_email: string): Promise<{ ok: true }> {
-  await warte(400);
-  // Aus Datenschutzgründen immer dieselbe Antwort, egal ob das Konto existiert.
+export async function passwortZuruecksetzen(email: string): Promise<{ ok: true } | { ok: false; fehler: string }> {
+  const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), { redirectTo: ruecksprung("/passwort-neu") });
+  // Nur echte Störungen melden; ob das Konto existiert, bleibt aus Datenschutzgründen offen.
+  if (error && (error.code === "over_email_send_rate_limit" || /rate limit|fetch|network/i.test(error.message)))
+    return { ok: false, fehler: authFehlerText(error) };
+  return { ok: true };
+}
+
+export async function neuesPasswortSetzen(passwort: string): Promise<{ ok: true } | { ok: false; fehler: string }> {
+  const { error } = await supabase().auth.updateUser({ password: passwort });
+  if (error) return { ok: false, fehler: authFehlerText(error) };
   return { ok: true };
 }
 
 export async function abmelden(): Promise<void> {
-  setzeSitzung(null);
+  await supabase().auth.signOut();
 }

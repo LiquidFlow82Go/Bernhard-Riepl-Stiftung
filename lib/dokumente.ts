@@ -1,11 +1,11 @@
 /**
- * Dokumente zu Anträgen.
- * Phase 1: Hochgeladene Dateien bleiben nur im Browser-Speicher dieser Sitzung.
- * Für Beispieldokumente wird ein Platzhalter-PDF erzeugt.
- * Phase 2: Upload in Supabase Storage (Bucket aus SUPABASE_STORAGE_BUCKET),
- * Ansehen/Herunterladen über signierte URLs.
+ * Dokumente zu Anträgen. Die Dateien liegen im privaten Supabase-Bucket
+ * „antragsdokumente“; Ansehen und Herunterladen laufen über kurzlebige,
+ * signierte Links. Wer was sehen darf, regeln die Storage-Policies.
  */
-import { DOKUMENT_LABEL, type Dokument } from "./types";
+import { DOKUMENTE_BUCKET } from "./supabase/env";
+import { supabase } from "./supabase/client";
+import type { Dokument } from "./types";
 
 export const ERLAUBTE_TYPEN = ["application/pdf", "image/jpeg", "image/png"] as const;
 export const ERLAUBTE_ENDUNGEN = ".pdf,.jpg,.jpeg,.png";
@@ -26,46 +26,41 @@ export function formatGroesse(bytes: number): string {
   return `${(bytes / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDigits: 1 })} MB`;
 }
 
-/** Dateien dieser Browsersitzung, nach Dokument-ID (nur Phase 1). */
-const sitzungsDateien = new Map<string, File>();
-
-export function merkeDatei(dokumentId: string, f: File): void {
-  sitzungsDateien.set(dokumentId, f);
+async function signierterLink(d: Dokument, herunterladen: boolean): Promise<string> {
+  if (!d.speicherpfad) throw new Error("Für dieses Dokument ist keine Datei gespeichert.");
+  const { data, error } = await supabase()
+    .storage.from(DOKUMENTE_BUCKET)
+    .createSignedUrl(d.speicherpfad, 120, herunterladen ? { download: d.dateiname } : undefined);
+  if (error || !data) throw new Error("Das Dokument konnte nicht geladen werden.");
+  return data.signedUrl;
 }
 
-async function platzhalterPdf(d: Dokument): Promise<Blob> {
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("Beispieldokument (Phase 1)", 20, 30);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text(
-    doc.splitTextToSize(
-      `${DOKUMENT_LABEL[d.kategorie]}\nDatei: ${d.dateiname}\n\nDie echte Datei wird ab Phase 2 aus dem Dokumentenspeicher geladen.`,
-      170,
-    ),
-    20,
-    45,
-  );
-  return doc.output("blob");
-}
-
-export async function ladeDokumentBlob(d: Dokument): Promise<Blob> {
-  return sitzungsDateien.get(d.id) ?? (await platzhalterPdf(d));
-}
-
+/** Öffnet das Dokument in einem neuen Tab. */
 export async function dokumentAnsehen(d: Dokument): Promise<void> {
-  const blob = await ladeDokumentBlob(d);
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank", "noopener");
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  // Fenster sofort öffnen, damit der Popup-Blocker den Klick erkennt.
+  const fenster = window.open("about:blank", "_blank");
+  try {
+    const url = await signierterLink(d, false);
+    if (fenster) {
+      fenster.opener = null;
+      fenster.location.href = url;
+    } else {
+      window.location.href = url;
+    }
+  } catch (e) {
+    fenster?.close();
+    throw e;
+  }
 }
 
 export async function dokumentHerunterladen(d: Dokument): Promise<void> {
-  const blob = await ladeDokumentBlob(d);
-  ladeBlobHerunter(blob, sitzungsDateien.has(d.id) ? d.dateiname : d.dateiname.replace(/\.\w+$/, "") + "_Beispiel.pdf");
+  const url = await signierterLink(d, true);
+  const a = document.createElement("a");
+  a.href = url;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 export function ladeBlobHerunter(blob: Blob, dateiname: string): void {

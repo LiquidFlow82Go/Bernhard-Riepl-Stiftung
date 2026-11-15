@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import { anmelden, passwortZuruecksetzen, registrieren, testAnmeldung } from "@/lib/auth";
-import { loginSchema, passwortVergessenSchema, registrierenSchema, zodFehler } from "@/lib/antragSchema";
-import { zuruecksetzen } from "@/lib/mockDb";
-import { TEST_PASSWORT } from "@/lib/beispieldaten";
+import { anmelden, neuesPasswortSetzen, passwortZuruecksetzen, registrieren } from "@/lib/auth";
+import { loginSchema, passwortNeuSchema, passwortVergessenSchema, registrierenSchema, zodFehler } from "@/lib/antragSchema";
 import type { Rolle } from "@/lib/types";
 import { Button } from "../ui/Button";
 import { Checkbox, Textfeld } from "../ui/Feld";
 import { Hinweisbox } from "../ui/Diverses";
+import { supabaseKonfiguriert } from "@/lib/supabase/env";
 
 export function AuthRahmen({ titel, einleitung, children, fuss }: { titel: string; einleitung?: ReactNode; children: ReactNode; fuss?: ReactNode }) {
   return (
@@ -18,6 +17,13 @@ export function AuthRahmen({ titel, einleitung, children, fuss }: { titel: strin
       <div className="mx-auto max-w-[520px]">
         <h1 className="text-[44px] leading-[1.1] lg:text-[56px]">{titel}</h1>
         {einleitung && <div className="mt-5 text-lg leading-[1.556]">{einleitung}</div>}
+        {!supabaseKonfiguriert && (
+          <div className="mt-8">
+            <Hinweisbox art="warn">
+              Die Anmeldung ist noch nicht eingerichtet: Es fehlen die Supabase-Zugangsdaten (siehe README, „Phase 2 einrichten“).
+            </Hinweisbox>
+          </div>
+        )}
         <div className="mt-10">{children}</div>
         {fuss && <div className="mt-10 pt-8 border-t border-neutral-400 text-base">{fuss}</div>}
       </div>
@@ -48,7 +54,9 @@ function zielNachLogin(rolle: Rolle, weiter: string | null) {
 
 export function LoginFormular() {
   const router = useRouter();
-  const weiter = useSearchParams().get("weiter");
+  const params = useSearchParams();
+  const weiter = params.get("weiter");
+  const hinweis = params.get("hinweis");
   const [email, setEmail] = useState("");
   const [passwort, setPasswort] = useState("");
   const [fehler, setFehler] = useState<Record<string, string>>({});
@@ -76,16 +84,20 @@ export function LoginFormular() {
       return;
     }
     router.push(zielNachLogin(erg.benutzer.rolle, weiter));
-  }
-
-  async function test(rolle: Rolle) {
-    const b = await testAnmeldung(rolle);
-    router.push(zielNachLogin(b.rolle, weiter));
+    router.refresh();
   }
 
   return (
     <>
       <form noValidate onSubmit={senden} className="grid gap-6">
+        {hinweis === "passwort" && (
+          <Hinweisbox art="ok" rolle="status">Ihr neues Passwort ist gespeichert. Bitte melden Sie sich an.</Hinweisbox>
+        )}
+        {hinweis === "link-ungueltig" && (
+          <Hinweisbox art="warn" rolle="status">
+            Der Link ist abgelaufen oder wurde bereits verwendet. Bitte melden Sie sich an oder fordern Sie einen neuen Link an.
+          </Hinweisbox>
+        )}
         <FehlerZusammenfassung fehler={allg} refEl={ref} />
         <Textfeld id="login-email" label="E-Mail-Adresse" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} fehler={fehler.email} pflicht />
         <Textfeld id="login-passwort" label="Passwort" type="password" autoComplete="current-password" value={passwort} onChange={(e) => setPasswort(e.target.value)} fehler={fehler.passwort} pflicht />
@@ -95,25 +107,6 @@ export function LoginFormular() {
         </div>
       </form>
 
-      <section aria-labelledby="test-titel" className="mt-14 border border-dashed border-neutral-700 bg-neutral-100 p-6">
-        <p className="caps text-xs text-neutral-700">Nur in der Testphase</p>
-        <h2 id="test-titel" className="mt-2 text-2xl leading-snug">Testanmeldung</h2>
-        <p className="mt-3 text-sm leading-relaxed">
-          Melden Sie sich mit einem Klick in einer der beiden Rollen an. Alternativ: <strong className="font-medium">antragsteller@beispiel.de</strong> oder{" "}
-          <strong className="font-medium">stiftungsrat@beispiel.de</strong> mit dem Passwort <strong className="font-medium">{TEST_PASSWORT}</strong>.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Button variante="sekundaer" onClick={() => test("antragsteller")}>Als Antragsteller ansehen</Button>
-          <Button variante="sekundaer" onClick={() => test("stiftungsrat")}>Als Stiftungsrat ansehen</Button>
-        </div>
-        <button
-          type="button"
-          onClick={() => { zuruecksetzen(); window.alert("Die Beispieldaten wurden zurückgesetzt."); }}
-          className="mt-5 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer"
-        >
-          Beispieldaten zurücksetzen
-        </button>
-      </section>
     </>
   );
 }
@@ -124,6 +117,7 @@ export function RegistrierenFormular() {
   const [fehler, setFehler] = useState<Record<string, string>>({});
   const [allg, setAllg] = useState<string | null>(null);
   const [laedt, setLaedt] = useState(false);
+  const [bestaetigen, setBestaetigen] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const set = (k: keyof typeof w) => (e: { target: { value: string } }) => setW({ ...w, [k]: e.target.value });
 
@@ -146,8 +140,26 @@ export function RegistrierenFormular() {
       requestAnimationFrame(() => ref.current?.focus());
       return;
     }
+    if (erg.bestaetigungNoetig) {
+      setBestaetigen(w.email.trim());
+      requestAnimationFrame(() => document.getElementById("reg-bestaetigen")?.focus());
+      return;
+    }
     router.push("/konto?neu=1");
+    router.refresh();
   }
+
+  if (bestaetigen)
+    return (
+      <div id="reg-bestaetigen" tabIndex={-1} role="status" className="focus:outline-none">
+        <Hinweisbox art="ok">
+          <p className="font-medium">Fast geschafft – bitte bestätigen Sie Ihre E-Mail-Adresse.</p>
+          <p className="mt-2">
+            Wir haben eine E-Mail an <strong className="font-medium">{bestaetigen}</strong> gesendet. Klicken Sie auf den Link darin, um Ihr Konto zu aktivieren. Prüfen Sie gegebenenfalls auch den Spam-Ordner.
+          </p>
+        </Hinweisbox>
+      </div>
+    );
 
   return (
     <form noValidate onSubmit={senden} className="grid gap-6">
@@ -187,8 +199,12 @@ export function PasswortVergessenFormular() {
     }
     setFehler(undefined);
     setLaedt(true);
-    await passwortZuruecksetzen(email);
+    const erg = await passwortZuruecksetzen(email);
     setLaedt(false);
+    if (!erg.ok) {
+      setFehler(erg.fehler);
+      return;
+    }
     setGesendet(true);
   }
 
@@ -198,7 +214,7 @@ export function PasswortVergessenFormular() {
         {gesendet && (
           <Hinweisbox art="ok">
             Falls ein Konto mit dieser Adresse besteht, erhalten Sie in Kürze eine E-Mail mit einem Link zum Zurücksetzen.
-            (Testphase: Es wird noch keine E-Mail versendet.)
+            Prüfen Sie gegebenenfalls auch den Spam-Ordner.
           </Hinweisbox>
         )}
       </div>
@@ -209,5 +225,48 @@ export function PasswortVergessenFormular() {
         </div>
       </form>
     </div>
+  );
+}
+
+export function PasswortNeuFormular() {
+  const router = useRouter();
+  const [w, setW] = useState({ passwort: "", passwort2: "" });
+  const [fehler, setFehler] = useState<Record<string, string>>({});
+  const [allg, setAllg] = useState<string | null>(null);
+  const [laedt, setLaedt] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  async function senden(e: FormEvent) {
+    e.preventDefault();
+    setAllg(null);
+    const r = passwortNeuSchema.safeParse(w);
+    if (!r.success) {
+      const f = zodFehler(r.error);
+      setFehler(f);
+      document.getElementById(`neu-${Object.keys(f)[0]}`)?.focus();
+      return;
+    }
+    setFehler({});
+    setLaedt(true);
+    const erg = await neuesPasswortSetzen(w.passwort);
+    setLaedt(false);
+    if (!erg.ok) {
+      setAllg(erg.fehler);
+      requestAnimationFrame(() => ref.current?.focus());
+      return;
+    }
+    router.push("/konto");
+    router.refresh();
+  }
+
+  return (
+    <form noValidate onSubmit={senden} className="grid gap-6">
+      <FehlerZusammenfassung fehler={allg} refEl={ref} />
+      <Textfeld id="neu-passwort" label="Neues Passwort" hinweis="Mindestens 10 Zeichen" type="password" autoComplete="new-password" value={w.passwort} onChange={(e) => setW({ ...w, passwort: e.target.value })} fehler={fehler.passwort} pflicht />
+      <Textfeld id="neu-passwort2" label="Neues Passwort wiederholen" type="password" autoComplete="new-password" value={w.passwort2} onChange={(e) => setW({ ...w, passwort2: e.target.value })} fehler={fehler.passwort2} pflicht />
+      <div>
+        <Button type="submit" gross disabled={laedt}>{laedt ? "Wird gespeichert …" : "Passwort speichern"}</Button>
+      </div>
+    </form>
   );
 }

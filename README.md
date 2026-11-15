@@ -2,7 +2,7 @@
 
 Webseite der Bernhard Riepl Stiftung (Miesbach) mit öffentlichem Onepager, digitalem Förderantrag und Memberbereichen für Antragsteller und Stiftungsrat.
 
-**Stand: Phase 1 (Oberfläche).** Alle Daten sind Beispieldaten und liegen im Browser (localStorage). Datenbank, Login und E-Mail-Versand folgen in den Phasen 2 bis 4.
+**Stand: Phase 2.** Datenbank, Anmeldung und Dokumentenspeicher laufen über Supabase (Region Frankfurt). Der E-Mail-Versand von Absagen über das Stiftungspostfach folgt in Phase 4.
 
 ## Technik
 
@@ -18,7 +18,7 @@ Voraussetzung: Node.js 20 oder neuer.
 
 ```bash
 npm install
-cp .env.example .env.local   # in Phase 1 noch ohne Wirkung
+cp .env.example .env.local   # Supabase-URL und Publishable Key eintragen
 npm run dev                  # http://localhost:3000
 ```
 
@@ -30,28 +30,38 @@ npm run start      # Produktions-Build lokal starten
 npm run typecheck  # nur TypeScript prüfen
 ```
 
-## Testanmeldung (Phase 1)
+## Phase 2 einrichten (Supabase)
 
-Unter `/login` gibt es den Kasten **Testanmeldung** mit zwei Schaltern:
+Einmalig im Supabase-Dashboard des Projekts „B.R. Stiftung“:
 
-| Rolle | Schalter | oder E-Mail | Passwort |
-|---|---|---|---|
-| Antragsteller | „Als Antragsteller ansehen“ | `antragsteller@beispiel.de` | `Stiftung2026!` |
-| Stiftungsrat | „Als Stiftungsrat ansehen“ | `stiftungsrat@beispiel.de` | `Stiftung2026!` |
+1. **Datenbank anlegen:** Unter **SQL Editor → New query** den Inhalt von `supabase/migrations/20261115120000_phase2_grundschema.sql` einfügen und auf **Run** klicken. Das Skript lässt sich gefahrlos erneut ausführen.
+2. **Adressen freigeben:** Unter **Authentication → URL Configuration** eintragen:
+   - **Site URL:** die Produktionsadresse, z. B. `https://brstiftung.vercel.app` (später die eigene Domain)
+   - **Redirect URLs:** `http://localhost:3000/**`, `https://brstiftung.vercel.app/**` und für Vorschau-Deployments `https://*.vercel.app/**`
+3. **Deutsche E-Mails:** Unter **Authentication → Email Templates** für „Confirm signup“ und „Reset Password“ den Inhalt aus `supabase/email-vorlagen/` übernehmen. Der Betreff steht jeweils oben in der Datei. Diese Vorlagen funktionieren auch, wenn der Link in einem anderen Browser geöffnet wird.
+4. **Stiftungsrat freischalten:** Mit der eigenen E-Mail-Adresse unter `/registrieren` ein Konto anlegen und bestätigen. Dann `supabase/stiftungsrat-freischalten.sql` mit dieser Adresse im SQL Editor ausführen und neu anmelden. Neue Konten sind immer Antragsteller. Die Rolle Stiftungsrat lässt sich nur per SQL vergeben.
+5. **Vercel:** Die Supabase-Integration setzt `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` und `SUPABASE_SECRET_KEY` automatisch. Nach dem ersten Verbinden einmal **Redeploy** auslösen, weil die öffentlichen Werte beim Build eingebaut werden.
+6. **Lokal:** `.env.example` nach `.env.local` kopieren und URL und Publishable Key eintragen (Project Settings → API Keys). Den Secret Key braucht Phase 2 nicht.
 
-Mit „Beispieldaten zurücksetzen“ stellen Sie den Ausgangszustand wieder her. Neu registrierte Konten erhalten immer die Rolle Antragsteller.
+**Hinweise**
+- Der eingebaute E-Mail-Versand von Supabase ist nur für Tests gedacht und stark begrenzt. Für den Livegang unter **Authentication → SMTP Settings** das Postfach der Stiftung eintragen (spätestens mit Phase 4).
+- Im Free-Plan pausiert Supabase ein Projekt nach einer Woche ohne Aktivität, Backups gibt es keine. Vor dem Livegang auf **Pro** wechseln.
 
-So probieren Sie den Ablauf aus:
+### Was wo geschützt ist
 
-1. Als Antragsteller anmelden, unter `/antrag` einen Antrag ausfüllen und absenden. Die Nummer wird im Format `JJJJ-NNN` vergeben, z. B. `2026-004`.
-2. Unter `/konto` erscheint der Antrag mit Status, PDF-Download und Dokumenten.
-3. Als Stiftungsrat anmelden. Unter `/stiftungsrat` finden Sie den Antrag, können Status und bewilligten Betrag setzen oder über einen der acht Ausschlussgründe eine Absage vorbereiten.
+| Ebene | Schutz |
+|---|---|
+| Datenbank (RLS) | Antragsteller lesen nur eigene Anträge, Dokumente und Absagen. Der Stiftungsrat liest alle Anträge und darf nur Status und bewilligten Betrag ändern. Nicht angemeldete Besucher haben keinen Zugriff. |
+| Funktionen | `antrag_einreichen()` prüft Pflichtangaben und vergibt die Nummer `JJJJ-NNN` ohne Doppelvergabe. `antrag_ablehnen()` steht nur dem Stiftungsrat zur Verfügung. |
+| Speicher | Privater Bucket `antragsdokumente` (PDF, JPG, PNG, max. 10 MB). Hochladen nur in eigene, neu eingegangene Anträge. Lesen nur über signierte Links, die 2 Minuten gültig sind. |
+| Server | `middleware.ts` leitet nicht angemeldete Besucher zur Anmeldung und trennt die Bereiche `/konto` und `/stiftungsrat` nach Rolle. |
+| Oberfläche | `RoleGuard` zeigt zusätzlich passende Hinweise. |
 
 ## Auf Vercel deployen
 
 1. Auf [vercel.com](https://vercel.com) **Add New → Project** wählen und das GitHub-Repository `LiquidFlow82Go/Bernhard-Riepl-Stiftung` importieren.
 2. Das Framework „Next.js“ wird erkannt. Build-Befehl und Ausgabeordner bleiben auf Standard.
-3. Unter **Environment Variables** setzen Sie vorerst nur `NEXT_PUBLIC_SITE_URL`, z. B. die spätere Domain. Die übrigen Variablen aus `.env.example` kommen ab Phase 2 dazu.
+3. Die Supabase-Variablen setzt die Supabase-Integration. Ergänzen Sie unter **Environment Variables** nur `NEXT_PUBLIC_SITE_URL`.
 4. **Deploy**. Jeder Push auf `main` löst danach automatisch ein neues Deployment aus.
 5. Die eigene Domain richten Sie unter **Settings → Domains** ein. Bei IONOS bzw. hosting.de setzen Sie dazu die DNS-Einträge, die Vercel anzeigt.
 
@@ -63,7 +73,8 @@ app/                    Seiten (App Router)
   antrag/               Förderantrag (6 Schritte)
   konto/                Memberbereich Antragsteller
   stiftungsrat/         Memberbereich Stiftungsrat
-  login, registrieren, passwort-vergessen
+  login, registrieren, passwort-vergessen, passwort-neu
+  auth/confirm/         Rücksprung aus Bestätigungs- und Passwort-E-Mails
   impressum, datenschutz, haftungsausschluss
   fonts/                selbst gehostete Schriften
 components/
@@ -76,6 +87,8 @@ components/
   ui/                   Button, Felder, Akkordeon, Dialog, Badges
 content/                alle Texte: Stiftung/Satzung, FAQ, Rechtstexte, absageVorlagen.ts
 lib/                    Typen, Datenzugriff, Validierung, Beträge, PDF, Auth, E-Mail
+supabase/               Migration, E-Mail-Vorlagen, SQL zum Freischalten des Stiftungsrats
+middleware.ts           Sitzung erneuern, Memberbereiche schützen
 public/                 Bilder, Stiftungssymbol, Favicons
 ```
 
@@ -87,17 +100,17 @@ public/                 Bilder, Stiftungssymbol, Favicons
 - Absagetexte: `content/absageVorlagen.ts`. Platzhalter wie `{antragsnummer}` werden beim Öffnen des Dialogs gefüllt.
 - Pflichtfelder: `PFLICHTFELDER` in `lib/antragSchema.ts`. Ein Eintrag genügt, dann richten sich Stern, Fehlermeldung und Fehlerübersicht automatisch danach.
 
-## Vorbereitung für Phase 2 (Supabase)
+## Datenzugriff
 
-Alle Datenzugriffe laufen über Funktionen in `lib/`. In Phase 2 ändert sich nur deren Umsetzung, die Aufrufe in den Komponenten bleiben gleich.
+Alle Datenzugriffe laufen über Funktionen in `lib/`. Die Komponenten kennen Supabase nicht direkt.
 
-| Datei | Phase 1 | Phase 2 |
-|---|---|---|
-| `lib/auth.ts` | Testkonten, Sitzung im localStorage | Supabase Auth (`signInWithPassword`, `signUp`, `resetPasswordForEmail`), Rolle aus `profiles` |
-| `lib/antraege.ts` | Beispieldaten (`lib/mockDb.ts`) | Tabellen `antraege`, `dokumente`, `absagen` mit Row Level Security |
-| `lib/antragsnummer.ts` | höchste Nummer + 1 | Postgres-Funktion mit Sperre (keine Doppelvergabe) |
-| `lib/dokumente.ts` | Dateien nur im Browser | Supabase Storage, Bucket `antragsdokumente`, signierte URLs |
-| `lib/email.ts` | Simulation | Route Handler mit nodemailer über SMTP des Stiftungspostfachs (Phase 4) |
-| `components/auth/RoleGuard.tsx` | prüft Testsitzung | zusätzlich Middleware und RLS serverseitig |
+| Datei | Aufgabe |
+|---|---|
+| `lib/supabase/` | Clients für Browser und Server, Zugangsdaten aus der Umgebung |
+| `lib/auth.ts` | Anmelden, Registrieren, Passwort zurücksetzen und neu setzen, Profil laden |
+| `lib/antraege.ts` | Anträge lesen, filtern, einreichen, Status ändern, ablehnen |
+| `lib/dokumente.ts` | Prüfung der Uploads, signierte Links zum Ansehen und Herunterladen |
+| `lib/email.ts` | Phase 4: Versand über SMTP des Stiftungspostfachs (noch Simulation) |
+| `supabase/migrations/` | Datenbankschema, RLS, Funktionen, Storage |
 
-Die Typen in `lib/types.ts` entsprechen dem geplanten Datenmodell. Die benötigten Umgebungsvariablen stehen in `.env.example`.
+Die Typen in `lib/types.ts` entsprechen dem Datenmodell. Die Formulardaten eines Antrags liegen als JSON in `antraege.daten`. Name, Projekttitel und beantragter Betrag stehen zusätzlich als eigene Spalten für Suche und Auswertung bereit.

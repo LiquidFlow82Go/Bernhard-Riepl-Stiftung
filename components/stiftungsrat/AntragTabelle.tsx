@@ -8,7 +8,7 @@ import { datumDe } from "@/lib/format";
 import { STATUS_LABEL, type Antrag, type AntragStatus } from "@/lib/types";
 import { useAuth } from "../auth/AuthProvider";
 import { eingabeKlassen } from "../ui/Feld";
-import { Laden, StatusBadge } from "../ui/Diverses";
+import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
 
 const SELECT =
   "h-12 w-full rounded-pill border border-neutral-700 bg-neutral-100 px-[18px] pr-10 text-neutral-800 appearance-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-eisenhut bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 8%22><path d=%22M1 1l5 5 5-5%22 fill=%22none%22 stroke=%22%230f0b08%22 stroke-width=%221.3%22/></svg>')] bg-[length:12px] bg-[right_18px_center] bg-no-repeat";
@@ -21,14 +21,18 @@ export function AntragTabelle() {
   const [suche, setSuche] = useState("");
   const [liste, setListe] = useState<Antrag[] | null>(null);
   const [alle, setAlle] = useState<Antrag[]>([]);
+  const [ladefehler, setLadefehler] = useState(false);
 
   useEffect(() => {
-    verfuegbareJahre().then(setJahre);
-    ladeAlleAntraege().then(setAlle);
+    verfuegbareJahre().then(setJahre).catch(() => {});
+    ladeAlleAntraege().then(setAlle).catch(() => setLadefehler(true));
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => ladeAlleAntraege({ jahr, status, suche }).then(setListe), 150);
+    const t = setTimeout(
+      () => ladeAlleAntraege({ jahr, status, suche }).then(setListe).catch(() => setLadefehler(true)),
+      250,
+    );
     return () => clearTimeout(t);
   }, [jahr, status, suche]);
 
@@ -73,7 +77,9 @@ export function AntragTabelle() {
         {liste ? `${liste.length} ${liste.length === 1 ? "Antrag" : "Anträge"} gefunden` : ""}
       </p>
 
-      {!liste ? (
+      {ladefehler ? (
+        <Hinweisbox art="fehler" rolle="alert">Die Anträge konnten nicht geladen werden. Bitte laden Sie die Seite neu.</Hinweisbox>
+      ) : !liste ? (
         <Laden />
       ) : liste.length === 0 ? (
         <p className="py-12 border-y border-neutral-400 text-lg">Keine Anträge für diese Auswahl.</p>

@@ -24,7 +24,7 @@ export function RatDetail() {
   const [vorlage, setVorlage] = useState<AbsageVorlage | null>(null);
 
   useEffect(() => {
-    ladeAntrag(id).then((a) => {
+    ladeAntrag(id).catch(() => null).then((a) => {
       setAntrag(a);
       if (a) {
         setStatus(a.status);
@@ -63,7 +63,13 @@ export function RatDetail() {
       return;
     }
     setFehler(undefined);
-    const neu = await aendereStatus(antrag.id, status, p.leer ? null : p.n);
+    let neu: Antrag;
+    try {
+      neu = await aendereStatus(antrag.id, status, p.leer ? null : p.n);
+    } catch {
+      setMeldung("Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.");
+      return;
+    }
     setAntrag(neu);
     setMeldung(`Gespeichert: Status „${STATUS_LABEL[neu.status]}“${neu.bewilligterBetrag != null ? `, bewilligt ${formatEuro(neu.bewilligterBetrag)}` : ""}.`);
   }
