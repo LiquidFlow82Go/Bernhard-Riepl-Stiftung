@@ -129,8 +129,24 @@ export interface Antrag {
   absage?: Absage | null;
   daten: AntragDaten;
   dokumente: Dokument[];
+  /** Bestätigte Konto-Adresse des Antragstellers (Empfänger aller E-Mails) */
+  kontoEmail?: string;
   aktualisiertAm: string;
 }
+
+export interface MailProtokollEintrag {
+  art: "eingang_antragsteller" | "eingang_stiftungsrat" | "absage";
+  empfaenger: string;
+  zeitpunkt: string;
+  erfolgreich: boolean;
+  fehler: string | null;
+}
+
+export const MAIL_ART_LABEL: Record<MailProtokollEintrag["art"], string> = {
+  eingang_antragsteller: "Eingangsbestätigung an Antragsteller",
+  eingang_stiftungsrat: "Benachrichtigung Stiftungsrat",
+  absage: "Absage",
+};
 
 export const STATUS_LABEL: Record<AntragStatus, string> = {
   eingegangen: "Eingegangen",

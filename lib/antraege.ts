@@ -13,6 +13,7 @@ import {
   type AntragStatus,
   type Dokument,
   type DokumentKategorie,
+  type MailProtokollEintrag,
 } from "./types";
 
 export interface AntragFilter {
@@ -54,9 +55,10 @@ interface AntragZeile {
   daten: Partial<AntragDaten>;
   dokumente?: DokumentZeile[];
   absagen?: AbsageZeile[];
+  profiles?: { email: string } | { email: string }[] | null;
 }
 
-const MIT_DETAILS = "*, dokumente(*), absagen(grund_id, grund_titel, betreff, text, empfaenger, datum)";
+const MIT_DETAILS = "*, dokumente(*), absagen(grund_id, grund_titel, betreff, text, empfaenger, datum), profiles(email)";
 
 function zuDokument(z: DokumentZeile): Dokument {
   return {
@@ -106,6 +108,7 @@ function zuAntrag(z: AntragZeile): Antrag {
     absage: letzte,
     daten,
     dokumente: (z.dokumente ?? []).map(zuDokument).sort((a, b) => a.hochgeladenAm.localeCompare(b.hochgeladenAm)),
+    kontoEmail: (Array.isArray(z.profiles) ? z.profiles[0]?.email : z.profiles?.email) ?? undefined,
   };
 }
 
@@ -230,18 +233,18 @@ export async function aendereStatus(id: string, status: AntragStatus, bewilligte
   return a;
 }
 
-/** Setzt den Status auf „Abgelehnt“ und hält Grund, Text und Datum fest. */
-export async function lehneAntragAb(id: string, absage: Omit<Absage, "datum">): Promise<Antrag> {
-  const { error } = await supabase().rpc("antrag_ablehnen", {
-    p_antrag_id: id,
-    p_grund_id: absage.grundId,
-    p_grund_titel: absage.grundTitel,
-    p_betreff: absage.betreff,
-    p_text: absage.text,
-    p_empfaenger: absage.empfaenger,
-  });
-  wirf(error, "Die Absage konnte nicht gespeichert werden");
-  const a = await ladeAntrag(id);
-  if (!a) throw new Error("Antrag nicht gefunden");
-  return a;
+/**
+ * Absagen laufen seit Phase 4 über sendeAbsage() in lib/email.ts: Der Server
+ * versendet die E-Mail und setzt erst danach den Status auf „Abgelehnt“.
+ */
+
+/** E-Mail-Protokoll eines Antrags (nur Stiftungsrat, per RLS). */
+export async function ladeMailProtokoll(antragId: string): Promise<MailProtokollEintrag[]> {
+  const { data, error } = await supabase()
+    .from("mail_log")
+    .select("art, empfaenger, zeitpunkt, erfolgreich, fehler")
+    .eq("antrag_id", antragId)
+    .order("zeitpunkt", { ascending: false });
+  wirf(error, "Mailprotokoll konnte nicht geladen werden");
+  return (data ?? []) as MailProtokollEintrag[];
 }

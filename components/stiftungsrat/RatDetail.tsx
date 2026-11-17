@@ -13,6 +13,7 @@ import { Button } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
 import { Fehlertext } from "../ui/Feld";
 import { AbsageDialog } from "./AbsageDialog";
+import { MailStatus } from "./MailStatus";
 
 export function RatDetail() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +23,7 @@ export function RatDetail() {
   const [meldung, setMeldung] = useState<string>("");
   const [fehler, setFehler] = useState<string | undefined>();
   const [vorlage, setVorlage] = useState<AbsageVorlage | null>(null);
+  const [mailStand, setMailStand] = useState(0);
 
   useEffect(() => {
     ladeAntrag(id).catch(() => null).then((a) => {
@@ -57,6 +59,7 @@ export function RatDetail() {
       return;
     }
     if (status === "abgelehnt" && antrag.status !== "abgelehnt") {
+      setStatus(antrag.status);
       setFehler(undefined);
       setMeldung("Für eine Ablehnung wählen Sie bitte unten einen Ausschlussgrund. Damit wird die Absage vorbereitet.");
       document.getElementById("absage-titel")?.scrollIntoView({ block: "start" });
@@ -168,6 +171,9 @@ export function RatDetail() {
             </Hinweisbox>
           )}
 
+          <MailStatus antragId={antrag.id} aktualisierung={mailStand} />
+
+          {antrag.status !== "abgelehnt" && (
           <section aria-labelledby="absage-titel" className="scroll-mt-28">
             <h2 id="absage-titel" className="text-2xl leading-snug">Absage mit Ausschlussgrund</h2>
             <p className="mt-2 text-sm text-neutral-700">Öffnet einen vorbereiteten, bearbeitbaren Absagetext.</p>
@@ -187,6 +193,7 @@ export function RatDetail() {
               ))}
             </ul>
           </section>
+          )}
         </aside>
       </div>
 
@@ -198,7 +205,8 @@ export function RatDetail() {
           setVorlage(null);
           setAntrag(neu);
           setStatus(neu.status);
-          setMeldung(`Absage gespeichert: Status „Abgelehnt“ (${neu.absage?.grundTitel}).`);
+          setMailStand((n) => n + 1);
+          setMeldung(`Absage versendet: Status „Abgelehnt“ (${neu.absage?.grundTitel}).`);
         }}
       />
     </div>

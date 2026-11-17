@@ -24,8 +24,7 @@ const GRUSS = `Wir danken Ihnen für Ihr Engagement und wünschen Ihnen für Ihr
 
 Mit freundlichen Grüßen
 
-Der Stiftungsrat der Bernhard Riepl Stiftung
-Stadlbergstraße 56 · 83714 Miesbach`;
+Der Stiftungsrat der Bernhard Riepl Stiftung`;
 
 const EINLEITUNG = `{anrede},
 

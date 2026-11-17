@@ -44,8 +44,22 @@ export async function middleware(request: NextRequest) {
   if (pfad.startsWith("/stiftungsrat") || pfad.startsWith("/konto") || pfad.startsWith("/antrag")) {
     const { data: profil } = await supabase.from("profiles").select("rolle").eq("id", user.id).single();
     const rat = profil?.rolle === "stiftungsrat";
-    if (pfad.startsWith("/stiftungsrat") && !rat) return NextResponse.redirect(new URL("/konto", request.url));
-    if (!pfad.startsWith("/stiftungsrat") && rat) return NextResponse.redirect(new URL("/stiftungsrat", request.url));
+    // Falsche Rolle (z. B. Link aus einer E-Mail): in den eigenen Bereich mit Hinweis
+    // und der Möglichkeit, sich mit dem passenden Konto neu anzumelden.
+    if (pfad.startsWith("/stiftungsrat") && !rat) {
+      const ziel = new URL("/konto", request.url);
+      ziel.searchParams.set("hinweis", "anderes-konto");
+      ziel.searchParams.set("weiter", pfad);
+      return NextResponse.redirect(ziel);
+    }
+    if (!pfad.startsWith("/stiftungsrat") && rat) {
+      const ziel = new URL("/stiftungsrat", request.url);
+      if (pfad.startsWith("/konto/antraege/")) {
+        ziel.searchParams.set("hinweis", "anderes-konto");
+        ziel.searchParams.set("weiter", pfad);
+      }
+      return NextResponse.redirect(ziel);
+    }
   }
   return antwort;
 }
