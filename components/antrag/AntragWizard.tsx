@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { reicheAntragEin } from "@/lib/antraege";
 import { feldId, labelFuer, PFLICHTFELDER, validiere, type Fehler } from "@/lib/antragSchema";
 import { ladeBlobHerunter } from "@/lib/dokumente";
-import { sendeEingangsbestaetigung } from "@/lib/email";
+import { sendeEingangsbestaetigung, type EingangErgebnis } from "@/lib/email";
 import { erzeugeAntragPdf, pdfDateiname } from "@/lib/pdf";
 import { leererAntrag, type Antrag, type AntragDaten, type DokumentKategorie } from "@/lib/types";
 import { useAuth } from "../auth/AuthProvider";
@@ -46,7 +46,7 @@ export function AntragWizard() {
   const [geladen, setGeladen] = useState(false);
   const [hinweis, setHinweis] = useState("");
   const [sendet, setSendet] = useState(false);
-  const [ergebnis, setErgebnis] = useState<{ antrag: Antrag; fehlgeschlagen: string[] } | null>(null);
+  const [ergebnis, setErgebnis] = useState<{ antrag: Antrag; fehlgeschlagen: string[]; mail: EingangErgebnis } | null>(null);
   const [sendeFehler, setSendeFehler] = useState("");
   const titelRef = useRef<HTMLHeadingElement>(null);
   const uebersichtRef = useRef<HTMLDivElement>(null);
@@ -147,9 +147,10 @@ export function AntragWizard() {
         fs.map((datei) => ({ kategorie: kategorie as DokumentKategorie, datei })),
       );
       const erg = await reicheAntragEin(daten, dokumente);
-      await sendeEingangsbestaetigung(daten.antragsteller.email, erg.antrag.nummer);
       try { localStorage.removeItem(ENTWURF_KEY); } catch {}
-      setErgebnis(erg);
+      // Ein Fehler beim Mailversand blockiert das Absenden nicht.
+      const mail = await sendeEingangsbestaetigung(erg.antrag.id);
+      setErgebnis({ ...erg, mail });
       requestAnimationFrame(() => {
         window.scrollTo({ top: 0 });
         document.getElementById("erfolg-titel")?.focus();
@@ -186,7 +187,7 @@ export function AntragWizard() {
 
   const kontext = useMemo(() => ({ daten, setze, fehler, dateien, setDateien, geheZu }), [daten, setze, fehler, dateien, setDateien, geheZu]);
 
-  if (ergebnis) return <Erfolg antrag={ergebnis.antrag} fehlgeschlagen={ergebnis.fehlgeschlagen} />;
+  if (ergebnis) return <Erfolg antrag={ergebnis.antrag} fehlgeschlagen={ergebnis.fehlgeschlagen} mail={ergebnis.mail} />;
   if (!geladen) return null;
 
   const aktuell = SCHRITTE[schritt - 1];
@@ -312,7 +313,7 @@ export function AntragWizard() {
   );
 }
 
-function Erfolg({ antrag, fehlgeschlagen }: { antrag: Antrag; fehlgeschlagen: string[] }) {
+function Erfolg({ antrag, fehlgeschlagen, mail }: { antrag: Antrag; fehlgeschlagen: string[]; mail: EingangErgebnis }) {
   const [laedt, setLaedt] = useState(false);
   async function pdf() {
     setLaedt(true);
@@ -339,6 +340,11 @@ function Erfolg({ antrag, fehlgeschlagen }: { antrag: Antrag; fehlgeschlagen: st
           jederzeit in Ihrem Konto.
         </p>
       </div>
+      <p className="mt-6 text-base">
+        {mail.antragsteller?.status === "gesendet" || mail.antragsteller?.status === "bereits_gesendet"
+          ? `Eine Eingangsbestätigung haben wir an ${antrag.kontoEmail ?? "Ihre Konto-Adresse"} gesendet.`
+          : "Die Eingangsbestätigung per E-Mail konnte gerade nicht versendet werden. Ihr Antrag ist trotzdem vollständig eingegangen – Sie finden ihn jederzeit in Ihrem Konto."}
+      </p>
       {fehlgeschlagen.length > 0 && (
         <div role="alert" className="mt-6 border-l-4 border-herbstgold bg-[#e0a21a29] px-5 py-4 text-neutral-800">
           Folgende Dateien konnten nicht hochgeladen werden: {fehlgeschlagen.join(", ")}. Ihr Antrag ist trotzdem eingegangen.
