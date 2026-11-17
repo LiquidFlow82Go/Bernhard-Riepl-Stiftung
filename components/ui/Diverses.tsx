@@ -60,7 +60,7 @@ export function Einblenden({ children, className = "", verzoegerung = 0 }: { chi
           io.disconnect();
         }
       },
-      { rootMargin: "0px 0px -60px 0px" },
+      { rootMargin: "0px 0px -80px 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -68,7 +68,7 @@ export function Einblenden({ children, className = "", verzoegerung = 0 }: { chi
   return (
     <div
       ref={ref}
-      className={`motion-safe:transition-[opacity,translate] motion-safe:duration-700 ease-out ${versteckt ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"} ${className}`}
+      className={`motion-safe:transition-[opacity,translate] motion-safe:duration-[1100ms] motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] ${versteckt ? "opacity-0 translate-y-6" : "opacity-100 translate-y-0"} ${className}`}
       style={{ transitionDelay: `${verzoegerung}s` }}
     >
       {children}

@@ -50,7 +50,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: 96px;
+    scroll-padding-top: 112px;
     -webkit-text-size-adjust: 100%;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -88,6 +88,24 @@
   ::selection {
     background: var(--color-rose);
     color: var(--color-neutral-800);
+  }
+}
+
+/* Weiche Bewegungen – nur wenn „Bewegung reduzieren“ nicht aktiv ist */
+@keyframes hero-ein {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-bild {
+  from { transform: scale(1.06); }
+  to { transform: scale(1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-ein {
+    animation: hero-ein 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-bild {
+    animation: hero-bild 2.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 
