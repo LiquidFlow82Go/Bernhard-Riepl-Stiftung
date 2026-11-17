@@ -1,12 +1,56 @@
-<!-- Supabase → Authentication → Email Templates → „Confirm signup“
-     Betreff: Bitte bestätigen Sie Ihr Konto bei der Bernhard Riepl Stiftung -->
-<div style="font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #0f0b08; max-width: 560px;">
-  <p>Guten Tag,</p>
-  <p>vielen Dank für Ihre Registrierung bei der Bernhard Riepl Stiftung. Bitte bestätigen Sie Ihre E-Mail-Adresse, um Ihr Konto zu aktivieren:</p>
-  <p style="margin: 28px 0;">
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&weiter=/konto"
-       style="background: #0f0b08; color: #ffffff; padding: 12px 22px; border-radius: 100px; text-decoration: none;">E-Mail-Adresse bestätigen</a>
-  </p>
-  <p>Falls Sie sich nicht registriert haben, können Sie diese E-Mail ignorieren.</p>
-  <p>Mit freundlichen Grüßen<br>Bernhard Riepl Stiftung<br>Stadlbergstraße 56 · 83714 Miesbach</p>
-</div>
+<!-- Supabase → Authentication → Emails → Templates
+     Betreff: Bitte bestätigen Sie Ihre E-Mail-Adresse – Bernhard Riepl Stiftung -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title>Bernhard Riepl Stiftung</title>
+</head>
+<body style="margin:0; padding:0; background-color:#fdfaf9;">
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">Bitte bestätigen Sie Ihre E-Mail-Adresse.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fdfaf9;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px; background-color:#ffffff; border:1px solid #cdc9c6;">
+        <tr>
+          <td style="padding:28px 32px 20px 32px; border-bottom:1px solid #cdc9c6;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px; vertical-align:middle;">
+                  <img src="{{ .SiteURL }}/icon-512.png" width="40" height="40" alt="" style="display:block; border:0;">
+                </td>
+                <td style="vertical-align:middle; font-family:Arial, Helvetica, sans-serif; font-size:20px; line-height:24px; color:#0f0b08;">
+                  Bernhard Riepl Stiftung
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px 8px 32px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; color:#0f0b08;">
+<p style="margin:0 0 16px 0;">Guten Tag,</p>
+<p style="margin:0 0 16px 0;">vielen Dank für Ihre Registrierung bei der Bernhard Riepl Stiftung. Bitte bestätigen Sie Ihre E-Mail-Adresse, um Ihr Konto zu aktivieren:</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px 0;">
+  <tr>
+    <td bgcolor="#0f0b08" style="border-radius:24px;">
+      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;weiter=/konto" style="display:inline-block; padding:12px 24px; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:20px; color:#ffffff; text-decoration:none; border-radius:24px;">E-Mail-Adresse bestätigen</a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 16px 0;">Falls Sie sich nicht registriert haben, können Sie diese E-Mail ignorieren.</p>
+<p style="margin:0 0 16px 0;">Mit freundlichen Grüßen<br>Bernhard Riepl Stiftung</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px 28px 32px; border-top:1px solid #cdc9c6; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:20px; color:#49433f;">
+            Bernhard Riepl Stiftung<br>Stadlbergstraße 56<br>83714 Miesbach
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
