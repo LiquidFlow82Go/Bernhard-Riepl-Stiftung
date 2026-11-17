@@ -7,7 +7,7 @@ export function Foerderantrag() {
   return (
     <section id="foerderantrag" aria-labelledby="antrag-titel" className="section">
       <div className="container-site">
-        <div className="max-w-3xl mb-14">
+        <Einblenden className="max-w-3xl mb-14">
           <Kicker>Förderantrag</Kicker>
           <h2 id="antrag-titel" className="text-[36px] leading-[1.111] lg:text-[48px] lg:leading-[1.125]">
             In vier Schritten zur Förderung
@@ -16,7 +16,7 @@ export function Foerderantrag() {
             Anträge stellen Sie vollständig online. Sie brauchen dafür ein Konto, die Angaben zu Ihrem Vorhaben und die
             Nachweise Ihrer Gemeinnützigkeit.
           </p>
-        </div>
+        </Einblenden>
 
         <ol className="grid gap-x-7 gap-y-12 sm:grid-cols-2 lg:grid-cols-4 border-t border-neutral-400">
           {ABLAUF.map((s, i) => (
@@ -35,7 +35,7 @@ export function Foerderantrag() {
           ))}
         </ol>
 
-        <div className="mt-[80px] lg:mt-[120px] grid bg-neutral-800 lg:grid-cols-2">
+        <Einblenden className="mt-[80px] lg:mt-[120px] grid bg-neutral-800 lg:grid-cols-2">
           <div className="relative min-h-[280px] lg:min-h-[520px]">
             <Image
               src="/bilder/abendrot.jpg"
@@ -66,7 +66,7 @@ export function Foerderantrag() {
               </ButtonLink>
             </div>
           </div>
-        </div>
+        </Einblenden>
       </div>
     </section>
   );

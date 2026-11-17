@@ -7,7 +7,7 @@ export function Stiftungszweck() {
   return (
     <section id="zweck" aria-labelledby="zweck-titel" className="section bg-neutral-300/20">
       <div className="container-site">
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-16 lg:items-end mb-14">
+        <Einblenden className="grid gap-6 lg:grid-cols-2 lg:gap-16 lg:items-end mb-14">
           <div>
             <Kicker>Stiftungszweck</Kicker>
             <h2 id="zweck-titel" className="text-[36px] leading-[1.111] lg:text-[48px] lg:leading-[1.125]">
@@ -18,7 +18,7 @@ export function Stiftungszweck() {
             Zweck der Stiftung ist die Förderung kirchlicher, kultureller – insbesondere künstlerischer – Zwecke, der Bildung
             und Hilfe für notleidende Menschen. Sie verfolgt ausschließlich und unmittelbar gemeinnützige und mildtätige Zwecke.
           </p>
-        </div>
+        </Einblenden>
 
         <ul className="grid gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
           {FOERDERBEREICHE.map((b, i) => (
@@ -40,7 +40,7 @@ export function Stiftungszweck() {
           ))}
         </ul>
 
-        <div className="mt-[80px] lg:mt-[120px] grid gap-8 lg:grid-cols-[4fr_8fr] lg:gap-16">
+        <Einblenden className="mt-[80px] lg:mt-[120px] grid gap-8 lg:grid-cols-[4fr_8fr] lg:gap-16">
           <div>
             <h3 className="text-[30px] leading-[1.2]">Satzung im Wortlaut</h3>
             <p className="mt-4 text-base">Auszug, §§ 1 bis 4. Stand: {STAND}.</p>
@@ -69,7 +69,7 @@ export function Stiftungszweck() {
               ),
             }))}
           />
-        </div>
+        </Einblenden>
       </div>
     </section>
   );
