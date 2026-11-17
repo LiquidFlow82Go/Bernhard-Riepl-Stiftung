@@ -7,6 +7,7 @@ import { ladeEigeneAntraege } from "@/lib/antraege";
 import { formatEuro, betrag } from "@/lib/betrag";
 import { datumDe } from "@/lib/format";
 import type { Antrag } from "@/lib/types";
+import { AnderesKontoHinweis } from "../auth/AnderesKontoHinweis";
 import { useAuth } from "../auth/AuthProvider";
 import { ButtonLink } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
@@ -32,6 +33,8 @@ export function KontoUebersicht() {
           Neuen Antrag stellen
         </ButtonLink>
       </div>
+
+      <AnderesKontoHinweis fuer="stiftungsrat" />
 
       {neu && (
         <div className="mb-10">
