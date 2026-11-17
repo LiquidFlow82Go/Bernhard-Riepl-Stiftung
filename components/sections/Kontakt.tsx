@@ -49,13 +49,13 @@ export function Kontakt() {
         </Einblenden>
 
         <Einblenden verzoegerung={0.1}>
-          <div className="relative aspect-[3/4] max-w-[460px] mx-auto lg:ml-auto overflow-hidden bg-neutral-300">
+          <div className="relative aspect-[5/4] w-full overflow-hidden bg-neutral-300">
             <Image
               src="/bilder/riepl-portrait-hut.jpg"
-              alt="Bernhard Riepl mit Strohhut, lächelnd, im Sommer vor einem Haus"
+              alt="Bernhard Riepl mit Trachtenhut und eine Begleiterin, beide lächelnd im sommerlichen Garten"
               fill
-              sizes="(min-width: 1024px) 35vw, 100vw"
-              className="object-cover object-top"
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="object-cover object-center"
             />
           </div>
         </Einblenden>
