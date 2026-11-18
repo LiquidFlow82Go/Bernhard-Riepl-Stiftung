@@ -7,7 +7,7 @@ import { anmelden, neuesPasswortSetzen, passwortZuruecksetzen, registrieren } fr
 import { loginSchema, passwortNeuSchema, passwortVergessenSchema, registrierenSchema, zodFehler } from "@/lib/antragSchema";
 import type { Rolle } from "@/lib/types";
 import { Button } from "../ui/Button";
-import { Checkbox, Textfeld } from "../ui/Feld";
+import { Checkbox, PasswortFeld, Textfeld } from "../ui/Feld";
 import { Hinweisbox } from "../ui/Diverses";
 import { supabaseKonfiguriert } from "@/lib/supabase/env";
 
@@ -100,7 +100,7 @@ export function LoginFormular() {
         )}
         <FehlerZusammenfassung fehler={allg} refEl={ref} />
         <Textfeld id="login-email" label="E-Mail-Adresse" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} fehler={fehler.email} pflicht />
-        <Textfeld id="login-passwort" label="Passwort" type="password" autoComplete="current-password" value={passwort} onChange={(e) => setPasswort(e.target.value)} fehler={fehler.passwort} pflicht />
+        <PasswortFeld id="login-passwort" label="Passwort" autoComplete="current-password" value={passwort} onChange={(e) => setPasswort(e.target.value)} fehler={fehler.passwort} pflicht />
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Button type="submit" gross disabled={laedt}>{laedt ? "Anmeldung läuft …" : "Anmelden"}</Button>
           <Link href="/passwort-vergessen" className="underline underline-offset-4 text-neutral-800">Passwort vergessen?</Link>
@@ -167,8 +167,8 @@ export function RegistrierenFormular() {
       <Textfeld id="reg-name" label="Ihr Name" autoComplete="name" value={w.name} onChange={set("name")} fehler={fehler.name} pflicht />
       <Textfeld id="reg-institution" label="Institution" hinweis="Verein, Kirchengemeinde, gGmbH oder Stiftung" autoComplete="organization" value={w.institution} onChange={set("institution")} fehler={fehler.institution} pflicht />
       <Textfeld id="reg-email" label="E-Mail-Adresse" type="email" autoComplete="email" value={w.email} onChange={set("email")} fehler={fehler.email} pflicht />
-      <Textfeld id="reg-passwort" label="Passwort" hinweis="Mindestens 10 Zeichen" type="password" autoComplete="new-password" value={w.passwort} onChange={set("passwort")} fehler={fehler.passwort} pflicht />
-      <Textfeld id="reg-passwort2" label="Passwort wiederholen" type="password" autoComplete="new-password" value={w.passwort2} onChange={set("passwort2")} fehler={fehler.passwort2} pflicht />
+      <PasswortFeld id="reg-passwort" label="Passwort" hinweis="Mindestens 10 Zeichen" autoComplete="new-password" value={w.passwort} onChange={set("passwort")} fehler={fehler.passwort} pflicht />
+      <PasswortFeld id="reg-passwort2" label="Passwort wiederholen" autoComplete="new-password" value={w.passwort2} onChange={set("passwort2")} fehler={fehler.passwort2} pflicht />
       <Checkbox id="reg-datenschutz" checked={w.datenschutz} onChange={(v) => setW({ ...w, datenschutz: v })} fehler={fehler.datenschutz} pflicht>
         Ich habe die{" "}
         <Link href="/datenschutz" target="_blank" className="underline underline-offset-4">
@@ -262,8 +262,8 @@ export function PasswortNeuFormular() {
   return (
     <form noValidate onSubmit={senden} className="grid gap-6">
       <FehlerZusammenfassung fehler={allg} refEl={ref} />
-      <Textfeld id="neu-passwort" label="Neues Passwort" hinweis="Mindestens 10 Zeichen" type="password" autoComplete="new-password" value={w.passwort} onChange={(e) => setW({ ...w, passwort: e.target.value })} fehler={fehler.passwort} pflicht />
-      <Textfeld id="neu-passwort2" label="Neues Passwort wiederholen" type="password" autoComplete="new-password" value={w.passwort2} onChange={(e) => setW({ ...w, passwort2: e.target.value })} fehler={fehler.passwort2} pflicht />
+      <PasswortFeld id="neu-passwort" label="Neues Passwort" hinweis="Mindestens 10 Zeichen" autoComplete="new-password" value={w.passwort} onChange={(e) => setW({ ...w, passwort: e.target.value })} fehler={fehler.passwort} pflicht />
+      <PasswortFeld id="neu-passwort2" label="Neues Passwort wiederholen" autoComplete="new-password" value={w.passwort2} onChange={(e) => setW({ ...w, passwort2: e.target.value })} fehler={fehler.passwort2} pflicht />
       <div>
         <Button type="submit" gross disabled={laedt}>{laedt ? "Wird gespeichert …" : "Passwort speichern"}</Button>
       </div>
