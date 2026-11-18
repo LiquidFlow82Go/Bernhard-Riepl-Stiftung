@@ -45,6 +45,10 @@ function datumDe(iso?: string): string {
 }
 
 export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
+  // Fußzeile rechts: Datum der Einreichung bzw. Erstellungsdatum des Entwurfs (TT.MM.JJJJ)
+  const tag = (iso: string) =>
+    new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
+  const fusszeile = e.eingereichtAm ? `Eingereicht am ${tag(e.eingereichtAm)}` : `Entwurf vom ${tag(new Date().toISOString())}`;
   const { jsPDF } = await import("jspdf");
   const d = e.daten;
   const A = d.antragsteller, P = d.projekt, K = d.kosten, F = d.finanzierung;
@@ -252,7 +256,7 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
     hr(M, M + CW, 26.5, LIGHT, 0.3);
     font(8, "normal", GREY);
     doc.text("Bernhard Riepl Stiftung · Stadlbergstraße 56 · 83714 Miesbach", M, PH - 10);
-    doc.text("V 03/2023", PW - M, PH - 10, { align: "right" });
+    doc.text(fusszeile, PW - M, PH - 10, { align: "right" });
   }
   return doc.output("blob");
 }
