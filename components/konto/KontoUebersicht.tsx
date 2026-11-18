@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ladeEigeneAntraege } from "@/lib/antraege";
 import { formatEuro, betrag } from "@/lib/betrag";
-import { datumDe } from "@/lib/format";
+import { anzeigeName, datumDe } from "@/lib/format";
 import type { Antrag } from "@/lib/types";
 import { AnderesKontoHinweis } from "../auth/AnderesKontoHinweis";
 import { useAuth } from "../auth/AuthProvider";
@@ -26,7 +26,10 @@ export function KontoUebersicht() {
     <div className="container-site py-12 lg:py-20">
       <div className="flex flex-wrap items-end justify-between gap-6 mb-12">
         <div>
-          <p className="caps text-sm text-neutral-700 mb-3">{benutzer?.institution ?? benutzer?.name}</p>
+          <p className="caps text-sm text-neutral-700 mb-3">
+            Konto von {anzeigeName(benutzer)}
+            {benutzer?.institution && benutzer.institution !== benutzer.name ? ` · ${benutzer.institution}` : ""}
+          </p>
           <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Meine Anträge</h1>
         </div>
         <ButtonLink href="/antrag" gross>
