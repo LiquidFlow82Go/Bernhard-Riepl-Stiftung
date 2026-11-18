@@ -38,9 +38,9 @@ export const ABSAGE_VORLAGEN: AbsageVorlage[] = [
     betreff: "Ihr Förderantrag {antragsnummer} – Bernhard Riepl Stiftung",
     text: `${EINLEITUNG}
 
-Nach ihrer Satzung fördert die Bernhard Riepl Stiftung ausschließlich Institutionen, die ihrerseits gemeinnützig tätig sind. Anträge von Privatpersonen können wir leider nicht berücksichtigen. Wir müssen Ihren Antrag daher ablehnen.
+Antragsberechtigt sind ausschließlich juristische Personen mit nachgewiesener Gemeinnützigkeit (wie Vereine, gGmbHs, Stiftungen oder Kirchengemeinden) sowie öffentliche Einrichtungen. Privatpersonen werden regulär nicht gefördert. Sollte im Ausnahmefall dennoch ein Antrag geprüft werden, gelten hohe Anforderungen an den Nachweis der Bedürftigkeit und Zweckbindung (z. B. Vorlage von Steuerbescheiden, Nachweisen über staatliche Transferleistungen, Immatrikulationsbescheinigungen, Ablehnungsbescheiden anderer Förderstellen und detaillierten Kostenplänen). Ein Anspruch auf Prüfung oder Förderung besteht nicht.
 
-Falls Ihr Vorhaben von einem gemeinnützigen Träger – etwa einem Verein oder einer Kirchengemeinde – durchgeführt wird, kann dieser gerne einen eigenen Antrag stellen.
+Falls Ihr Vorhaben von einem gemeinnützigen Träger – etwa einem Verein oder einer Kirchengemeinde – durchgeführt werden sollte, kann dieser Träger gerne einen eigenen Antrag für Sie stellen.
 
 ${GRUSS}`,
   },

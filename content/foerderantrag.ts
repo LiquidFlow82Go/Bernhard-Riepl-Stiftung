@@ -22,7 +22,7 @@ export const ABLAUF = [
 ];
 
 export const FOERDERVORAUSSETZUNGEN = [
-  "Antragsteller ist eine gemeinnützig tätige Institution – keine Privatperson.",
+  "Antragsteller ist eine gemeinnützige Institution oder öffentliche Einrichtung – Privatpersonen werden regulär nicht gefördert.",
   "Nachweis der Steuerbegünstigung durch Freistellungsbescheinigung des Finanzamtes.",
   "Das Vorhaben dient einem der Zwecke nach § 2 der Satzung.",
 ];

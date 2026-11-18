@@ -5,7 +5,8 @@ export const FAQ: { frage: string; antwort: string }[] = [
   {
     frage: "Wer kann einen Förderantrag stellen?",
     antwort:
-      "Anträge können ausschließlich Institutionen stellen, die selbst gemeinnützig tätig sind – etwa Vereine, gemeinnützige GmbHs, Stiftungen, Kirchengemeinden oder öffentliche Einrichtungen. Privatpersonen fördert die Stiftung nicht.",
+      "Antragsberechtigt sind ausschließlich juristische Personen mit nachgewiesener Gemeinnützigkeit (wie Vereine, gGmbHs, Stiftungen oder Kirchengemeinden) sowie öffentliche Einrichtungen. Privatpersonen werden regulär nicht gefördert.\n\n" +
+      "Sollte im Ausnahmefall dennoch ein Antrag geprüft werden, gelten hohe Anforderungen an den Nachweis der Bedürftigkeit und Zweckbindung (z. B. Vorlage von Steuerbescheiden, Nachweisen über staatliche Transferleistungen, Immatrikulationsbescheinigungen, Ablehnungsbescheiden anderer Förderstellen und detaillierten Kostenplänen). Ein Anspruch auf Prüfung oder Förderung besteht nicht.",
   },
   {
     frage: "Welche Vorhaben fördert die Stiftung?",

@@ -128,7 +128,7 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
 
   h1("1  Angaben zum Antragsteller");
   h2("1.1  Bezeichnung der Institution");
-  para("Wichtiger Hinweis: Die Bernhard Riepl Stiftung fördert keine Privatpersonen, sondern nur Institutionen, die ihrerseits gemeinnützig tätig sind. Ohne Nachweis über die Steuerbegünstigung (Freistellungsbescheinigung des Finanzamtes) erfolgt keine Bearbeitung des Antrages. Bei Vereinen: bitte Satzung, Vereinsregisterauszug und Gemeinnützigkeitsbescheinigung als Anlage beilegen.", 8);
+  para("Wichtiger Hinweis: Die Bernhard Riepl Stiftung fördert regulär keine Privatpersonen, sondern gemeinnützige Institutionen und öffentliche Einrichtungen. Ohne Nachweis über die Steuerbegünstigung (Freistellungsbescheinigung des Finanzamtes) wird der Antrag nicht bearbeitet. Zu möglichen Ausnahmen siehe „Wer kann einen Förderantrag stellen?“ in den Fragen und Antworten auf der Webseite. Bei Vereinen: bitte Satzung, Vereinsregisterauszug und Gemeinnützigkeitsbescheinigung als Anlage beilegen.", 8);
   two("Name des Antragstellers", A.name, "Telefon / Telefax", A.telefon);
   two("Nummer Handelsregister bzw. Vereinsregister", A.register, "Steuernummer bzw. Freistellungsbescheinigung", A.steuernummer);
   two("Straße, Hausnummer", A.strasse, "E-Mail", A.email);
