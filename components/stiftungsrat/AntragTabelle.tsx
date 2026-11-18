@@ -45,6 +45,13 @@ export function AntragTabelle() {
         {benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat"} – {anzeigeName(benutzer)}
       </p>
       <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Förderanträge</h1>
+      {benutzer?.rolle === "admin" && (
+        <p className="mt-4">
+          <Link href="/stiftungsrat/antragsteller" className="inline-flex items-center min-h-11 underline underline-offset-4 text-neutral-800">
+            Zur Ansicht Antragsteller (nur lesend)
+          </Link>
+        </p>
+      )}
       <div className="mt-8 -mb-4 empty:hidden">
         <AnderesKontoHinweis fuer="antragsteller" />
       </div>

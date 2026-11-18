@@ -5,6 +5,11 @@
 
 export type Rolle = "antragsteller" | "stiftungsrat" | "admin";
 
+/** Stiftungsrat-Bereich: Ratsmitglieder und Admins. */
+export function istRat(rolle: Rolle | null | undefined): boolean {
+  return rolle === "stiftungsrat" || rolle === "admin";
+}
+
 export interface Benutzer {
   id: string;
   email: string;

@@ -117,6 +117,11 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {benutzer ? (
               <>
+                {benutzer.rolle === "admin" && (
+                  <Link href="/stiftungsrat/antragsteller" className={`${link} px-1`}>
+                    Ansicht Antragsteller
+                  </Link>
+                )}
                 <Link href={bereich!} className={`${glas ? btnHell : btnDunkel} max-w-[300px]`} title={bereichLang}>
                   <span className="xl:hidden">{bereichKurz}</span>
                   <span className="hidden xl:inline truncate">{bereichLang}</span>
@@ -170,9 +175,14 @@ export function Header() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
             {benutzer ? (
               <>
-                <Link href={bereich!} className={`${btnDunkel} h-12 text-base`}>
+                <Link href={bereich!} onClick={() => setOffen(false)} className={`${btnDunkel} h-12 text-base`}>
                   <span className="truncate">{bereichLang}</span>
                 </Link>
+                {benutzer.rolle === "admin" && (
+                  <Link href="/stiftungsrat/antragsteller" onClick={() => setOffen(false)} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
+                    Ansicht Antragsteller
+                  </Link>
+                )}
                 <button type="button" onClick={raus} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
                   Abmelden
                 </button>

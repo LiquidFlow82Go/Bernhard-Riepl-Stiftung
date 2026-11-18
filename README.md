@@ -117,6 +117,35 @@ Prüfen lässt sich das mit einer Test-Mail an einen Gmail-Account („Original 
 - **Protokoll** `mail_log` ohne Mailtext. Lesen darf nur der Stiftungsrat, schreiben nur der Server.
 - **Keine Anhänge:** Antragsdaten und Bankverbindung bleiben hinter dem Login.
 
+## Rollen und Namen
+
+| Rolle | Darf |
+|---|---|
+| `antragsteller` | Anträge stellen, eigene Anträge sehen, Unterlagen nachreichen. Standard für jede Registrierung. |
+| `stiftungsrat` | Alle Anträge sehen, Status setzen, bewilligen, absagen. |
+| `admin` | Alles wie der Stiftungsrat, dazu die lesende **Ansicht Antragsteller** (Menü bzw. `/stiftungsrat/antragsteller`). Admins können selbst keine Anträge einreichen. |
+
+Rollen werden nur per SQL vergeben (Supabase → **SQL Editor**), danach meldet sich die Person neu an:
+
+```sql
+-- Admin
+update public.profiles set rolle = 'admin' where email = 'name@beispiel.de';
+-- Stiftungsrat
+update public.profiles set rolle = 'stiftungsrat' where email = 'name@beispiel.de';
+-- Zurück zum Antragsteller
+update public.profiles set rolle = 'antragsteller' where email = 'name@beispiel.de';
+```
+
+Voraussetzung für `admin` sind die Migrationen `20261118090000_admin_rolle_wert.sql` und `20261118090100_admin_rechte.sql`.
+
+**Namen eintragen:** Menü und Seitenkopf zeigen „Stiftungsrat – [Name]“, „Admin – [Name]“ bzw. „Konto von [Name]“. Ohne Namen erscheint die E-Mail-Adresse. Antragsteller geben ihren Namen bei der Registrierung an. Für Ratsmitglieder und Admins tragen Sie ihn in Supabase ein: **Table Editor → profiles →** Spalte `name` doppelklicken, Namen eingeben, **Save**. Oder per SQL:
+
+```sql
+update public.profiles set name = 'Dr. Maria Huber' where email = 'name@beispiel.de';
+```
+
+Die Änderung erscheint nach dem nächsten Neuladen der Seite.
+
 ## Auf Vercel deployen
 
 1. Auf [vercel.com](https://vercel.com) **Add New → Project** wählen und das GitHub-Repository `LiquidFlow82Go/Bernhard-Riepl-Stiftung` importieren.

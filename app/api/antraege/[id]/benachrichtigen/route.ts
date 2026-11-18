@@ -1,6 +1,6 @@
 import { eingangsbestaetigung, neuerAntragRat } from "@/content/mailVorlagen";
 import { adressListe, letzteVersuche, sendeMail, siteUrl, stiftungsratAdressen, type MailArt } from "@/lib/mail";
-import { antwort, datumDe, euro, ladeAntragKern, MINUTEN, sitzung } from "@/lib/server/zugriff";
+import { antwort, datumDe, euro, istRatRolle, ladeAntragKern, MINUTEN, sitzung } from "@/lib/server/zugriff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!antrag) return antwort(404, { fehler: "Antrag nicht gefunden." });
 
   let arten: MailArt[];
-  if (wer.rolle === "stiftungsrat") {
+  if (istRatRolle(wer.rolle)) {
     arten = ["eingang_stiftungsrat"];
   } else {
     if (antrag.benutzer_id !== wer.id) return antwort(404, { fehler: "Antrag nicht gefunden." });

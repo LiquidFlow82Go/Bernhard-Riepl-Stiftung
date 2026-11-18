@@ -9,6 +9,8 @@ import {
   leererAntrag,
   type Absage,
   type Antrag,
+  type Benutzer,
+  type Rolle,
   type AntragDaten,
   type AntragStatus,
   type Dokument,
@@ -223,6 +225,40 @@ export async function reicheAntragEin(daten: AntragDaten, dokumente: NeuesDokume
   const antrag = await ladeAntrag(antragId);
   if (!antrag) throw new Error("Der Antrag wurde gespeichert, konnte aber nicht erneut geladen werden.");
   return { antrag, fehlgeschlagen };
+}
+
+/* ---------- Admin: lesende Antragsteller-Ansicht ---------- */
+
+export interface AntragstellerKonto extends Benutzer {
+  erstelltAm: string;
+  anzahlAntraege: number;
+}
+
+/** Alle Antragsteller-Konten (nur für Stiftungsrat/Admin lesbar, per RLS). */
+export async function ladeAntragstellerKonten(): Promise<AntragstellerKonto[]> {
+  const sb = supabase();
+  const [{ data, error }, { data: antraege }] = await Promise.all([
+    sb.from("profiles").select("id, email, name, institution, rolle, erstellt_am").eq("rolle", "antragsteller").order("erstellt_am", { ascending: false }),
+    sb.from("antraege").select("benutzer_id"),
+  ]);
+  wirf(error, "Konten konnten nicht geladen werden");
+  const zaehler = new Map<string, number>();
+  for (const a of (antraege ?? []) as { benutzer_id: string }[]) zaehler.set(a.benutzer_id, (zaehler.get(a.benutzer_id) ?? 0) + 1);
+  return (data as { id: string; email: string; name: string; institution: string; rolle: Rolle; erstellt_am: string }[]).map((p) => ({
+    id: p.id,
+    email: p.email,
+    name: p.name,
+    institution: p.institution || undefined,
+    rolle: p.rolle,
+    erstelltAm: p.erstellt_am,
+    anzahlAntraege: zaehler.get(p.id) ?? 0,
+  }));
+}
+
+export async function ladeAntragstellerKonto(id: string): Promise<AntragstellerKonto | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const liste = await ladeAntragstellerKonten();
+  return liste.find((k) => k.id === id) ?? null;
 }
 
 /* ---------- Unterlagen nachreichen ---------- */

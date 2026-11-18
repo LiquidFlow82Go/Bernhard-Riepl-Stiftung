@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { anmelden, neuesPasswortSetzen, passwortZuruecksetzen, registrieren } from "@/lib/auth";
 import { loginSchema, passwortNeuSchema, passwortVergessenSchema, registrierenSchema, zodFehler } from "@/lib/antragSchema";
-import type { Rolle } from "@/lib/types";
+import { istRat, type Rolle } from "@/lib/types";
 import { Button } from "../ui/Button";
 import { Checkbox, PasswortFeld, Textfeld } from "../ui/Feld";
 import { Hinweisbox } from "../ui/Diverses";
@@ -45,11 +45,12 @@ function FehlerZusammenfassung({ fehler, refEl }: { fehler: string | null; refEl
 
 function zielNachLogin(rolle: Rolle, weiter: string | null) {
   if (weiter && weiter.startsWith("/") && !weiter.startsWith("//")) {
-    if (rolle === "stiftungsrat" && !weiter.startsWith("/stiftungsrat")) return "/stiftungsrat";
+    if (istRat(rolle) && !weiter.startsWith("/stiftungsrat")) return "/stiftungsrat";
+    if (rolle === "stiftungsrat" && weiter.startsWith("/stiftungsrat/antragsteller")) return "/stiftungsrat";
     if (rolle === "antragsteller" && weiter.startsWith("/stiftungsrat")) return "/konto";
     return weiter;
   }
-  return rolle === "stiftungsrat" ? "/stiftungsrat" : "/konto";
+  return istRat(rolle) ? "/stiftungsrat" : "/konto";
 }
 
 export function LoginFormular() {

@@ -7,6 +7,7 @@ import { erzeugeAntragPdf, pdfDateiname } from "@/lib/pdf";
 import { datumDe } from "@/lib/format";
 import type { Antrag, Dokument } from "@/lib/types";
 import { Button } from "../ui/Button";
+import { Hinweisbox } from "../ui/Diverses";
 
 export function PdfButton({ antrag, variante = "primaer" }: { antrag: Antrag; variante?: "primaer" | "sekundaer" }) {
   const [laedt, setLaedt] = useState(false);
@@ -60,4 +61,14 @@ export function ansichtDokumente(dokumente: Dokument[]) {
     vermerk: d.nachgereicht ? `nachgereicht am ${datumDe(d.hochgeladenAm)}` : undefined,
     aktionen: <DokumentAktionen d={d} />,
   }));
+}
+
+/** Hinweis für die lesende Antragsteller-Ansicht (nur Admin). */
+export function NurLesenHinweis() {
+  return (
+    <Hinweisbox art="info">
+      <strong className="font-medium">Ansicht Antragsteller – nur lesend.</strong> Sie sehen diesen Bereich so, wie der
+      Antragsteller ihn sieht. Änderungen und Uploads sind hier nicht möglich.
+    </Hinweisbox>
+  );
 }
