@@ -154,6 +154,17 @@ Prüfen lässt sich das mit einer Test-Mail an einen Gmail-Account („Original 
 - **Protokoll** `mail_log` ohne Mailtext. Lesen darf nur der Stiftungsrat, schreiben nur der Server.
 - **Keine Anhänge:** Antragsdaten und Bankverbindung bleiben hinter dem Login.
 
+## Verbesserungen 2026-11 einrichten (Datenbank)
+
+Im Supabase **SQL Editor** nacheinander ausführen, jeweils den Dateiinhalt einfügen und **Run**. Bestehende Daten bleiben erhalten; jede Datei kann gefahrlos erneut ausgeführt werden.
+
+1. `20261118090000_admin_rolle_wert.sql` – **allein** ausführen (neuer Enum-Wert muss gespeichert sein, bevor er verwendet wird)
+2. `20261118090100_admin_rechte.sql`
+3. `20261118090200_unterlagen_nachreichen.sql`
+4. `20261118090300_bewilligung.sql`
+
+Jede Datei sollte mit „Success. No rows returned“ enden. Erst danach den Branch mergen bzw. deployen – sonst fehlen der Oberfläche die neuen Spalten und Funktionen.
+
 ## Rollen und Namen
 
 | Rolle | Darf |
@@ -182,6 +193,41 @@ update public.profiles set name = 'Dr. Maria Huber' where email = 'name@beispiel
 ```
 
 Die Änderung erscheint nach dem nächsten Neuladen der Seite.
+
+## Go-live-Checkliste
+
+Erst abhaken, wenn die Seite unter der eigenen Domain öffentlich gehen soll.
+
+**Konten und Daten**
+- [ ] Echte Konten für alle Ratsmitglieder angelegt, Rollen vergeben und Namen eingetragen (siehe [Rollen und Namen](#rollen-und-namen)); mindestens ein Admin.
+- [ ] Testkonten `antrag@test.de` und `rat@test.de` samt Anträgen, Dokumenten und Protokolleinträgen entfernen: `supabase/migrations/MANUELL_vor_go_live_testkonten_loeschen.sql` im SQL Editor **abschnittsweise** ausführen (Vorschau → Storage-Dateien im Dashboard löschen → Löschen mit `rollback;` testen → auf `commit;` umstellen). Das Skript wird nie automatisch angewendet.
+- [ ] Prüfen, dass keine weiteren Test-Anträge anderer Konten übrig sind (letzte Abfrage der Vorschau).
+
+**E-Mail**
+- [ ] Test-Postfach (Ethereal) ersetzen: Vercel **Production** und **Preview** auf das echte SMTP-Postfach umstellen (`SMTP_*`, `MAIL_FROM`), danach neu deployen.
+- [ ] `MAIL_STIFTUNGSRAT` und `MAIL_BCC_ARCHIV` auf die echten Adressen setzen.
+- [ ] Supabase **SMTP Settings** mit dem echten Postfach (siehe [Supabase: eigenes SMTP-Postfach](#supabase-eigenes-smtp-postfach)) und Mailvorlagen eingetragen.
+- [ ] SPF, DKIM und DMARC gesetzt, Testmail landet nicht im Spam.
+
+**Tarife und Betrieb**
+- [ ] Supabase auf einen bezahlten Tarif (Pro) umstellen: Im kostenlosen Tarif pausiert das Projekt nach einer Woche ohne Zugriffe, und es gibt keine täglichen Backups.
+- [ ] Vercel auf **Pro** umstellen: Der Hobby-Tarif ist nur für private, nicht-kommerzielle Nutzung gedacht.
+- [ ] Backups in Supabase aktiv (Database → Backups).
+
+**Domain**
+- [ ] Domain bei Vercel unter **Settings → Domains** hinzugefügt und DNS beim Anbieter gesetzt, HTTPS aktiv.
+- [ ] `NEXT_PUBLIC_SITE_URL` auf die Domain umgestellt, neu deployt.
+- [ ] Supabase **URL Configuration**: Site URL auf die Domain, Domain in den Redirect URLs ergänzt.
+
+**Recht und Inhalte**
+- [ ] Impressum, Datenschutzerklärung und Haftungsausschluss rechtlich geprüft und freigegeben (`content/rechtstexte.ts`).
+- [ ] Alle Platzhalter in eckigen Klammern ersetzt (z. B. Sitzungsrhythmus in den FAQ) – auf der Seite gelb markiert.
+- [ ] Absage- und Bewilligungstexte vom Stiftungsrat freigegeben.
+
+**Abschlusstest**
+- [ ] Mit einem neuen Konto: registrieren, Antrag mit Dokumenten absenden, Eingangsbestätigung prüfen, Unterlagen nachreichen.
+- [ ] Als Stiftungsrat: Benachrichtigung erhalten, Antrag öffnen, bewilligen bzw. absagen, E-Mails prüfen.
+- [ ] Danach diesen Testantrag mit derselben Methode wie oben entfernen oder als Beispiel bewusst stehen lassen.
 
 ## Auf Vercel deployen
 
