@@ -61,3 +61,9 @@ export async function sendeAbsage(n: {
   if (ok) return { ok: true };
   return { ok: false, fehler: (daten.fehler as string) ?? "Die Absage konnte nicht versendet werden." };
 }
+
+/** Antragsteller: Stiftungsrat über nachgereichte Unterlagen informieren. Wirft nie. */
+export async function meldeNachreichung(antragId: string): Promise<MailRueckmeldung> {
+  const { daten } = await post(`/api/antraege/${antragId}/nachreichung`);
+  return (daten.ergebnis as MailRueckmeldung | undefined) ?? { status: "fehlgeschlagen", fehler: (daten.fehler as string) ?? undefined };
+}

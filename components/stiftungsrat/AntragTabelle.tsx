@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ladeAlleAntraege, verfuegbareJahre } from "@/lib/antraege";
+import { ladeAlleAntraege, neueUnterlagenSeit, verfuegbareJahre } from "@/lib/antraege";
 import { betrag, formatEuro } from "@/lib/betrag";
 import { anzeigeName, datumDe } from "@/lib/format";
 import { STATUS_LABEL, type Antrag, type AntragStatus } from "@/lib/types";
@@ -99,6 +99,7 @@ export function AntragTabelle() {
                   <span className="tabular-nums text-neutral-800 underline underline-offset-4">{a.nummer}</span>
                   <StatusBadge status={a.status} />
                 </span>
+                {neueUnterlagenSeit(a) && <NeuBadge seit={neueUnterlagenSeit(a)!} />}
                 <span className="block mt-2 text-lg text-neutral-800">{a.daten.projekt.titel}</span>
                 <span className="block mt-1 text-sm text-neutral-700">{a.daten.antragsteller.name}</span>
                 <span className="block mt-1 text-sm text-neutral-700">
@@ -137,7 +138,10 @@ export function AntragTabelle() {
                   <td className="whitespace-nowrap">{datumDe(a.eingereichtAm)}</td>
                   <td className="text-right tabular-nums whitespace-nowrap">{formatEuro(betrag(a.daten.finanzierung.stiftung))}</td>
                   <td className="text-right tabular-nums whitespace-nowrap">{a.bewilligterBetrag != null ? formatEuro(a.bewilligterBetrag) : "–"}</td>
-                  <td><StatusBadge status={a.status} /></td>
+                  <td>
+                    <StatusBadge status={a.status} />
+                    {neueUnterlagenSeit(a) && <NeuBadge seit={neueUnterlagenSeit(a)!} />}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -146,5 +150,13 @@ export function AntragTabelle() {
         </>
       )}
     </div>
+  );
+}
+
+function NeuBadge({ seit }: { seit: string }) {
+  return (
+    <span className="mt-2 block w-fit rounded-pill bg-herbstgold/20 border border-herbstgold px-2.5 py-0.5 text-xs text-neutral-800">
+      Neue Unterlagen seit {datumDe(seit)}
+    </span>
   );
 }

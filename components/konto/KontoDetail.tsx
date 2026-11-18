@@ -2,14 +2,15 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ladeAntrag } from "@/lib/antraege";
+import { ladeAntrag, nachreichenMoeglich } from "@/lib/antraege";
 import { formatEuro } from "@/lib/betrag";
 import { datumDe } from "@/lib/format";
 import type { Antrag } from "@/lib/types";
 import { AntragAnsicht } from "../antrag/AntragAnsicht";
 import { useAuth } from "../auth/AuthProvider";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
-import { DokumentAktionen, PdfButton, Zurueck } from "./Gemeinsam";
+import { Nachreichen } from "./Nachreichen";
+import { ansichtDokumente, PdfButton, Zurueck } from "./Gemeinsam";
 
 export function KontoDetail() {
   const { id } = useParams<{ id: string }>();
@@ -72,12 +73,14 @@ export function KontoDetail() {
         </div>
       )}
 
+      {nachreichenMoeglich(antrag) && <Nachreichen antrag={antrag} onAktualisiert={setAntrag} />}
+
       <h2 className="mt-16 mb-8 text-[30px] leading-[1.2]">Ihre Angaben</h2>
-      <p className="-mt-4 mb-10 text-sm text-neutral-700">Eingereichte Anträge können nicht mehr bearbeitet werden. Bei Änderungen wenden Sie sich bitte an die Stiftung.</p>
+      <p className="-mt-4 mb-10 text-sm text-neutral-700">Eingereichte Anträge können nicht mehr bearbeitet werden. Fehlende Unterlagen können Sie oben nachreichen; bei anderen Änderungen wenden Sie sich bitte an die Stiftung.</p>
       <AntragAnsicht
         daten={antrag.daten}
         bewilligt={antrag.status === "bewilligt" ? antrag.bewilligterBetrag : undefined}
-        dokumente={antrag.dokumente.map((d) => ({ ...d, aktionen: <DokumentAktionen d={d} /> }))}
+        dokumente={ansichtDokumente(antrag.dokumente)}
       />
     </div>
   );

@@ -33,6 +33,7 @@ interface DokumentZeile {
   groesse: number;
   speicherpfad: string;
   hochgeladen_am: string;
+  nachgereicht?: boolean;
 }
 
 interface AbsageZeile {
@@ -52,6 +53,7 @@ interface AntragZeile {
   aktualisiert_am: string;
   status: AntragStatus;
   bewilligter_betrag: number | string | null;
+  unterlagen_gesehen_am?: string | null;
   daten: Partial<AntragDaten>;
   dokumente?: DokumentZeile[];
   absagen?: AbsageZeile[];
@@ -70,6 +72,7 @@ function zuDokument(z: DokumentZeile): Dokument {
     groesse: Number(z.groesse),
     hochgeladenAm: z.hochgeladen_am,
     speicherpfad: z.speicherpfad,
+    nachgereicht: Boolean(z.nachgereicht),
   };
 }
 
@@ -108,6 +111,7 @@ function zuAntrag(z: AntragZeile): Antrag {
     absage: letzte,
     daten,
     dokumente: (z.dokumente ?? []).map(zuDokument).sort((a, b) => a.hochgeladenAm.localeCompare(b.hochgeladenAm)),
+    unterlagenGesehenAm: z.unterlagen_gesehen_am ?? null,
     kontoEmail: (Array.isArray(z.profiles) ? z.profiles[0]?.email : z.profiles?.email) ?? undefined,
   };
 }
@@ -131,7 +135,7 @@ export async function ladeEigeneAntraege(benutzerId: string): Promise<Antrag[]> 
 
 /** Alle Anträge (nur Stiftungsrat, durch RLS abgesichert). */
 export async function ladeAlleAntraege(filter: AntragFilter = {}): Promise<Antrag[]> {
-  let q = supabase().from("antraege").select("*").order("eingereicht_am", { ascending: false });
+  let q = supabase().from("antraege").select("*, dokumente(*)").order("eingereicht_am", { ascending: false });
   if (filter.jahr && filter.jahr !== "alle") q = q.like("nummer", `${filter.jahr}-%`);
   if (filter.status && filter.status !== "alle") q = q.eq("status", filter.status);
   const suche = (filter.suche ?? "").replace(/[,()%*\\]/g, " ").trim();
@@ -219,6 +223,65 @@ export async function reicheAntragEin(daten: AntragDaten, dokumente: NeuesDokume
   const antrag = await ladeAntrag(antragId);
   if (!antrag) throw new Error("Der Antrag wurde gespeichert, konnte aber nicht erneut geladen werden.");
   return { antrag, fehlgeschlagen };
+}
+
+/* ---------- Unterlagen nachreichen ---------- */
+
+/** Status, in denen Antragsteller Unterlagen nachreichen dürfen (gleiche Regel wie in der Datenbank). */
+export function nachreichenMoeglich(a: Antrag): boolean {
+  return a.status === "eingegangen" || a.status === "in_pruefung";
+}
+
+/**
+ * Lädt zusätzliche Dateien zu einem eingereichten Antrag hoch. Es wird nur
+ * eingefügt – vorhandene Dokumente lassen sich weder ersetzen noch löschen.
+ * Kennzeichen „nachgereicht“ und Zeitpunkt setzt die Datenbank.
+ */
+export async function reicheUnterlagenNach(
+  antragId: string,
+  dokumente: NeuesDokument[],
+): Promise<{ hochgeladen: number; fehlgeschlagen: string[] }> {
+  const sb = supabase();
+  const fehlgeschlagen: string[] = [];
+  let hochgeladen = 0;
+  for (const d of dokumente) {
+    const pfad = `${antragId}/${crypto.randomUUID()}-${sichererDateiname(d.datei.name)}`;
+    const hoch = await sb.storage.from(DOKUMENTE_BUCKET).upload(pfad, d.datei, {
+      contentType: d.datei.type || "application/octet-stream",
+      upsert: false,
+    });
+    if (hoch.error) {
+      fehlgeschlagen.push(d.datei.name);
+      continue;
+    }
+    const { error } = await sb.from("dokumente").insert({
+      antrag_id: antragId,
+      kategorie: d.kategorie,
+      dateiname: d.datei.name,
+      mime_type: d.datei.type || "application/octet-stream",
+      groesse: d.datei.size,
+      speicherpfad: pfad,
+    });
+    if (error) fehlgeschlagen.push(d.datei.name);
+    else hochgeladen++;
+  }
+  return { hochgeladen, fehlgeschlagen };
+}
+
+/** Frühester Zeitpunkt nachgereichter Unterlagen, die der Stiftungsrat noch nicht gesehen hat. */
+export function neueUnterlagenSeit(a: Antrag): string | null {
+  const gesehen = a.unterlagenGesehenAm ?? "";
+  const neu = a.dokumente
+    .filter((d) => d.nachgereicht && d.hochgeladenAm > gesehen)
+    .map((d) => d.hochgeladenAm)
+    .sort();
+  return neu[0] ?? null;
+}
+
+/** Stiftungsrat: nachgereichte Unterlagen als gesehen markieren. */
+export async function markiereUnterlagenGesehen(id: string): Promise<void> {
+  const { error } = await supabase().from("antraege").update({ unterlagen_gesehen_am: new Date().toISOString() }).eq("id", id);
+  wirf(error, "Konnte nicht gespeichert werden");
 }
 
 /* ---------- Stiftungsrat ---------- */

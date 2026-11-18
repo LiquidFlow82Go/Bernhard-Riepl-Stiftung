@@ -3,12 +3,12 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ABSAGE_VORLAGEN, type AbsageVorlage } from "@/content/absageVorlagen";
-import { aendereStatus, ladeAntrag } from "@/lib/antraege";
+import { aendereStatus, ladeAntrag, markiereUnterlagenGesehen, neueUnterlagenSeit } from "@/lib/antraege";
 import { betrag, formatBetrag, formatEuro, normalisiereBetrag, parseBetrag } from "@/lib/betrag";
 import { datumDe } from "@/lib/format";
 import { STATUS_LABEL, type Antrag, type AntragStatus } from "@/lib/types";
 import { AntragAnsicht } from "../antrag/AntragAnsicht";
-import { DokumentAktionen, PdfButton, Zurueck } from "../konto/Gemeinsam";
+import { ansichtDokumente, PdfButton, Zurueck } from "../konto/Gemeinsam";
 import { Button } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
 import { Fehlertext } from "../ui/Feld";
@@ -78,6 +78,19 @@ export function RatDetail() {
   }
 
   const A = antrag.daten.antragsteller;
+  const neueSeit = neueUnterlagenSeit(antrag);
+
+  async function gesehen() {
+    if (!antrag) return;
+    try {
+      await markiereUnterlagenGesehen(antrag.id);
+      const neu = await ladeAntrag(antrag.id);
+      if (neu) setAntrag(neu);
+      setMeldung("Nachgereichte Unterlagen als gesehen markiert.");
+    } catch {
+      setMeldung("Konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.");
+    }
+  }
 
   return (
     <div className="container-site py-12 lg:py-20">
@@ -96,11 +109,20 @@ export function RatDetail() {
           <AntragAnsicht
             daten={antrag.daten}
             bewilligt={antrag.bewilligterBetrag}
-            dokumente={antrag.dokumente.map((d) => ({ ...d, aktionen: <DokumentAktionen d={d} /> }))}
+            dokumente={ansichtDokumente(antrag.dokumente)}
           />
         </div>
 
         <aside className="order-1 xl:order-2 xl:sticky xl:top-28 grid gap-8" aria-label="Bearbeitung">
+          {neueSeit && (
+            <Hinweisbox art="warn">
+              <p className="font-medium">Neue Unterlagen seit {datumDe(neueSeit, true)}</p>
+              <p className="mt-1 text-sm">Der Antragsteller hat Dokumente nachgereicht. Sie sind unter „5 Dokumente“ mit „nachgereicht“ gekennzeichnet.</p>
+              <button type="button" onClick={gesehen} className="mt-2 min-h-11 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer">
+                Als gesehen markieren
+              </button>
+            </Hinweisbox>
+          )}
           <section aria-labelledby="status-titel" className="bg-neutral-100 border border-neutral-400 shadow-card p-6">
             <h2 id="status-titel" className="text-2xl leading-snug">Entscheidung</h2>
             <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">

@@ -197,7 +197,47 @@ Diese Nachricht wurde automatisch von der Webseite versendet.`;
   return { betreff, html, text };
 }
 
-/* ---------- 3. Absage ---------- */
+/* ---------- 3. Nachgereichte Unterlagen (an den Stiftungsrat) ---------- */
+
+export function neueUnterlagenRat(d: {
+  siteUrl: string;
+  antragsnummer: string;
+  institution: string;
+  projekttitel: string;
+  anzahl: number;
+  link: string;
+}): Mail {
+  const angaben: [string, string][] = [
+    ["Antragsnummer", d.antragsnummer],
+    ["Institution", d.institution],
+    ["Projekt", d.projekttitel],
+    ["Neue Dateien", String(d.anzahl)],
+  ];
+  const betreff = `Unterlagen nachgereicht zu Antrag ${d.antragsnummer}`;
+  const html = rahmen({
+    siteUrl: d.siteUrl,
+    vorspann: `Zu Antrag ${d.antragsnummer} wurden Unterlagen nachgereicht.`,
+    inhalt: `<p style="margin:0 0 16px 0;">Guten Tag,</p>
+<p style="margin:0 0 16px 0;">zu einem Förderantrag wurden über die Webseite Unterlagen nachgereicht.</p>
+${angabenTabelle(angaben)}
+<p style="margin:0 0 16px 0;">Die Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsrats:</p>
+${button(d.link, "Antrag öffnen")}
+<p style="margin:0 0 16px 0; font-size:13px; line-height:20px; color:#49433f;">Diese Nachricht wurde automatisch von der Webseite versendet.</p>`,
+  });
+  const text = `Guten Tag,
+
+zu einem Förderantrag wurden über die Webseite Unterlagen nachgereicht.
+
+${textAngaben(angaben)}
+
+Die Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsrats:
+${d.link}
+
+Diese Nachricht wurde automatisch von der Webseite versendet.`;
+  return { betreff, html, text };
+}
+
+/* ---------- 4. Absage ---------- */
 
 /** Betreff und Text stammen aus dem Absagedialog (vom Ratsmitglied bearbeitet). */
 export function absage(d: { siteUrl: string; betreff: string; text: string }): Mail {

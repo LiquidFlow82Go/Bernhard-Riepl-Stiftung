@@ -106,6 +106,8 @@ export interface Dokument {
   hochgeladenAm: string;
   /** In Phase 2: Pfad im Supabase-Storage-Bucket */
   speicherpfad?: string;
+  /** Nach dem Einreichen nachgereicht (setzt die Datenbank) */
+  nachgereicht?: boolean;
 }
 
 export type AntragStatus = "eingegangen" | "in_pruefung" | "bewilligt" | "abgelehnt";
@@ -131,11 +133,13 @@ export interface Antrag {
   dokumente: Dokument[];
   /** Bestätigte Konto-Adresse des Antragstellers (Empfänger aller E-Mails) */
   kontoEmail?: string;
+  /** Stiftungsrat hat nachgereichte Unterlagen bis zu diesem Zeitpunkt gesehen */
+  unterlagenGesehenAm?: string | null;
   aktualisiertAm: string;
 }
 
 export interface MailProtokollEintrag {
-  art: "eingang_antragsteller" | "eingang_stiftungsrat" | "absage";
+  art: "eingang_antragsteller" | "eingang_stiftungsrat" | "absage" | "nachreichung" | "bewilligung";
   empfaenger: string;
   zeitpunkt: string;
   erfolgreich: boolean;
@@ -146,6 +150,8 @@ export const MAIL_ART_LABEL: Record<MailProtokollEintrag["art"], string> = {
   eingang_antragsteller: "Eingangsbestätigung an Antragsteller",
   eingang_stiftungsrat: "Benachrichtigung Stiftungsrat",
   absage: "Absage",
+  nachreichung: "Hinweis auf nachgereichte Unterlagen",
+  bewilligung: "Bewilligung",
 };
 
 export const STATUS_LABEL: Record<AntragStatus, string> = {

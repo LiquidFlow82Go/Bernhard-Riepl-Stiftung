@@ -53,6 +53,8 @@ export interface AnsichtDokument {
   kategorie: string;
   dateiname: string;
   groesse: number;
+  /** z. B. „nachgereicht am 18.11.2026“ */
+  vermerk?: string;
   aktionen?: ReactNode;
 }
 
@@ -156,6 +158,11 @@ export function AntragAnsicht({
                   <span className="block text-sm text-neutral-700">{DOKUMENT_LABEL[d.kategorie as DokumentKategorie] ?? d.kategorie}</span>
                   <span className="text-neutral-800 break-all">{d.dateiname}</span>
                   <span className="text-sm text-neutral-700"> · {formatGroesse(d.groesse)}</span>
+                  {d.vermerk && (
+                    <span className="ml-2 inline-block align-middle rounded-pill bg-herbstgold/20 border border-herbstgold px-2.5 py-0.5 text-xs text-neutral-800">
+                      {d.vermerk}
+                    </span>
+                  )}
                 </span>
                 {d.aktionen}
               </li>

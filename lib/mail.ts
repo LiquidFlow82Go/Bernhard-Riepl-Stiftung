@@ -14,7 +14,7 @@ import { supabaseAdmin } from "./supabase/admin";
  *   NEXT_PUBLIC_SITE_URL  Basis für Links in E-Mails
  */
 
-export type MailArt = "eingang_antragsteller" | "eingang_stiftungsrat" | "absage";
+export type MailArt = "eingang_antragsteller" | "eingang_stiftungsrat" | "absage" | "nachreichung" | "bewilligung";
 
 export interface MailAuftrag {
   art: MailArt;

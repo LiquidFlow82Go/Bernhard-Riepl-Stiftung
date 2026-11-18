@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { dokumentAnsehen, dokumentHerunterladen, ladeBlobHerunter } from "@/lib/dokumente";
 import { erzeugeAntragPdf, pdfDateiname } from "@/lib/pdf";
+import { datumDe } from "@/lib/format";
 import type { Antrag, Dokument } from "@/lib/types";
 import { Button } from "../ui/Button";
 
@@ -50,4 +51,13 @@ export function Zurueck({ href, children }: { href: string; children: React.Reac
       <span aria-hidden="true">←</span> {children}
     </Link>
   );
+}
+
+/** Dokumente für die Ansicht, nachgereichte mit Datum gekennzeichnet. */
+export function ansichtDokumente(dokumente: Dokument[]) {
+  return dokumente.map((d) => ({
+    ...d,
+    vermerk: d.nachgereicht ? `nachgereicht am ${datumDe(d.hochgeladenAm)}` : undefined,
+    aktionen: <DokumentAktionen d={d} />,
+  }));
 }
