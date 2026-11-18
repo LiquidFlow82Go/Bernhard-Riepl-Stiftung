@@ -84,10 +84,7 @@ Unter **Settings → Environment Variables** für **Production und Preview** ein
 - Auf Vorschau-Deployments mit [Ethereal](https://ethereal.email): Konto anlegen, `SMTP_HOST=smtp.ethereal.email`, `SMTP_PORT=587`, `SMTP_SECURE=false` und die angezeigten Zugangsdaten. Diese Werte nur für **Preview** eintragen.
 
 ### 3. Supabase Auth über dasselbe Postfach
-1. **Authentication → Emails → SMTP Settings → Enable custom SMTP**:
-   - Sender email: Wert von `MAIL_FROM`
-   - Sender name: `Bernhard Riepl Stiftung`
-   - Host, Port, Username, Password: wie `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`
+1. **Eigenes SMTP in Supabase einrichten** – Schritt für Schritt im Abschnitt [„Supabase: eigenes SMTP-Postfach“](#supabase-eigenes-smtp-postfach) weiter unten.
 2. **Authentication → Rate Limits:** Das E-Mail-Limit steht nach dem Aktivieren auf 30 pro Stunde, das reicht.
 3. **Authentication → Emails → Templates:**
    - „Confirm sign up“: Betreff und Inhalt aus `supabase/email-vorlagen/konto-bestaetigen.html`
@@ -101,6 +98,44 @@ Unter **Settings → Environment Variables** für **Production und Preview** ein
    Den bisherigen Eintrag `https://*.vercel.app/**` entfernen. Er erlaubt Weiterleitungen auf **jede** Vercel-Seite, auch fremde.
 
 Die Links in den Auth-E-Mails führen immer zur Site URL, also zur Produktion. Das gilt auch, wenn man sich auf einer Vorschau registriert. Da Vorschau und Produktion dieselbe Datenbank nutzen, funktioniert das trotzdem.
+
+### Supabase: eigenes SMTP-Postfach
+
+Ohne eigenes SMTP verschickt Supabase Bestätigungs- und Passwort-Mails nur an Teammitglieder des Projekts und höchstens wenige pro Stunde. Für den echten Betrieb braucht es das Postfach der Stiftung. Beispiel: `antrag@bernhard-riepl-stiftung.de`.
+
+**Vorher beim Mail-Anbieter bereitlegen** (Kundenbereich, meist unter „E-Mail → Postfach → Server-Einstellungen“):
+- SMTP-Server (Postausgang), z. B. `smtp.ionos.de` bei IONOS
+- Port und Verschlüsselung: `465` mit SSL/TLS oder `587` mit STARTTLS
+- Benutzername: in der Regel die vollständige Adresse `antrag@bernhard-riepl-stiftung.de`
+- Passwort des Postfachs
+
+**In Supabase eintragen:**
+1. [supabase.com/dashboard](https://supabase.com/dashboard) öffnen und das Projekt **B.R. Stiftung** wählen.
+2. Links **Authentication**, dann **Emails**, oben den Reiter **SMTP Settings**.
+3. **Enable custom SMTP** einschalten.
+4. Felder ausfüllen:
+
+   | Feld | Wert |
+   |---|---|
+   | Sender email address | `antrag@bernhard-riepl-stiftung.de` (gleich wie `MAIL_FROM` bei Vercel) |
+   | Sender name | `Bernhard Riepl Stiftung` |
+   | Host | SMTP-Server des Anbieters, z. B. `smtp.ionos.de` |
+   | Port number | `465` (SSL/TLS) oder `587` (STARTTLS) – so wie vom Anbieter angegeben |
+   | Minimum interval per user | `60` Sekunden (Standard lassen) |
+   | Username | `antrag@bernhard-riepl-stiftung.de` |
+   | Password | Postfach-Passwort – nur hier eingeben, nie in den Code oder in Chats |
+
+5. **Save changes**.
+6. **Authentication → Rate Limits:** „Rate limit for sending emails“ auf mindestens `30` pro Stunde stellen.
+7. Bei Vercel dieselben Werte als `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` (`true` bei 465, `false` bei 587), `SMTP_USER`, `SMTP_PASSWORD` und `MAIL_FROM` für **Production** eintragen (siehe [Abschnitt 2](#2-umgebungsvariablen-bei-vercel)) und neu deployen.
+
+**Testen:**
+1. In einem privaten Browserfenster unter `/registrieren` ein Konto mit einer eigenen, echten Adresse anlegen. Die Bestätigungs-Mail muss innerhalb einer Minute ankommen – Absender „Bernhard Riepl Stiftung“, Adresse `antrag@bernhard-riepl-stiftung.de`, Gestaltung wie in `supabase/email-vorlagen/`.
+2. Link in der Mail anklicken: Sie landen angemeldet im Konto.
+3. Abmelden, „Passwort vergessen?“ nutzen: Die Mail kommt an, der Link führt zu „Neues Passwort“.
+4. Spam-Ordner prüfen. Landet die Mail dort, fehlen meist SPF/DKIM (siehe [DNS](#4-dns-beim-mail-anbieter-für-die-domain-der-absenderadresse)).
+5. Kommt nichts an: **Supabase → Logs → Auth** zeigt die Fehlermeldung. Häufig sind falscher Port bzw. falsche Verschlüsselung (465 ↔ 587) oder ein Tippfehler im Passwort.
+6. Danach einen Testantrag absenden und prüfen, ob Eingangsbestätigung und Benachrichtigung des Stiftungsrats ankommen (diese laufen über die Vercel-Variablen, nicht über Supabase).
 
 ### 4. DNS beim Mail-Anbieter (für die Domain der Absenderadresse)
 - **SPF:** ein TXT-Eintrag auf der Domain, der den Mailserver des Anbieters erlaubt, z. B. `v=spf1 include:<vom Anbieter vorgegeben> ~all`. Pro Domain darf es nur einen SPF-Eintrag geben.
