@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HAUPTMENUE } from "@/content/navigation";
 import { abmelden } from "@/lib/auth";
+import { anzeigeName } from "@/lib/format";
 import { useAuth } from "../auth/AuthProvider";
 
 /**
@@ -60,7 +61,11 @@ export function Header() {
   }, [offen]);
 
   const glas = startseite && ueberHero && !offen;
-  const bereich = benutzer ? (benutzer.rolle === "stiftungsrat" ? "/stiftungsrat" : "/konto") : null;
+  const rat = benutzer?.rolle === "stiftungsrat" || benutzer?.rolle === "admin";
+  const bereich = benutzer ? (rat ? "/stiftungsrat" : "/konto") : null;
+  const name = anzeigeName(benutzer);
+  const bereichKurz = rat ? (benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat") : "Mein Konto";
+  const bereichLang = rat ? `${bereichKurz} – ${name}` : `Konto von ${name}`;
 
   async function raus() {
     await abmelden();
@@ -112,8 +117,9 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {benutzer ? (
               <>
-                <Link href={bereich!} className={glas ? btnHell : btnDunkel}>
-                  {benutzer.rolle === "stiftungsrat" ? "Stiftungsrat" : "Mein Konto"}
+                <Link href={bereich!} className={`${glas ? btnHell : btnDunkel} max-w-[300px]`} title={bereichLang}>
+                  <span className="xl:hidden">{bereichKurz}</span>
+                  <span className="hidden xl:inline truncate">{bereichLang}</span>
                 </Link>
                 <button type="button" onClick={raus} className={`${link} px-2 cursor-pointer`}>
                   Abmelden
@@ -165,7 +171,7 @@ export function Header() {
             {benutzer ? (
               <>
                 <Link href={bereich!} className={`${btnDunkel} h-12 text-base`}>
-                  {benutzer.rolle === "stiftungsrat" ? "Stiftungsrat" : "Mein Konto"}
+                  <span className="truncate">{bereichLang}</span>
                 </Link>
                 <button type="button" onClick={raus} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
                   Abmelden

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ladeAlleAntraege, verfuegbareJahre } from "@/lib/antraege";
 import { betrag, formatEuro } from "@/lib/betrag";
-import { datumDe } from "@/lib/format";
+import { anzeigeName, datumDe } from "@/lib/format";
 import { STATUS_LABEL, type Antrag, type AntragStatus } from "@/lib/types";
 import { AnderesKontoHinweis } from "../auth/AnderesKontoHinweis";
 import { useAuth } from "../auth/AuthProvider";
@@ -41,7 +41,9 @@ export function AntragTabelle() {
 
   return (
     <div className="container-site py-12 lg:py-20">
-      <p className="caps text-sm text-neutral-700 mb-3">Stiftungsrat · {benutzer?.name}</p>
+      <p className="caps text-sm text-neutral-700 mb-3">
+        {benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat"} – {anzeigeName(benutzer)}
+      </p>
       <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Förderanträge</h1>
       <div className="mt-8 -mb-4 empty:hidden">
         <AnderesKontoHinweis fuer="antragsteller" />

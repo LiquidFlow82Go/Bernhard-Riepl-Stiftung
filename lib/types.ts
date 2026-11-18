@@ -3,7 +3,7 @@
  * (Tabellen: profiles, antraege, dokumente, absagen).
  */
 
-export type Rolle = "antragsteller" | "stiftungsrat";
+export type Rolle = "antragsteller" | "stiftungsrat" | "admin";
 
 export interface Benutzer {
   id: string;
