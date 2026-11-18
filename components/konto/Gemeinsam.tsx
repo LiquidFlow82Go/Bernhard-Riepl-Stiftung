@@ -34,10 +34,10 @@ export function PdfButton({ antrag, variante = "primaer" }: { antrag: Antrag; va
 export function DokumentAktionen({ d }: { d: Dokument }) {
   return (
     <span className="flex gap-5 shrink-0">
-      <button type="button" onClick={() => dokumentAnsehen(d)} className="text-sm underline underline-offset-4 text-neutral-800 cursor-pointer py-1">
+      <button type="button" onClick={() => dokumentAnsehen(d)} className="text-sm underline underline-offset-4 text-neutral-800 cursor-pointer min-h-11 px-1">
         Ansehen<span className="sr-only">: {d.dateiname} (öffnet in neuem Tab)</span>
       </button>
-      <button type="button" onClick={() => dokumentHerunterladen(d)} className="text-sm underline underline-offset-4 text-neutral-800 cursor-pointer py-1">
+      <button type="button" onClick={() => dokumentHerunterladen(d)} className="text-sm underline underline-offset-4 text-neutral-800 cursor-pointer min-h-11 px-1">
         Herunterladen<span className="sr-only">: {d.dateiname}</span>
       </button>
     </span>

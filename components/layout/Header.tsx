@@ -76,7 +76,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-6 pointer-events-none">
+      <header className="fixed inset-x-0 top-0 z-40 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 sm:pt-[max(1rem,env(safe-area-inset-top))] lg:px-6 lg:pt-6 pointer-events-none">
         <div
           className={`pointer-events-auto mx-auto max-w-[1200px] flex items-center justify-between gap-4 rounded-pill border pl-4 pr-2 py-2 sm:pl-5 lg:pl-6 lg:pr-2.5 lg:py-2.5 transition-[background-color,border-color,box-shadow] duration-500 ease-out backdrop-blur-md ${
             glas
@@ -93,7 +93,7 @@ export function Header() {
             <span
               className={`font-display font-extralight text-[18px] sm:text-[21px] leading-none truncate transition-colors duration-500 ${glas ? "text-neutral-100" : "text-neutral-800"}`}
             >
-              Bernhard Riepl <span className="max-[359px]:hidden">Stiftung</span>
+              Bernhard Riepl <span className="max-[399px]:hidden">Stiftung</span>
             </span>
           </Link>
 

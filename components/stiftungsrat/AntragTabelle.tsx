@@ -88,7 +88,26 @@ export function AntragTabelle() {
       ) : liste.length === 0 ? (
         <p className="py-12 border-y border-neutral-400 text-lg">Keine Anträge für diese Auswahl.</p>
       ) : (
-        <div className="overflow-x-auto -mx-6 px-6">
+        <>
+        <ul className="md:hidden border-t border-neutral-400">
+          {liste.map((a) => (
+            <li key={a.id} className="border-b border-neutral-400">
+              <Link href={`/stiftungsrat/antraege/${a.id}`} className="block py-5">
+                <span className="flex items-center justify-between gap-4">
+                  <span className="tabular-nums text-neutral-800 underline underline-offset-4">{a.nummer}</span>
+                  <StatusBadge status={a.status} />
+                </span>
+                <span className="block mt-2 text-lg text-neutral-800">{a.daten.projekt.titel}</span>
+                <span className="block mt-1 text-sm text-neutral-700">{a.daten.antragsteller.name}</span>
+                <span className="block mt-1 text-sm text-neutral-700">
+                  {datumDe(a.eingereichtAm)} · beantragt {formatEuro(betrag(a.daten.finanzierung.stiftung))}
+                  {a.bewilligterBetrag != null ? ` · bewilligt ${formatEuro(a.bewilligterBetrag)}` : ""}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block overflow-x-auto -mx-6 px-6">
           <table className="tabelle w-full min-w-[860px]">
             <caption className="sr-only">Alle Förderanträge, neueste zuerst</caption>
             <thead>
@@ -122,6 +141,7 @@ export function AntragTabelle() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

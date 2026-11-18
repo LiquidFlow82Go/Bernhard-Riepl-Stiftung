@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: { title: "Bernhard Riepl Stiftung", locale: "de_DE", type: "website", images: ["/bilder/landhaus.jpg"] },
 };
 
-export const viewport: Viewport = { themeColor: "#fdfaf9" };
+export const viewport: Viewport = { themeColor: "#fdfaf9", viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

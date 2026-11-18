@@ -34,7 +34,7 @@ function Abschnitt({
           {titel}
         </h3>
         {onBearbeiten && (
-          <button type="button" onClick={() => onBearbeiten(schritt)} className="shrink-0 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer py-1">
+          <button type="button" onClick={() => onBearbeiten(schritt)} className="shrink-0 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer min-h-11 px-1">
             Bearbeiten<span className="sr-only">: {titel}</span>
           </button>
         )}

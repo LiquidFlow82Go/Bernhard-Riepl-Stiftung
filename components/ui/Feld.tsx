@@ -113,7 +113,7 @@ export function JaNeinGruppe({
       {hinweis && <p className="text-sm text-neutral-700 mt-1">{hinweis}</p>}
       <div className="flex flex-wrap gap-x-6 gap-y-2 mt-3">
         {(["Ja", "Nein"] as const).map((v) => (
-          <label key={v} className="inline-flex items-center gap-2.5 cursor-pointer py-1">
+          <label key={v} className="inline-flex items-center gap-2.5 cursor-pointer min-h-11 pr-2">
             <input
               type="radio"
               name={name}
@@ -151,7 +151,7 @@ export function Checkbox({
           aria-invalid={fehler ? true : undefined}
           aria-required={pflicht || undefined}
           aria-describedby={fehler ? `${id}-fehler` : undefined}
-          className="mt-0.5 size-5 shrink-0 accent-neutral-800 cursor-pointer"
+          className="mt-0.5 size-6 shrink-0 accent-neutral-800 cursor-pointer"
         />
         <label htmlFor={id} className="cursor-pointer text-neutral-800">
           {children}
