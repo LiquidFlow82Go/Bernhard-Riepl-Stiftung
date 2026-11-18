@@ -112,6 +112,8 @@ Prüfen lässt sich das mit einer Test-Mail an einen Gmail-Account („Original 
 ### Ablauf und Absicherung
 - **Antrag absenden:** Der Antrag wird zuerst gespeichert, danach versucht der Server die Mails 1 und 2. Ein Fehler beim Versand blockiert nichts. Er steht im Protokoll, und beim Stiftungsrat erscheinen ein Hinweis und „Benachrichtigung erneut senden“.
 - **Absage:** Nur der Stiftungsrat, serverseitig geprüft. Erst E-Mail, dann Status. Schlägt der Versand fehl, bleibt der Status unverändert und der Text im Dialog erhalten. Ein Datenbank-Trigger verhindert „Abgelehnt“ ohne Versand.
+- **Bewilligung:** Dialog mit Betrag, Empfänger, Betreff und vorbereitetem Text (`content/mailVorlagen.ts`, `BEWILLIGUNG_VORLAGE`). „Bewilligen und E-Mail senden“ setzt den Status erst nach erfolgreichem Versand (BCC an das Archiv); Abschnitte in eckigen Klammern müssen vorher ergänzt sein. „Nur bewilligen, keine E-Mail“ setzt Status und Betrag ohne Versand. Gespeichert werden Betrag, Text, Datum und Ratsmitglied (Tabelle `bewilligungen`).
+- **Unterlagen nachreichen:** Antragsteller können bei „Eingegangen“ und „In Prüfung“ Dateien ergänzen (nur hinzufügen). Der Stiftungsrat erhält eine E-Mail an `MAIL_STIFTUNGSRAT` und sieht „Neue Unterlagen seit …“.
 - **Empfänger** kommen immer aus der Datenbank (bestätigte Konto-Adresse) oder aus Umgebungsvariablen, nie aus der Anfrage.
 - **Wiederholungssperre:** Eingangsmails gibt es je Antrag nur einmal. Erneutes Senden ist frühestens nach 2 Minuten möglich, eine zweite Absage frühestens nach 10 Minuten.
 - **Protokoll** `mail_log` ohne Mailtext. Lesen darf nur der Stiftungsrat, schreiben nur der Server.

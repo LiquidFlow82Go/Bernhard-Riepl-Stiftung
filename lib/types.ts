@@ -138,9 +138,20 @@ export interface Antrag {
   dokumente: Dokument[];
   /** Bestätigte Konto-Adresse des Antragstellers (Empfänger aller E-Mails) */
   kontoEmail?: string;
+  /** Letzte Bewilligung (Betrag, ggf. gesendete E-Mail, Datum) */
+  bewilligung?: Bewilligung | null;
   /** Stiftungsrat hat nachgereichte Unterlagen bis zu diesem Zeitpunkt gesehen */
   unterlagenGesehenAm?: string | null;
   aktualisiertAm: string;
+}
+
+export interface Bewilligung {
+  betrag: number;
+  mailGesendet: boolean;
+  betreff: string | null;
+  text: string | null;
+  empfaenger: string | null;
+  datum: string;
 }
 
 export interface MailProtokollEintrag {

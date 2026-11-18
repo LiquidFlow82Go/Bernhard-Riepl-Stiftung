@@ -67,3 +67,24 @@ export async function meldeNachreichung(antragId: string): Promise<MailRueckmeld
   const { daten } = await post(`/api/antraege/${antragId}/nachreichung`);
   return (daten.ergebnis as MailRueckmeldung | undefined) ?? { status: "fehlgeschlagen", fehler: (daten.fehler as string) ?? undefined };
 }
+
+/**
+ * Stiftungsrat: Antrag bewilligen – mit E-Mail (Status erst nach erfolgreichem
+ * Versand) oder ohne E-Mail. Wirft nie.
+ */
+export async function sendeBewilligung(n: {
+  antragId: string;
+  betrag: number;
+  mitMail: boolean;
+  betreff: string;
+  text: string;
+}): Promise<{ ok: true } | { ok: false; fehler: string }> {
+  const { ok, daten } = await post(`/api/antraege/${n.antragId}/bewilligung`, {
+    betrag: n.betrag,
+    mitMail: n.mitMail,
+    betreff: n.betreff,
+    text: n.text,
+  });
+  if (ok) return { ok: true };
+  return { ok: false, fehler: (daten.fehler as string) ?? "Die Bewilligung konnte nicht gespeichert werden." };
+}

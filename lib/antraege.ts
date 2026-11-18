@@ -10,6 +10,7 @@ import {
   type Absage,
   type Antrag,
   type Benutzer,
+  type Bewilligung,
   type Rolle,
   type AntragDaten,
   type AntragStatus,
@@ -47,6 +48,15 @@ interface AbsageZeile {
   datum: string;
 }
 
+interface BewilligungZeile {
+  betrag: number | string;
+  mail_gesendet: boolean;
+  betreff: string | null;
+  text: string | null;
+  empfaenger: string | null;
+  datum: string;
+}
+
 interface AntragZeile {
   id: string;
   nummer: string;
@@ -59,10 +69,13 @@ interface AntragZeile {
   daten: Partial<AntragDaten>;
   dokumente?: DokumentZeile[];
   absagen?: AbsageZeile[];
+  bewilligungen?: BewilligungZeile[];
   profiles?: { email: string } | { email: string }[] | null;
 }
 
-const MIT_DETAILS = "*, dokumente(*), absagen(grund_id, grund_titel, betreff, text, empfaenger, datum), profiles(email)";
+const MIT_DETAILS =
+  "*, dokumente(*), absagen(grund_id, grund_titel, betreff, text, empfaenger, datum), " +
+  "bewilligungen(betrag, mail_gesendet, betreff, text, empfaenger, datum), profiles(email)";
 
 function zuDokument(z: DokumentZeile): Dokument {
   return {
@@ -102,9 +115,21 @@ function zuAntrag(z: AntragZeile): Antrag {
         datum: absagen[0].datum,
       }
     : null;
+  const bew = [...(z.bewilligungen ?? [])].sort((a, b) => b.datum.localeCompare(a.datum))[0];
+  const bewilligung: Bewilligung | null = z.status === "bewilligt" && bew
+    ? {
+        betrag: Number(bew.betrag),
+        mailGesendet: bew.mail_gesendet,
+        betreff: bew.betreff,
+        text: bew.text,
+        empfaenger: bew.empfaenger,
+        datum: bew.datum,
+      }
+    : null;
   return {
     id: z.id,
     nummer: z.nummer,
+    bewilligung,
     benutzerId: z.benutzer_id,
     eingereichtAm: z.eingereicht_am,
     aktualisiertAm: z.aktualisiert_am,
@@ -151,7 +176,7 @@ export async function ladeAntrag(id: string): Promise<Antrag | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const { data, error } = await supabase().from("antraege").select(MIT_DETAILS).eq("id", id).maybeSingle();
   wirf(error, "Antrag konnte nicht geladen werden");
-  return data ? zuAntrag(data as AntragZeile) : null;
+  return data ? zuAntrag(data as unknown as AntragZeile) : null;
 }
 
 export async function verfuegbareJahre(): Promise<number[]> {
@@ -322,10 +347,12 @@ export async function markiereUnterlagenGesehen(id: string): Promise<void> {
 
 /* ---------- Stiftungsrat ---------- */
 
-export async function aendereStatus(id: string, status: AntragStatus, bewilligterBetrag?: number | null): Promise<Antrag> {
-  const aenderung: { status: AntragStatus; bewilligter_betrag?: number | null } = { status };
-  if (bewilligterBetrag !== undefined) aenderung.bewilligter_betrag = bewilligterBetrag;
-  const { error } = await supabase().from("antraege").update(aenderung).eq("id", id);
+/**
+ * Status „Eingegangen“ bzw. „In Prüfung“ setzen. „Bewilligt“ und „Abgelehnt“
+ * laufen über die Dialoge (Server-Routen), die Datenbank lässt sie hier nicht zu.
+ */
+export async function aendereStatus(id: string, status: "eingegangen" | "in_pruefung"): Promise<Antrag> {
+  const { error } = await supabase().from("antraege").update({ status }).eq("id", id);
   wirf(error, "Status konnte nicht gespeichert werden");
   const a = await ladeAntrag(id);
   if (!a) throw new Error("Antrag nicht gefunden");

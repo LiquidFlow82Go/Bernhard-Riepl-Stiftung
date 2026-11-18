@@ -4,34 +4,30 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ABSAGE_VORLAGEN, type AbsageVorlage } from "@/content/absageVorlagen";
 import { aendereStatus, ladeAntrag, markiereUnterlagenGesehen, neueUnterlagenSeit } from "@/lib/antraege";
-import { betrag, formatBetrag, formatEuro, normalisiereBetrag, parseBetrag } from "@/lib/betrag";
+import { betrag, formatEuro } from "@/lib/betrag";
 import { datumDe } from "@/lib/format";
 import { STATUS_LABEL, type Antrag, type AntragStatus } from "@/lib/types";
 import { AntragAnsicht } from "../antrag/AntragAnsicht";
 import { ansichtDokumente, PdfButton, Zurueck } from "../konto/Gemeinsam";
 import { Button } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
-import { Fehlertext } from "../ui/Feld";
 import { AbsageDialog } from "./AbsageDialog";
+import { BewilligungDialog } from "./BewilligungDialog";
 import { MailStatus } from "./MailStatus";
 
 export function RatDetail() {
   const { id } = useParams<{ id: string }>();
   const [antrag, setAntrag] = useState<Antrag | null | undefined>(undefined);
   const [status, setStatus] = useState<AntragStatus>("eingegangen");
-  const [bewilligt, setBewilligt] = useState("");
   const [meldung, setMeldung] = useState<string>("");
-  const [fehler, setFehler] = useState<string | undefined>();
   const [vorlage, setVorlage] = useState<AbsageVorlage | null>(null);
+  const [bewilligen, setBewilligen] = useState(false);
   const [mailStand, setMailStand] = useState(0);
 
   useEffect(() => {
     ladeAntrag(id).catch(() => null).then((a) => {
       setAntrag(a);
-      if (a) {
-        setStatus(a.status);
-        setBewilligt(a.bewilligterBetrag != null ? formatBetrag(a.bewilligterBetrag) : "");
-      }
+      if (a) setStatus(a.status);
     });
   }, [id]);
 
@@ -47,34 +43,29 @@ export function RatDetail() {
   async function speichern() {
     if (!antrag) return;
     setMeldung("");
-    const p = parseBetrag(bewilligt);
-    if (!p.ok) {
-      setFehler("Bitte nur Ziffern, Punkt und Komma verwenden, z. B. 4.000,00.");
-      document.getElementById("rat-bewilligt")?.focus();
+    if (status === antrag.status) {
+      setMeldung("Der Status ist unverändert.");
       return;
     }
-    if (status === "bewilligt" && (p.leer || p.n <= 0)) {
-      setFehler("Bitte geben Sie für eine Bewilligung den bewilligten Betrag an.");
-      document.getElementById("rat-bewilligt")?.focus();
+    if (status === "bewilligt") {
+      setBewilligen(true);
       return;
     }
-    if (status === "abgelehnt" && antrag.status !== "abgelehnt") {
+    if (status === "abgelehnt") {
       setStatus(antrag.status);
-      setFehler(undefined);
       setMeldung("Für eine Ablehnung wählen Sie bitte unten einen Ausschlussgrund. Damit wird die Absage vorbereitet.");
       document.getElementById("absage-titel")?.scrollIntoView({ block: "start" });
       return;
     }
-    setFehler(undefined);
     let neu: Antrag;
     try {
-      neu = await aendereStatus(antrag.id, status, p.leer ? null : p.n);
+      neu = await aendereStatus(antrag.id, status);
     } catch {
       setMeldung("Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.");
       return;
     }
     setAntrag(neu);
-    setMeldung(`Gespeichert: Status „${STATUS_LABEL[neu.status]}“${neu.bewilligterBetrag != null ? `, bewilligt ${formatEuro(neu.bewilligterBetrag)}` : ""}.`);
+    setMeldung(`Gespeichert: Status „${STATUS_LABEL[neu.status]}“.`);
   }
 
   const A = antrag.daten.antragsteller;
@@ -156,29 +147,32 @@ export function RatDetail() {
               </div>
             </fieldset>
 
-            <div className="mt-5 flex flex-col gap-2">
-              <label htmlFor="rat-bewilligt" className="text-sm font-medium text-neutral-800">Bewilligter Betrag</label>
-              <div className="relative">
-                <input
-                  id="rat-bewilligt"
-                  inputMode="decimal"
-                  value={bewilligt}
-                  onChange={(e) => setBewilligt(e.target.value)}
-                  onBlur={() => setBewilligt(normalisiereBetrag(bewilligt))}
-                  placeholder="0,00"
-                  aria-invalid={fehler ? true : undefined}
-                  aria-describedby={fehler ? "rat-bewilligt-fehler" : undefined}
-                  className="w-full h-12 rounded-pill border border-neutral-700 bg-neutral-100 pl-[18px] pr-10 text-right tabular-nums text-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-eisenhut aria-[invalid=true]:border-fehler aria-[invalid=true]:border-2"
-                />
-                <span aria-hidden="true" className="absolute right-[18px] top-1/2 -translate-y-1/2 text-neutral-700">€</span>
-              </div>
-              <Fehlertext id="rat-bewilligt-fehler" text={fehler} />
-            </div>
+            <p className="mt-3 text-sm text-neutral-700">„Bewilligt“ öffnet den Bewilligungsdialog mit Betrag und E-Mail, „Abgelehnt“ die Absage mit Ausschlussgrund.</p>
             <div className="mt-6">
-              <Button onClick={speichern} className="w-full">Speichern</Button>
+              <Button onClick={speichern} className="w-full">{status === "bewilligt" && antrag.status !== "bewilligt" ? "Weiter zur Bewilligung" : "Speichern"}</Button>
             </div>
             <p role="status" className="mt-3 text-sm text-neutral-800 min-h-5">{meldung}</p>
           </section>
+
+          {antrag.status === "bewilligt" && (
+            <Hinweisbox art="ok">
+              <p className="font-medium">
+                Bewilligt{antrag.bewilligung ? ` am ${datumDe(antrag.bewilligung.datum)}` : ""}: {formatEuro(antrag.bewilligterBetrag)}
+              </p>
+              {antrag.bewilligung && (
+                <p className="mt-1 text-sm">
+                  {antrag.bewilligung.mailGesendet ? `E-Mail an: ${antrag.bewilligung.empfaenger}` : "Ohne E-Mail bewilligt."}
+                </p>
+              )}
+              {antrag.bewilligung?.mailGesendet && (
+                <details className="mt-2 text-sm">
+                  <summary className="cursor-pointer underline underline-offset-4">Gesendeten Text anzeigen</summary>
+                  <p className="mt-2 font-medium">{antrag.bewilligung.betreff}</p>
+                  <p className="mt-2 whitespace-pre-line">{antrag.bewilligung.text}</p>
+                </details>
+              )}
+            </Hinweisbox>
+          )}
 
           {antrag.status === "abgelehnt" && antrag.absage && (
             <Hinweisbox art="info">
@@ -218,6 +212,22 @@ export function RatDetail() {
           )}
         </aside>
       </div>
+
+      <BewilligungDialog
+        antrag={antrag}
+        offen={bewilligen}
+        onSchliessen={() => {
+          setBewilligen(false);
+          setStatus(antrag.status);
+        }}
+        onGespeichert={(neu, mitMail) => {
+          setBewilligen(false);
+          setAntrag(neu);
+          setStatus(neu.status);
+          setMailStand((n) => n + 1);
+          setMeldung(`Bewilligt: ${formatEuro(neu.bewilligterBetrag)}${mitMail ? ", E-Mail versendet" : ", ohne E-Mail"}.`);
+        }}
+      />
 
       <AbsageDialog
         antrag={antrag}
