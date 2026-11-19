@@ -92,26 +92,26 @@ export const FOERDERBEREICHE = [
   {
     titel: "Kirche",
     text: "Kirchliche Hilfsprojekte und Vorhaben, die das kirchliche Leben in der Region stärken.",
-    bild: "/bilder/eisenhut.jpg",
-    alt: "Blauer Eisenhut vor einem verwitterten Holzzaun",
+    bild: "/bilder/zweck-kirche.jpg",
+    alt: "Weiß verputzte Dorfkirche mit rotem Ziegeldach und hohem Turm vor blauem Himmel, davor der Friedhof",
   },
   {
     titel: "Kunst und Kultur",
     text: "Kulturelle Einrichtungen und Sammlungen, Konzerte, Ausstellungen und künstlerische Nachwuchstalente.",
-    bild: "/bilder/rose-koralle.jpg",
-    alt: "Korallenrote Rose im Gegenlicht vor einer Wiese",
+    bild: "/bilder/zweck-kunst-kultur.jpg",
+    alt: "Collage: junge Geigerin im Konzertsaal, Bildhauer an einer Steinfigur, Theaterszene in historischen Kostümen und Trachtentanz am Maibaum",
   },
   {
     titel: "Bildung",
     text: "Stipendien für die Aus- und Fortbildung bedürftiger Personen.",
-    bild: "/bilder/garten-herbst.jpg",
-    alt: "Herbstlicher Garten mit alten Bäumen und einem Haus im Hintergrund",
+    bild: "/bilder/zweck-bildung.jpg",
+    alt: "Studentin lernt in einer Bibliothek, eine Mentorin erklärt ihr etwas in einem Buch",
   },
   {
     titel: "Hilfe für Menschen in Not",
     text: "Unterstützung notleidender Menschen – unmittelbar oder über gemeinnützige Träger.",
-    bild: "/bilder/rose-rosa.jpg",
-    alt: "Rosa Rose mit Knospen an einer Hauswand",
+    bild: "/bilder/zweck-hilfe.jpg",
+    alt: "Junge Helferin reicht einem älteren Mann in einem Wohnzimmer eine Tasse Tee",
   },
 ];
 
