@@ -31,7 +31,13 @@ export function BetragZeile({
           : "border-b border-neutral-400 py-2.5"
       }
     >
-      <div className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(8.5rem,11rem)] gap-2 sm:gap-3 ${namePfad ? "sm:items-end" : "sm:items-center"}`}>
+      <div
+        className={`grid gap-2 sm:gap-3 sm:items-center ${
+          namePfad
+            ? "grid-cols-1 sm:grid-cols-[minmax(7.5rem,10rem)_minmax(0,1fr)_minmax(8.5rem,11rem)]"
+            : "grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(8.5rem,11rem)]"
+        }`}
+      >
         <div className={`min-w-0 ${eingerueckt ? "sm:pl-5" : ""}`}>
         <label htmlFor={f.id} className={hervorgehoben ? "block font-display text-xl leading-snug text-neutral-800" : "block text-base text-neutral-800"}>
           {label}
@@ -47,22 +53,20 @@ export function BetragZeile({
             </span>
           )}
         </label>
-        {namePfad && (
-          <div className="mt-2 flex flex-col gap-1">
-            <label htmlFor={n.id} className="text-sm text-neutral-700">{nameLabel ?? "Name"}</label>
-            <input
-              id={n.id}
-              name={n.name}
-              type="text"
-              autoComplete="off"
-              placeholder={namePlatzhalter}
-              value={n.value}
-              onChange={n.onChange}
-              className="w-full h-12 sm:h-11 text-base rounded-pill border border-neutral-700 bg-neutral-100 px-4 text-neutral-800 placeholder:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-eisenhut"
-            />
-          </div>
-        )}
         </div>
+        {namePfad && (
+          <input
+            id={n.id}
+            name={n.name}
+            type="text"
+            autoComplete="off"
+            aria-label={nameLabel ?? "Name"}
+            placeholder={namePlatzhalter}
+            value={n.value}
+            onChange={n.onChange}
+            className="w-full min-w-0 h-12 sm:h-11 text-base rounded-pill border border-neutral-700 bg-neutral-100 px-4 text-neutral-800 placeholder:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-eisenhut"
+          />
+        )}
         <div className="relative">
           <input
             id={f.id}
