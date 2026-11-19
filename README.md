@@ -1,8 +1,8 @@
 # Bernhard Riepl Stiftung – Webseite
 
-Webseite der Bernhard Riepl Stiftung (Miesbach) mit öffentlichem Onepager, digitalem Förderantrag und Memberbereichen für Antragsteller und Stiftungsrat.
+Webseite der Bernhard Riepl Stiftung (Miesbach) mit öffentlichem Onepager, digitalem Förderantrag und Memberbereichen für Antragsteller und Stiftungsvorstand.
 
-**Stand: Phase 4.** Datenbank, Anmeldung und Dokumentenspeicher laufen über Supabase (Region Frankfurt). E-Mails (Eingangsbestätigung, Benachrichtigung des Stiftungsrats, Absage) gehen über das SMTP-Postfach der Stiftung.
+**Stand: Phase 4.** Datenbank, Anmeldung und Dokumentenspeicher laufen über Supabase (Region Frankfurt). E-Mails (Eingangsbestätigung, Benachrichtigung des Stiftungsvorstands, Absage) gehen über das SMTP-Postfach der Stiftung.
 
 ## Technik
 
@@ -39,7 +39,7 @@ Einmalig im Supabase-Dashboard des Projekts „B.R. Stiftung“:
    - **Site URL:** die Produktionsadresse, z. B. `https://brstiftung.vercel.app` (später die eigene Domain)
    - **Redirect URLs:** `http://localhost:3000/**`, `https://brstiftung.vercel.app/**` und für Vorschau-Deployments `https://*.vercel.app/**`
 3. **Deutsche E-Mails:** Erst möglich, wenn eigenes SMTP eingerichtet ist (siehe „Phase 4 einrichten“).
-4. **Stiftungsrat freischalten:** Mit der eigenen E-Mail-Adresse unter `/registrieren` ein Konto anlegen und bestätigen. Dann `supabase/stiftungsrat-freischalten.sql` mit dieser Adresse im SQL Editor ausführen und neu anmelden. Neue Konten sind immer Antragsteller. Die Rolle Stiftungsrat lässt sich nur per SQL vergeben.
+4. **Stiftungsvorstand freischalten:** Mit der eigenen E-Mail-Adresse unter `/registrieren` ein Konto anlegen und bestätigen. Dann `supabase/stiftungsvorstand-freischalten.sql` mit dieser Adresse im SQL Editor ausführen und neu anmelden. Neue Konten sind immer Antragsteller. Die Rolle Stiftungsvorstand lässt sich nur per SQL vergeben.
 5. **Vercel:** Die Supabase-Integration setzt `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` und `SUPABASE_SECRET_KEY` automatisch. Nach dem ersten Verbinden einmal **Redeploy** auslösen, weil die öffentlichen Werte beim Build eingebaut werden.
 6. **Lokal:** `.env.example` nach `.env.local` kopieren und URL und Publishable Key eintragen (Project Settings → API Keys). Den Secret Key braucht Phase 2 nicht.
 
@@ -51,10 +51,10 @@ Einmalig im Supabase-Dashboard des Projekts „B.R. Stiftung“:
 
 | Ebene | Schutz |
 |---|---|
-| Datenbank (RLS) | Antragsteller lesen nur eigene Anträge, Dokumente und Absagen. Der Stiftungsrat liest alle Anträge und darf nur Status und bewilligten Betrag ändern. Nicht angemeldete Besucher haben keinen Zugriff. |
-| Funktionen | `antrag_einreichen()` prüft Pflichtangaben und vergibt die Nummer `JJJJ-NNN` ohne Doppelvergabe. `antrag_ablehnen()` steht nur dem Stiftungsrat zur Verfügung. |
+| Datenbank (RLS) | Antragsteller lesen nur eigene Anträge, Dokumente und Absagen. Der Stiftungsvorstand liest alle Anträge und darf nur Status und bewilligten Betrag ändern. Nicht angemeldete Besucher haben keinen Zugriff. |
+| Funktionen | `antrag_einreichen()` prüft Pflichtangaben und vergibt die Nummer `JJJJ-NNN` ohne Doppelvergabe. `antrag_ablehnen()` steht nur dem Stiftungsvorstand zur Verfügung. |
 | Speicher | Privater Bucket `antragsdokumente` (PDF, JPG, PNG, max. 10 MB). Hochladen nur in eigene, neu eingegangene Anträge. Lesen nur über signierte Links, die 2 Minuten gültig sind. |
-| Server | `middleware.ts` leitet nicht angemeldete Besucher zur Anmeldung und trennt die Bereiche `/konto` und `/stiftungsrat` nach Rolle. |
+| Server | `middleware.ts` leitet nicht angemeldete Besucher zur Anmeldung und trennt die Bereiche `/konto` und `/stiftungsvorstand` nach Rolle. |
 | Oberfläche | `RoleGuard` zeigt zusätzlich passende Hinweise. |
 
 ## Phase 4 einrichten (E-Mail-Versand)
@@ -135,7 +135,7 @@ Ohne eigenes SMTP verschickt Supabase Bestätigungs- und Passwort-Mails nur an T
 3. Abmelden, „Passwort vergessen?“ nutzen: Die Mail kommt an, der Link führt zu „Neues Passwort“.
 4. Spam-Ordner prüfen. Landet die Mail dort, fehlen meist SPF/DKIM (siehe [DNS](#4-dns-beim-mail-anbieter-für-die-domain-der-absenderadresse)).
 5. Kommt nichts an: **Supabase → Logs → Auth** zeigt die Fehlermeldung. Häufig sind falscher Port bzw. falsche Verschlüsselung (465 ↔ 587) oder ein Tippfehler im Passwort.
-6. Danach einen Testantrag absenden und prüfen, ob Eingangsbestätigung und Benachrichtigung des Stiftungsrats ankommen (diese laufen über die Vercel-Variablen, nicht über Supabase).
+6. Danach einen Testantrag absenden und prüfen, ob Eingangsbestätigung und Benachrichtigung des Stiftungsvorstands ankommen (diese laufen über die Vercel-Variablen, nicht über Supabase).
 
 ### 4. DNS beim Mail-Anbieter (für die Domain der Absenderadresse)
 - **SPF:** ein TXT-Eintrag auf der Domain, der den Mailserver des Anbieters erlaubt, z. B. `v=spf1 include:<vom Anbieter vorgegeben> ~all`. Pro Domain darf es nur einen SPF-Eintrag geben.
@@ -145,13 +145,13 @@ Ohne eigenes SMTP verschickt Supabase Bestätigungs- und Passwort-Mails nur an T
 Prüfen lässt sich das mit einer Test-Mail an einen Gmail-Account („Original anzeigen“: SPF, DKIM und DMARC sollten „PASS“ zeigen) oder mit mail-tester.com.
 
 ### Ablauf und Absicherung
-- **Antrag absenden:** Der Antrag wird zuerst gespeichert, danach versucht der Server die Mails 1 und 2. Ein Fehler beim Versand blockiert nichts. Er steht im Protokoll, und beim Stiftungsrat erscheinen ein Hinweis und „Benachrichtigung erneut senden“.
-- **Absage:** Nur der Stiftungsrat, serverseitig geprüft. Erst E-Mail, dann Status. Schlägt der Versand fehl, bleibt der Status unverändert und der Text im Dialog erhalten. Ein Datenbank-Trigger verhindert „Abgelehnt“ ohne Versand.
-- **Bewilligung:** Dialog mit Betrag, Empfänger, Betreff und vorbereitetem Text (`content/mailVorlagen.ts`, `BEWILLIGUNG_VORLAGE`). „Bewilligen und E-Mail senden“ setzt den Status erst nach erfolgreichem Versand (BCC an das Archiv); Abschnitte in eckigen Klammern müssen vorher ergänzt sein. „Nur bewilligen, keine E-Mail“ setzt Status und Betrag ohne Versand. Gespeichert werden Betrag, Text, Datum und Ratsmitglied (Tabelle `bewilligungen`).
-- **Unterlagen nachreichen:** Antragsteller können bei „Eingegangen“ und „In Prüfung“ Dateien ergänzen (nur hinzufügen). Der Stiftungsrat erhält eine E-Mail an `MAIL_STIFTUNGSRAT` und sieht „Neue Unterlagen seit …“.
+- **Antrag absenden:** Der Antrag wird zuerst gespeichert, danach versucht der Server die Mails 1 und 2. Ein Fehler beim Versand blockiert nichts. Er steht im Protokoll, und beim Stiftungsvorstand erscheinen ein Hinweis und „Benachrichtigung erneut senden“.
+- **Absage:** Nur der Stiftungsvorstand, serverseitig geprüft. Erst E-Mail, dann Status. Schlägt der Versand fehl, bleibt der Status unverändert und der Text im Dialog erhalten. Ein Datenbank-Trigger verhindert „Abgelehnt“ ohne Versand.
+- **Bewilligung:** Dialog mit Betrag, Empfänger, Betreff und vorbereitetem Text (`content/mailVorlagen.ts`, `BEWILLIGUNG_VORLAGE`). „Bewilligen und E-Mail senden“ setzt den Status erst nach erfolgreichem Versand (BCC an das Archiv); Abschnitte in eckigen Klammern müssen vorher ergänzt sein. „Nur bewilligen, keine E-Mail“ setzt Status und Betrag ohne Versand. Gespeichert werden Betrag, Text, Datum und Vorstandsmitglied (Tabelle `bewilligungen`).
+- **Unterlagen nachreichen:** Antragsteller können bei „Eingegangen“ und „In Prüfung“ Dateien ergänzen (nur hinzufügen). Der Stiftungsvorstand erhält eine E-Mail an `MAIL_STIFTUNGSRAT` und sieht „Neue Unterlagen seit …“.
 - **Empfänger** kommen immer aus der Datenbank (bestätigte Konto-Adresse) oder aus Umgebungsvariablen, nie aus der Anfrage.
 - **Wiederholungssperre:** Eingangsmails gibt es je Antrag nur einmal. Erneutes Senden ist frühestens nach 2 Minuten möglich, eine zweite Absage frühestens nach 10 Minuten.
-- **Protokoll** `mail_log` ohne Mailtext. Lesen darf nur der Stiftungsrat, schreiben nur der Server.
+- **Protokoll** `mail_log` ohne Mailtext. Lesen darf nur der Stiftungsvorstand, schreiben nur der Server.
 - **Keine Anhänge:** Antragsdaten und Bankverbindung bleiben hinter dem Login.
 
 ## Verbesserungen 2026-11 einrichten (Datenbank)
@@ -170,15 +170,15 @@ Jede Datei sollte mit „Success. No rows returned“ enden. Erst danach den Bra
 | Rolle | Darf |
 |---|---|
 | `antragsteller` | Anträge stellen, eigene Anträge sehen, Unterlagen nachreichen. Standard für jede Registrierung. |
-| `stiftungsrat` | Alle Anträge sehen, Status setzen, bewilligen, absagen. |
-| `admin` | Alles wie der Stiftungsrat, dazu die lesende **Ansicht Antragsteller** (Menü bzw. `/stiftungsrat/antragsteller`). Admins können selbst keine Anträge einreichen. |
+| `stiftungsrat` | Stiftungsvorstand: alle Anträge sehen, Status setzen, bewilligen, absagen. Der technische Rollenname bleibt `stiftungsrat`. |
+| `admin` | Alles wie der Stiftungsvorstand, dazu die lesende **Ansicht Antragsteller** (Menü bzw. `/stiftungsvorstand/antragsteller`) und **Anträge löschen** (Detailansicht, Bestätigung mit der Antragsnummer; löscht auch alle Dateien, Absagen, Bewilligungen und Protokolleinträge). Admins können selbst keine Anträge einreichen. |
 
 Rollen werden nur per SQL vergeben (Supabase → **SQL Editor**), danach meldet sich die Person neu an:
 
 ```sql
 -- Admin
 update public.profiles set rolle = 'admin' where email = 'name@beispiel.de';
--- Stiftungsrat
+-- Stiftungsvorstand
 update public.profiles set rolle = 'stiftungsrat' where email = 'name@beispiel.de';
 -- Zurück zum Antragsteller
 update public.profiles set rolle = 'antragsteller' where email = 'name@beispiel.de';
@@ -186,7 +186,7 @@ update public.profiles set rolle = 'antragsteller' where email = 'name@beispiel.
 
 Voraussetzung für `admin` sind die Migrationen `20261118090000_admin_rolle_wert.sql` und `20261118090100_admin_rechte.sql`.
 
-**Namen eintragen:** Menü und Seitenkopf zeigen „Stiftungsrat – [Name]“, „Admin – [Name]“ bzw. „Konto von [Name]“. Ohne Namen erscheint die E-Mail-Adresse. Antragsteller geben ihren Namen bei der Registrierung an. Für Ratsmitglieder und Admins tragen Sie ihn in Supabase ein: **Table Editor → profiles →** Spalte `name` doppelklicken, Namen eingeben, **Save**. Oder per SQL:
+**Namen eintragen:** Menü und Seitenkopf zeigen „Stiftungsvorstand – [Name]“, „Admin – [Name]“ bzw. „Konto von [Name]“. Ohne Namen erscheint die E-Mail-Adresse. Antragsteller geben ihren Namen bei der Registrierung an. Für Vorstandsmitglieder und Admins tragen Sie ihn in Supabase ein: **Table Editor → profiles →** Spalte `name` doppelklicken, Namen eingeben, **Save**. Oder per SQL:
 
 ```sql
 update public.profiles set name = 'Dr. Maria Huber' where email = 'name@beispiel.de';
@@ -199,7 +199,7 @@ Die Änderung erscheint nach dem nächsten Neuladen der Seite.
 Erst abhaken, wenn die Seite unter der eigenen Domain öffentlich gehen soll.
 
 **Konten und Daten**
-- [ ] Echte Konten für alle Ratsmitglieder angelegt, Rollen vergeben und Namen eingetragen (siehe [Rollen und Namen](#rollen-und-namen)); mindestens ein Admin.
+- [ ] Echte Konten für alle Vorstandsmitglieder angelegt, Rollen vergeben und Namen eingetragen (siehe [Rollen und Namen](#rollen-und-namen)); mindestens ein Admin.
 - [ ] Testkonten `antrag@test.de` und `rat@test.de` samt Anträgen, Dokumenten und Protokolleinträgen entfernen: `supabase/migrations/MANUELL_vor_go_live_testkonten_loeschen.sql` im SQL Editor **abschnittsweise** ausführen (Vorschau → Storage-Dateien im Dashboard löschen → Löschen mit `rollback;` testen → auf `commit;` umstellen). Das Skript wird nie automatisch angewendet.
 - [ ] Prüfen, dass keine weiteren Test-Anträge anderer Konten übrig sind (letzte Abfrage der Vorschau).
 
@@ -222,11 +222,11 @@ Erst abhaken, wenn die Seite unter der eigenen Domain öffentlich gehen soll.
 **Recht und Inhalte**
 - [ ] Impressum, Datenschutzerklärung und Haftungsausschluss rechtlich geprüft und freigegeben (`content/rechtstexte.ts`).
 - [ ] Alle Platzhalter in eckigen Klammern ersetzt (z. B. Sitzungsrhythmus in den FAQ) – auf der Seite gelb markiert.
-- [ ] Absage- und Bewilligungstexte vom Stiftungsrat freigegeben.
+- [ ] Absage- und Bewilligungstexte vom Stiftungsvorstand freigegeben.
 
 **Abschlusstest**
 - [ ] Mit einem neuen Konto: registrieren, Antrag mit Dokumenten absenden, Eingangsbestätigung prüfen, Unterlagen nachreichen.
-- [ ] Als Stiftungsrat: Benachrichtigung erhalten, Antrag öffnen, bewilligen bzw. absagen, E-Mails prüfen.
+- [ ] Als Stiftungsvorstand: Benachrichtigung erhalten, Antrag öffnen, bewilligen bzw. absagen, E-Mails prüfen.
 - [ ] Danach diesen Testantrag mit derselben Methode wie oben entfernen oder als Beispiel bewusst stehen lassen.
 
 ## Auf Vercel deployen
@@ -244,7 +244,7 @@ app/                    Seiten (App Router)
   page.tsx              Onepager
   antrag/               Förderantrag (6 Schritte)
   konto/                Memberbereich Antragsteller
-  stiftungsrat/         Memberbereich Stiftungsrat
+  stiftungsvorstand/    Memberbereich Stiftungsvorstand (alte Adresse /stiftungsrat wird weitergeleitet)
   login, registrieren, passwort-vergessen, passwort-neu
   auth/confirm/         Rücksprung aus Bestätigungs- und Passwort-E-Mails
   impressum, datenschutz, haftungsausschluss
@@ -255,11 +255,11 @@ components/
   auth/                 AuthProvider, RoleGuard, Login-/Registrierungsformulare
   antrag/               Wizard, Schritte, Betragsfelder, Upload, Zusammenfassung
   konto/                Übersicht und Detail Antragsteller
-  stiftungsrat/         Tabelle, Detail, Absagedialog
+  stiftungsvorstand/    Tabelle, Detail, Absage-, Bewilligungs- und Löschdialog
   ui/                   Button, Felder, Akkordeon, Dialog, Badges
 content/                alle Texte: Stiftung/Satzung, FAQ, Rechtstexte, absageVorlagen.ts
 lib/                    Typen, Datenzugriff, Validierung, Beträge, PDF, Auth, E-Mail
-supabase/               Migration, E-Mail-Vorlagen, SQL zum Freischalten des Stiftungsrats
+supabase/               Migration, E-Mail-Vorlagen, SQL zum Freischalten des Stiftungsvorstands
 middleware.ts           Sitzung erneuern, Memberbereiche schützen
 public/                 Bilder, Stiftungssymbol, Favicons
 ```

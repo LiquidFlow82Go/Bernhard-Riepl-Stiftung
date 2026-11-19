@@ -10,11 +10,11 @@ type Ergebnis = { status: "gesendet" | "fehlgeschlagen" | "bereits_gesendet" | "
 /**
  * E-Mails nach dem Absenden eines Antrags:
  *  1. Eingangsbestätigung an die Konto-Adresse des Antragstellers
- *  2. Benachrichtigung an den Stiftungsrat (MAIL_STIFTUNGSRAT)
+ *  2. Benachrichtigung an den Stiftungsvorstand (MAIL_STIFTUNGSRAT)
  *
  * Antragsteller: nur für den eigenen Antrag, innerhalb von 24 Stunden nach dem
  * Absenden und je E-Mail nur einmal erfolgreich.
- * Stiftungsrat: kann die Benachrichtigung (2) erneut senden.
+ * Stiftungsvorstand: kann die Benachrichtigung (2) erneut senden.
  * Empfänger stammen nie aus der Anfrage.
  */
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -65,7 +65,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             institution: antrag.antragsteller_name ?? "",
             projekttitel: titel,
             betrag: euro(antrag.betrag_beantragt),
-            link: `${basis}/stiftungsrat/antraege/${antrag.id}`,
+            link: `${basis}/stiftungsvorstand/antraege/${antrag.id}`,
           });
 
     const an = art === "eingang_antragsteller" ? adressListe(antrag.konto_email) : stiftungsratAdressen();

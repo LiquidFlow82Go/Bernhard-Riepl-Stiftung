@@ -10,14 +10,14 @@ export function Footer() {
       <div className="container-site">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <div className="flex items-center gap-3">
-              <Image src="/stiftungssymbol.svg" alt="" width={40} height={50} className="h-[50px] w-10" />
-              <p className="font-display font-extralight text-2xl text-neutral-100 leading-tight">
-                Bernhard Riepl
-                <br />
-                Stiftung
-              </p>
-            </div>
+            <Image
+              src="/logo/logo-hell.png"
+              alt="Bernhard Riepl Stiftung"
+              width={1077}
+              height={616}
+              sizes="240px"
+              className="h-auto w-[220px] lg:w-[240px]"
+            />
             <p className="mt-6 max-w-sm text-base leading-relaxed">{STIFTUNG.zweckKurz}.</p>
           </div>
           <div>

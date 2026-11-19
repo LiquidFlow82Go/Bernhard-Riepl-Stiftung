@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ladeAlleAntraege, neueUnterlagenSeit, verfuegbareJahre } from "@/lib/antraege";
 import { betrag, formatEuro } from "@/lib/betrag";
@@ -16,6 +17,7 @@ const SELECT =
 
 export function AntragTabelle() {
   const { benutzer } = useAuth();
+  const geloescht = useSearchParams().get("geloescht");
   const [jahre, setJahre] = useState<number[]>([]);
   const [jahr, setJahr] = useState<number | "alle">("alle");
   const [status, setStatus] = useState<AntragStatus | "alle">("alle");
@@ -42,12 +44,12 @@ export function AntragTabelle() {
   return (
     <div className="container-site py-12 lg:py-20">
       <p className="caps text-sm text-neutral-700 mb-3">
-        {benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat"} – {anzeigeName(benutzer)}
+        {benutzer?.rolle === "admin" ? "Admin" : "Stiftungsvorstand"} – {anzeigeName(benutzer)}
       </p>
       <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Förderanträge</h1>
       {benutzer?.rolle === "admin" && (
         <p className="mt-4">
-          <Link href="/stiftungsrat/antragsteller" className="inline-flex items-center min-h-11 underline underline-offset-4 text-neutral-800">
+          <Link href="/stiftungsvorstand/antragsteller" className="inline-flex items-center min-h-11 underline underline-offset-4 text-neutral-800">
             Zur Ansicht Antragsteller (nur lesend)
           </Link>
         </p>
@@ -55,6 +57,11 @@ export function AntragTabelle() {
       <div className="mt-8 -mb-4 empty:hidden">
         <AnderesKontoHinweis fuer="antragsteller" />
       </div>
+      {geloescht && (
+        <div className="mt-8">
+          <Hinweisbox art="ok" rolle="status">Antrag {geloescht} wurde endgültig gelöscht.</Hinweisbox>
+        </div>
+      )}
 
       <dl className="mt-10 grid grid-cols-2 md:grid-cols-4 border-y border-neutral-400">
         {(Object.keys(STATUS_LABEL) as AntragStatus[]).map((s, i) => (
@@ -101,7 +108,7 @@ export function AntragTabelle() {
         <ul className="md:hidden border-t border-neutral-400">
           {liste.map((a) => (
             <li key={a.id} className="border-b border-neutral-400">
-              <Link href={`/stiftungsrat/antraege/${a.id}`} className="block py-5">
+              <Link href={`/stiftungsvorstand/antraege/${a.id}`} className="block py-5">
                 <span className="flex items-center justify-between gap-4">
                   <span className="tabular-nums text-neutral-800 underline underline-offset-4">{a.nummer}</span>
                   <StatusBadge status={a.status} />
@@ -135,7 +142,7 @@ export function AntragTabelle() {
               {liste.map((a) => (
                 <tr key={a.id} className="hover:bg-neutral-100">
                   <td className="tabular-nums whitespace-nowrap">
-                    <Link href={`/stiftungsrat/antraege/${a.id}`} className="text-neutral-800 underline underline-offset-4">
+                    <Link href={`/stiftungsvorstand/antraege/${a.id}`} className="text-neutral-800 underline underline-offset-4">
                       {a.nummer}
                       <span className="sr-only">: {a.daten.projekt.titel} öffnen</span>
                     </Link>

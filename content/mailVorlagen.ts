@@ -38,7 +38,7 @@ const ABSENDER_ZEILEN = ["Bernhard Riepl Stiftung", "Stadlbergstraße 56", "8371
 
 /** Gemeinsamer Rahmen im Stil der Webseite (warmes Fast-Weiß, dunkle Schrift). */
 export function rahmen(o: { siteUrl: string; vorspann: string; inhalt: string }): string {
-  const logo = `${o.siteUrl}/icon-512.png`;
+  const logo = `${o.siteUrl}/logo/zeichen-dunkel.png`;
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -58,7 +58,7 @@ export function rahmen(o: { siteUrl: string; vorspann: string; inhalt: string })
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td style="padding-right:12px; vertical-align:middle;">
-                  <img src="${esc(logo)}" width="40" height="40" alt="" style="display:block; border:0;">
+                  <img src="${esc(logo)}" width="70" height="28" alt="" style="display:block; border:0; width:70px; height:auto;">
                 </td>
                 <td style="vertical-align:middle; font-family:Arial, Helvetica, sans-serif; font-size:20px; line-height:24px; color:#0f0b08;">
                   Bernhard Riepl Stiftung
@@ -135,7 +135,7 @@ export function eingangsbestaetigung(d: {
     siteUrl: d.siteUrl,
     vorspann: `Ihr Förderantrag ${d.antragsnummer} ist bei uns eingegangen.`,
     inhalt: `<p style="margin:0 0 16px 0;">Sehr geehrte Damen und Herren,</p>
-<p style="margin:0 0 16px 0;">vielen Dank für Ihren Antrag. Er ist bei der Bernhard Riepl Stiftung eingegangen und wird vom Stiftungsrat geprüft.</p>
+<p style="margin:0 0 16px 0;">vielen Dank für Ihren Antrag. Er ist bei der Bernhard Riepl Stiftung eingegangen und wird vom Stiftungsvorstand geprüft.</p>
 ${angabenTabelle(angaben)}
 <p style="margin:0 0 16px 0;">Den Stand Ihres Antrags und eine Kopie als PDF finden Sie jederzeit in Ihrem Konto:</p>
 ${button(d.link, "Antrag ansehen")}
@@ -144,7 +144,7 @@ ${GRUSS_HTML}`,
   });
   const text = `Sehr geehrte Damen und Herren,
 
-vielen Dank für Ihren Antrag. Er ist bei der Bernhard Riepl Stiftung eingegangen und wird vom Stiftungsrat geprüft.
+vielen Dank für Ihren Antrag. Er ist bei der Bernhard Riepl Stiftung eingegangen und wird vom Stiftungsvorstand geprüft.
 
 ${textAngaben(angaben)}
 
@@ -157,7 +157,7 @@ ${GRUSS_TEXT}`;
   return { betreff, html, text };
 }
 
-/* ---------- 2. Benachrichtigung an den Stiftungsrat ---------- */
+/* ---------- 2. Benachrichtigung an den Stiftungsvorstand ---------- */
 
 export function neuerAntragRat(d: {
   siteUrl: string;
@@ -180,7 +180,7 @@ export function neuerAntragRat(d: {
     inhalt: `<p style="margin:0 0 16px 0;">Guten Tag,</p>
 <p style="margin:0 0 16px 0;">über die Webseite ist ein neuer Förderantrag eingegangen.</p>
 ${angabenTabelle(angaben)}
-<p style="margin:0 0 16px 0;">Alle Angaben, das PDF und die hochgeladenen Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsrats:</p>
+<p style="margin:0 0 16px 0;">Alle Angaben, das PDF und die hochgeladenen Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsvorstands:</p>
 ${button(d.link, "Antrag öffnen")}
 <p style="margin:0 0 16px 0; font-size:13px; line-height:20px; color:#49433f;">Diese Nachricht wurde automatisch von der Webseite versendet.</p>`,
   });
@@ -190,14 +190,14 @@ ${button(d.link, "Antrag öffnen")}
 
 ${textAngaben(angaben)}
 
-Alle Angaben, das PDF und die hochgeladenen Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsrats:
+Alle Angaben, das PDF und die hochgeladenen Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsvorstands:
 ${d.link}
 
 Diese Nachricht wurde automatisch von der Webseite versendet.`;
   return { betreff, html, text };
 }
 
-/* ---------- 3. Nachgereichte Unterlagen (an den Stiftungsrat) ---------- */
+/* ---------- 3. Nachgereichte Unterlagen (an den Stiftungsvorstand) ---------- */
 
 export function neueUnterlagenRat(d: {
   siteUrl: string;
@@ -220,7 +220,7 @@ export function neueUnterlagenRat(d: {
     inhalt: `<p style="margin:0 0 16px 0;">Guten Tag,</p>
 <p style="margin:0 0 16px 0;">zu einem Förderantrag wurden über die Webseite Unterlagen nachgereicht.</p>
 ${angabenTabelle(angaben)}
-<p style="margin:0 0 16px 0;">Die Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsrats:</p>
+<p style="margin:0 0 16px 0;">Die Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsvorstands:</p>
 ${button(d.link, "Antrag öffnen")}
 <p style="margin:0 0 16px 0; font-size:13px; line-height:20px; color:#49433f;">Diese Nachricht wurde automatisch von der Webseite versendet.</p>`,
   });
@@ -230,7 +230,7 @@ zu einem Förderantrag wurden über die Webseite Unterlagen nachgereicht.
 
 ${textAngaben(angaben)}
 
-Die Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsrats:
+Die Dokumente finden Sie nach der Anmeldung im Bereich des Stiftungsvorstands:
 ${d.link}
 
 Diese Nachricht wurde automatisch von der Webseite versendet.`;
@@ -243,7 +243,7 @@ Diese Nachricht wurde automatisch von der Webseite versendet.`;
  * Vorlage für die Bewilligungs-E-Mail (im Dialog bearbeitbar).
  * Platzhalter in geschweiften Klammern werden automatisch gefüllt:
  *   {anrede}, {antragsnummer}, {projekttitel}, {betrag}
- * Abschnitte in eckigen Klammern ergänzt das Ratsmitglied vor dem Versand;
+ * Abschnitte in eckigen Klammern ergänzt das Vorstandsmitglied vor dem Versand;
  * solange noch eckige Klammern im Text stehen, wird nicht gesendet.
  * Keine Bankdaten, keine Anhänge.
  */
@@ -251,7 +251,7 @@ export const BEWILLIGUNG_VORLAGE = {
   betreff: "Bewilligung Ihres Förderantrags {antragsnummer}",
   text: `{anrede},
 
-wir freuen uns, Ihnen mitteilen zu können, dass der Stiftungsrat der Bernhard Riepl Stiftung Ihren Förderantrag {antragsnummer} „{projekttitel}“ bewilligt hat. Die Förderung beträgt {betrag}.
+wir freuen uns, Ihnen mitteilen zu können, dass der Stiftungsvorstand der Bernhard Riepl Stiftung Ihren Förderantrag {antragsnummer} „{projekttitel}“ bewilligt hat. Die Förderung beträgt {betrag}.
 
 [Auszahlung: Bitte hier ergänzen, wann und auf welchem Weg der Betrag ausgezahlt wird.]
 
@@ -263,7 +263,7 @@ Wir wünschen Ihrem Vorhaben gutes Gelingen und danken Ihnen für Ihr Engagement
 
 Mit freundlichen Grüßen
 
-Der Stiftungsrat der Bernhard Riepl Stiftung`,
+Der Stiftungsvorstand der Bernhard Riepl Stiftung`,
 };
 
 /** Offene Abschnitte in eckigen Klammern, z. B. „[Auszahlung: …]“. */
@@ -278,7 +278,7 @@ export function bewilligung(d: { siteUrl: string; betreff: string; text: string 
 
 /* ---------- 5. Absage ---------- */
 
-/** Betreff und Text stammen aus dem Absagedialog (vom Ratsmitglied bearbeitet). */
+/** Betreff und Text stammen aus dem Absagedialog (vom Vorstandsmitglied bearbeitet). */
 export function absage(d: { siteUrl: string; betreff: string; text: string }): Mail {
   const html = rahmen({
     siteUrl: d.siteUrl,

@@ -13,10 +13,13 @@ import { Button } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
 import { AbsageDialog } from "./AbsageDialog";
 import { BewilligungDialog } from "./BewilligungDialog";
+import { AntragLoeschen } from "./LoeschenDialog";
+import { useAuth } from "../auth/AuthProvider";
 import { MailStatus } from "./MailStatus";
 
 export function RatDetail() {
   const { id } = useParams<{ id: string }>();
+  const { benutzer } = useAuth();
   const [antrag, setAntrag] = useState<Antrag | null | undefined>(undefined);
   const [status, setStatus] = useState<AntragStatus>("eingegangen");
   const [meldung, setMeldung] = useState<string>("");
@@ -35,7 +38,7 @@ export function RatDetail() {
   if (antrag === null)
     return (
       <div className="container-site py-20">
-        <Zurueck href="/stiftungsrat">Alle Anträge</Zurueck>
+        <Zurueck href="/stiftungsvorstand">Alle Anträge</Zurueck>
         <h1 className="mt-6 text-4xl">Antrag nicht gefunden</h1>
       </div>
     );
@@ -85,7 +88,7 @@ export function RatDetail() {
 
   return (
     <div className="container-site py-12 lg:py-20">
-      <Zurueck href="/stiftungsrat">Alle Anträge</Zurueck>
+      <Zurueck href="/stiftungsvorstand">Alle Anträge</Zurueck>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-3xl">
           <p className="caps text-sm text-neutral-700 mb-3 tabular-nums">Antrag {antrag.nummer} · {A.name}</p>
@@ -210,6 +213,7 @@ export function RatDetail() {
             </ul>
           </section>
           )}
+          {benutzer?.rolle === "admin" && <AntragLoeschen antrag={antrag} />}
         </aside>
       </div>
 

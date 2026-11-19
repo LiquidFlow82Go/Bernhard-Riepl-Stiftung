@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AntragTabelle } from "@/components/stiftungsrat/AntragTabelle";
+import { AntragTabelle } from "@/components/stiftungsvorstand/AntragTabelle";
 
 export default function Seite() {
   return (

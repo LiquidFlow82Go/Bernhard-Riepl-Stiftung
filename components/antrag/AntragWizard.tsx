@@ -60,7 +60,12 @@ export function AntragWizard() {
       const raw = localStorage.getItem(ENTWURF_KEY);
       if (raw) {
         const e = JSON.parse(raw);
-        d = { ...d, ...e.daten, konto: { ...d.konto, ...e.daten?.konto } };
+        d = {
+          ...d,
+          ...e.daten,
+          finanzierung: { ...d.finanzierung, ...e.daten?.finanzierung },
+          konto: { ...d.konto, ...e.daten?.konto },
+        };
         setSchritt(Math.min(Math.max(1, e.schritt ?? 1), 6));
         setHinweis(`Ihr Entwurf vom ${new Date(e.gespeichert).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })} wurde wiederhergestellt.`);
       }

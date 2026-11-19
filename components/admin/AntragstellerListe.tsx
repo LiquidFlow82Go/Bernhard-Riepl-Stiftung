@@ -20,7 +20,7 @@ export function AntragstellerListe() {
 
   return (
     <div className="container-site py-12 lg:py-20">
-      <Zurueck href="/stiftungsrat">Alle Anträge</Zurueck>
+      <Zurueck href="/stiftungsvorstand">Alle Anträge</Zurueck>
       <p className="mt-8 caps text-sm text-neutral-700 mb-3">Admin</p>
       <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Ansicht Antragsteller</h1>
       <div className="mt-8 mb-10 max-w-3xl"><NurLesenHinweis /></div>
@@ -36,7 +36,7 @@ export function AntragstellerListe() {
           {liste.map((k) => (
             <li key={k.id} className="border-b border-neutral-400">
               <Link
-                href={`/stiftungsrat/antragsteller/${k.id}`}
+                href={`/stiftungsvorstand/antragsteller/${k.id}`}
                 className="grid gap-1 py-5 md:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_auto] md:items-center md:gap-6 hover:bg-neutral-100"
               >
                 <span className="text-lg text-neutral-800 underline underline-offset-4 break-words">{anzeigeName(k)}</span>
@@ -67,13 +67,13 @@ export function AntragstellerKontoAnsicht() {
   if (konto === null)
     return (
       <div className="container-site py-20">
-        <Zurueck href="/stiftungsrat/antragsteller">Alle Antragsteller</Zurueck>
+        <Zurueck href="/stiftungsvorstand/antragsteller">Alle Antragsteller</Zurueck>
         <h1 className="mt-6 text-4xl">Konto nicht gefunden</h1>
       </div>
     );
   return (
     <Suspense>
-      <KontoUebersicht ansicht={{ konto, basis: `/stiftungsrat/antragsteller/${konto.id}` }} />
+      <KontoUebersicht ansicht={{ konto, basis: `/stiftungsvorstand/antragsteller/${konto.id}` }} />
     </Suspense>
   );
 }
@@ -81,5 +81,5 @@ export function AntragstellerKontoAnsicht() {
 /** Admin: Detailansicht eines Antrags aus Sicht des Antragstellers – nur lesend. */
 export function AntragstellerAntragAnsicht() {
   const { benutzerId } = useParams<{ benutzerId: string }>();
-  return <KontoDetail ansicht={{ benutzerId, zurueck: `/stiftungsrat/antragsteller/${benutzerId}` }} />;
+  return <KontoDetail ansicht={{ benutzerId, zurueck: `/stiftungsvorstand/antragsteller/${benutzerId}` }} />;
 }

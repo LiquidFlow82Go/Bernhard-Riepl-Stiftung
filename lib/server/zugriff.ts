@@ -16,7 +16,7 @@ export async function sitzung(): Promise<{ id: string; rolle: Rolle } | null> {
   return { id: user.id, rolle: data.rolle as Rolle };
 }
 
-/** Stiftungsrat-Rechte (Ratsmitglied oder Admin). */
+/** Stiftungsvorstand-Rechte (Vorstandsmitglied oder Admin). */
 export function istRatRolle(rolle: Rolle): boolean {
   return rolle === "stiftungsrat" || rolle === "admin";
 }

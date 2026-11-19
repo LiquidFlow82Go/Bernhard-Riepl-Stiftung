@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Hinweis an den Stiftungsrat (MAIL_STIFTUNGSRAT), dass Unterlagen nachgereicht wurden.
+ * Hinweis an den Stiftungsvorstand (MAIL_STIFTUNGSRAT), dass Unterlagen nachgereicht wurden.
  * Nur der Antragsteller des eigenen Antrags, nur wenn in den letzten 30 Minuten
  * tatsächlich Dokumente nachgereicht wurden, höchstens alle 5 Minuten.
  * Empfänger stammen nie aus der Anfrage.
@@ -31,7 +31,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const versuche = await letzteVersuche(antrag.id, "nachreichung");
   if (versuche[0] && Date.now() - new Date(versuche[0].zeitpunkt).getTime() < 5 * MINUTEN)
-    return antwort(200, { ergebnis: { status: "gesperrt", fehler: "Der Stiftungsrat wurde vor wenigen Minuten bereits informiert." } });
+    return antwort(200, { ergebnis: { status: "gesperrt", fehler: "Der Stiftungsvorstand wurde vor wenigen Minuten bereits informiert." } });
 
   const basis = siteUrl();
   const mail = neueUnterlagenRat({
@@ -40,7 +40,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     institution: antrag.antragsteller_name ?? "",
     projekttitel: antrag.projekt_titel ?? "",
     anzahl: count,
-    link: `${basis}/stiftungsrat/antraege/${antrag.id}`,
+    link: `${basis}/stiftungsvorstand/antraege/${antrag.id}`,
   });
   const r = await sendeMail({ art: "nachreichung", antragId: antrag.id, an: stiftungsratAdressen(), ...mail, ausgeloestVon: wer.id });
   return antwort(200, { ergebnis: r.ok ? { status: "gesendet" } : { status: "fehlgeschlagen", fehler: r.fehler } });

@@ -11,7 +11,7 @@ function zeit(iso: string) {
   return new Date(iso).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" });
 }
 
-/** E-Mail-Protokoll eines Antrags mit Möglichkeit, die Rats-Benachrichtigung erneut zu senden. */
+/** E-Mail-Protokoll eines Antrags mit Möglichkeit, die Vorstands-Benachrichtigung erneut zu senden. */
 export function MailStatus({ antragId, aktualisierung }: { antragId: string; aktualisierung: number }) {
   const [eintraege, setEintraege] = useState<MailProtokollEintrag[] | null>(null);
   const [sendet, setSendet] = useState(false);
@@ -45,7 +45,7 @@ export function MailStatus({ antragId, aktualisierung }: { antragId: string; akt
       {ratFehlgeschlagen && (
         <div className="mt-4">
           <Hinweisbox art="warn">
-            Die Benachrichtigung an den Stiftungsrat zu diesem Antrag konnte nicht versendet werden.
+            Die Benachrichtigung an den Stiftungsvorstand zu diesem Antrag konnte nicht versendet werden.
           </Hinweisbox>
         </div>
       )}

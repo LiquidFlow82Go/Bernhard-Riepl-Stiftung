@@ -69,14 +69,14 @@ export function KontoDetail({ ansicht }: { ansicht?: DetailLeseAnsicht } = {}) {
       {antrag.status === "bewilligt" && (
         <div className="mt-8">
           <Hinweisbox art="ok">
-            Der Stiftungsrat hat Ihren Antrag bewilligt. Bewilligter Betrag: <strong className="font-medium">{formatEuro(antrag.bewilligterBetrag)}</strong>
+            Der Stiftungsvorstand hat Ihren Antrag bewilligt. Bewilligter Betrag: <strong className="font-medium">{formatEuro(antrag.bewilligterBetrag)}</strong>
           </Hinweisbox>
         </div>
       )}
       {antrag.status === "abgelehnt" && antrag.absage && (
         <div className="mt-8">
           <Hinweisbox art="info">
-            Der Stiftungsrat hat Ihren Antrag am {datumDe(antrag.absage.datum, true)} abgelehnt. Die Begründung haben Sie per E-Mail erhalten.
+            Der Stiftungsvorstand hat Ihren Antrag am {datumDe(antrag.absage.datum, true)} abgelehnt. Die Begründung haben Sie per E-Mail erhalten.
           </Hinweisbox>
         </div>
       )}

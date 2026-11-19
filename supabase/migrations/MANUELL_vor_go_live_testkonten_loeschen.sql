@@ -6,7 +6,7 @@
 --
 -- Entfernt die beiden Testkonten mit allem, was daran hängt:
 --   antrag@test.de  (Antragsteller)
---   rat@test.de     (Stiftungsrat)
+--   rat@test.de     (Stiftungsvorstand)
 --
 -- Gelöscht werden: Anträge der Testkonten samt Dokument-Einträgen,
 -- Absagen, Bewilligungen und Mailprotokoll; danach die Konten selbst

@@ -160,7 +160,7 @@ export async function ladeEigeneAntraege(benutzerId: string): Promise<Antrag[]> 
   return (data as AntragZeile[]).map(zuAntrag);
 }
 
-/** Alle Anträge (nur Stiftungsrat, durch RLS abgesichert). */
+/** Alle Anträge (nur Stiftungsvorstand, durch RLS abgesichert). */
 export async function ladeAlleAntraege(filter: AntragFilter = {}): Promise<Antrag[]> {
   let q = supabase().from("antraege").select("*, dokumente(*)").order("eingereicht_am", { ascending: false });
   if (filter.jahr && filter.jahr !== "alle") q = q.like("nummer", `${filter.jahr}-%`);
@@ -259,7 +259,7 @@ export interface AntragstellerKonto extends Benutzer {
   anzahlAntraege: number;
 }
 
-/** Alle Antragsteller-Konten (nur für Stiftungsrat/Admin lesbar, per RLS). */
+/** Alle Antragsteller-Konten (nur für Stiftungsvorstand/Admin lesbar, per RLS). */
 export async function ladeAntragstellerKonten(): Promise<AntragstellerKonto[]> {
   const sb = supabase();
   const [{ data, error }, { data: antraege }] = await Promise.all([
@@ -329,7 +329,7 @@ export async function reicheUnterlagenNach(
   return { hochgeladen, fehlgeschlagen };
 }
 
-/** Frühester Zeitpunkt nachgereichter Unterlagen, die der Stiftungsrat noch nicht gesehen hat. */
+/** Frühester Zeitpunkt nachgereichter Unterlagen, die der Stiftungsvorstand noch nicht gesehen hat. */
 export function neueUnterlagenSeit(a: Antrag): string | null {
   const gesehen = a.unterlagenGesehenAm ?? "";
   const neu = a.dokumente
@@ -339,13 +339,13 @@ export function neueUnterlagenSeit(a: Antrag): string | null {
   return neu[0] ?? null;
 }
 
-/** Stiftungsrat: nachgereichte Unterlagen als gesehen markieren. */
+/** Stiftungsvorstand: nachgereichte Unterlagen als gesehen markieren. */
 export async function markiereUnterlagenGesehen(id: string): Promise<void> {
   const { error } = await supabase().from("antraege").update({ unterlagen_gesehen_am: new Date().toISOString() }).eq("id", id);
   wirf(error, "Konnte nicht gespeichert werden");
 }
 
-/* ---------- Stiftungsrat ---------- */
+/* ---------- Stiftungsvorstand ---------- */
 
 /**
  * Status „Eingegangen“ bzw. „In Prüfung“ setzen. „Bewilligt“ und „Abgelehnt“
@@ -364,7 +364,7 @@ export async function aendereStatus(id: string, status: "eingegangen" | "in_prue
  * versendet die E-Mail und setzt erst danach den Status auf „Abgelehnt“.
  */
 
-/** E-Mail-Protokoll eines Antrags (nur Stiftungsrat, per RLS). */
+/** E-Mail-Protokoll eines Antrags (nur Stiftungsvorstand, per RLS). */
 export async function ladeMailProtokoll(antragId: string): Promise<MailProtokollEintrag[]> {
   const { data, error } = await supabase()
     .from("mail_log")

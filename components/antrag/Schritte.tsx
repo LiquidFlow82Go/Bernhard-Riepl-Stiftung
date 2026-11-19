@@ -148,12 +148,12 @@ export function Schritt4() {
         <BetragZeile pfad="finanzierung.eigenleistung" label="Eigenleistung" eingerueckt />
         <BetragZeile pfad="finanzierung.einnahmen" label="Zu erwartende Einnahmen" />
         <SummenZeile label="Öffentliche Mittel" hinweis="durch Anträge belegen" wert={formatBetrag(s.oeffentlich)} />
-        <BetragZeile pfad="finanzierung.gemeinde" label="Gemeinde / Stadt" eingerueckt />
-        <BetragZeile pfad="finanzierung.landkreis" label="Landkreis" eingerueckt />
-        <BetragZeile pfad="finanzierung.land" label="Land / Bund" eingerueckt />
-        <BetragZeile pfad="finanzierung.sonstige" label="Sonstige" eingerueckt />
+        <BetragZeile pfad="finanzierung.gemeinde" label="Gemeinde / Stadt" eingerueckt namePfad="finanzierung.gemeindeName" nameLabel="Name der Gemeinde / Stadt" namePlatzhalter="z. B. Stadt Miesbach" />
+        <BetragZeile pfad="finanzierung.landkreis" label="Landkreis" eingerueckt namePfad="finanzierung.landkreisName" nameLabel="Name des Landkreises" namePlatzhalter="z. B. Landkreis Miesbach" />
+        <BetragZeile pfad="finanzierung.land" label="Land / Bund" eingerueckt namePfad="finanzierung.landName" nameLabel="Fördernde Stelle bei Land / Bund" namePlatzhalter="z. B. Bayerischer Kulturfonds" />
+        <BetragZeile pfad="finanzierung.sonstige" label="Sonstige" eingerueckt namePfad="finanzierung.sonstigeName" nameLabel="Name der Stelle" namePlatzhalter="z. B. Bezirk Oberbayern" />
         <BetragZeile pfad="finanzierung.weitere" label="Weitere Mittel" hinweis="z. B. durch Firmen o. ä." />
-        <BetragZeile pfad="finanzierung.stiftung" label="Bernhard Riepl Stiftung – beantragte Förderung" />
+        <BetragZeile pfad="finanzierung.stiftung" label="Bernhard Riepl Stiftung – beantragte Förderung" hinweis="Der Betrag, den Sie bei der Stiftung beantragen." hervorgehoben />
         <SummenZeile label="Summe Finanzierung" wert={formatBetrag(s.finanzierung)} gesamt />
         <p role="status" className={`mt-5 px-5 py-3 font-medium ${stil}`}>
           {d.text}

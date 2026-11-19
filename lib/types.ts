@@ -5,7 +5,7 @@
 
 export type Rolle = "antragsteller" | "stiftungsrat" | "admin";
 
-/** Stiftungsrat-Bereich: Ratsmitglieder und Admins. */
+/** Stiftungsvorstand-Bereich: Vorstandsmitglieder und Admins. */
 export function istRat(rolle: Rolle | null | undefined): boolean {
   return rolle === "stiftungsrat" || rolle === "admin";
 }
@@ -69,9 +69,15 @@ export interface FinanzierungDaten {
   eigenleistung: string;
   einnahmen: string;
   gemeinde: string;
+  /** Name der Gemeinde / Stadt */
+  gemeindeName: string;
   landkreis: string;
+  landkreisName: string;
   land: string;
+  /** Land bzw. Bundesstelle, z. B. Bayerisches Staatsministerium … */
+  landName: string;
   sonstige: string;
+  sonstigeName: string;
   weitere: string;
   stiftung: string;
 }
@@ -140,7 +146,7 @@ export interface Antrag {
   kontoEmail?: string;
   /** Letzte Bewilligung (Betrag, ggf. gesendete E-Mail, Datum) */
   bewilligung?: Bewilligung | null;
-  /** Stiftungsrat hat nachgereichte Unterlagen bis zu diesem Zeitpunkt gesehen */
+  /** Stiftungsvorstand hat nachgereichte Unterlagen bis zu diesem Zeitpunkt gesehen */
   unterlagenGesehenAm?: string | null;
   aktualisiertAm: string;
 }
@@ -164,7 +170,7 @@ export interface MailProtokollEintrag {
 
 export const MAIL_ART_LABEL: Record<MailProtokollEintrag["art"], string> = {
   eingang_antragsteller: "Eingangsbestätigung an Antragsteller",
-  eingang_stiftungsrat: "Benachrichtigung Stiftungsrat",
+  eingang_stiftungsrat: "Benachrichtigung Stiftungsvorstand",
   absage: "Absage",
   nachreichung: "Hinweis auf nachgereichte Unterlagen",
   bewilligung: "Bewilligung",
@@ -223,9 +229,13 @@ export function leererAntrag(): AntragDaten {
       eigenleistung: "",
       einnahmen: "",
       gemeinde: "",
+      gemeindeName: "",
       landkreis: "",
+      landkreisName: "",
       land: "",
+      landName: "",
       sonstige: "",
+      sonstigeName: "",
       weitere: "",
       stiftung: "",
     },
