@@ -199,7 +199,7 @@
 /* Desktop: Hover nur mit Maus. Wie bei Webflow-Feature-Karten: weicher großer
    Schatten, Überschrift und Ziffer in der Akzentfarbe, goldene Linie läuft durch.
    Farbe und Schatten auch bei „Bewegung reduzieren“, nur das Vergrößern nicht. */
-@media (any-hover: hover) and (min-width: 1024px) {
+@media (min-width: 1024px) {
   .schritt-linie { transform: scaleX(0.18); }
   .schritt-kachel { box-shadow: 0 2px 4px rgba(120, 72, 20, 0.06); }
   .schritt-kachel:hover {
@@ -211,7 +211,7 @@
   .schritt-kachel:hover .schritt-nr,
   .schritt-kachel:hover .schritt-titel { color: #9a4a0f; }
 }
-@media (any-hover: hover) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   .schritt-kachel:hover { transform: scale(1.03); }
 }
 @media (prefers-reduced-motion: reduce) {
