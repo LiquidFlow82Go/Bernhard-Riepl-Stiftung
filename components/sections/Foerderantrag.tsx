@@ -21,11 +21,11 @@ export function Foerderantrag() {
 
         <SchrittKacheln />
 
-        <Einblenden className="mt-[80px] lg:mt-[120px] grid bg-neutral-800 lg:grid-cols-2">
+        <Einblenden className="mt-[80px] lg:mt-[120px] grid bg-[#26384a] lg:grid-cols-2">
           <div className="relative min-h-[280px] lg:min-h-[520px]">
             <Image
-              src="/bilder/abendrot.jpg"
-              alt="Abendrot über dem Alpenvorland, im Vordergrund die Silhouette eines Baumes"
+              src="/bilder/steg-see.jpg"
+              alt="Holzsteg, der in einen stillen Bergsee hinausführt; Nebel liegt über dem Wasser, dahinter Berge unter blauem Himmel"
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="object-cover"
@@ -38,7 +38,7 @@ export function Foerderantrag() {
             <ul className="mt-8 space-y-4">
               {FOERDERVORAUSSETZUNGEN.map((v) => (
                 <li key={v} className="flex gap-4 text-neutral-200 text-base leading-relaxed">
-                  <span aria-hidden="true" className="mt-[11px] h-px w-6 shrink-0 bg-abendrot" />
+                  <span aria-hidden="true" className="mt-[11px] h-px w-6 shrink-0 bg-[#d6b48e]" />
                   {v}
                 </li>
               ))}
