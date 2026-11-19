@@ -71,7 +71,7 @@ function UploadFeld({ k, hinweis }: { k: DokumentKategorie; hinweis: string }) {
           />
           <label
             htmlFor={id}
-            className="inline-flex items-center justify-center gap-2 rounded-pill border border-neutral-400 bg-neutral-100 shadow-button px-5 py-[11px] font-display text-[15px] text-neutral-800 cursor-pointer peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-eisenhut max-[479px]:w-full"
+            className="inline-flex items-center justify-center gap-2 min-h-12 rounded-pill border border-neutral-400 bg-neutral-100 shadow-button px-5 py-[11px] font-display text-[15px] text-neutral-800 cursor-pointer peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-eisenhut max-[479px]:w-full"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4"><path d="M8 11V2M4.5 5.5 8 2l3.5 3.5M2 11v3h12v-3" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg>
             Datei auswählen<span className="sr-only">: {DOKUMENT_LABEL[k]}</span>
@@ -89,7 +89,7 @@ function UploadFeld({ k, hinweis }: { k: DokumentKategorie; hinweis: string }) {
               <button
                 type="button"
                 onClick={() => entferne(i)}
-                className="shrink-0 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer py-1"
+                className="shrink-0 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer min-h-11 px-1"
               >
                 Entfernen<span className="sr-only">: {f.name}</span>
               </button>
@@ -108,8 +108,8 @@ export function DokumenteUpload() {
   return (
     <div>
       <p className="text-base max-w-[70ch]">
-        Erlaubt sind PDF, JPG und PNG mit höchstens 10 MB je Datei. Sie können pro Anlage mehrere Dateien auswählen oder per
-        Drag-and-drop ablegen.
+        Erlaubt sind PDF, JPG und PNG mit höchstens 10 MB je Datei. Sie können pro Anlage mehrere Dateien auswählen, per
+        Drag-and-drop ablegen oder auf dem Smartphone direkt fotografieren.
       </p>
       <p className="mt-3 text-sm text-neutral-700 max-w-[70ch]">
         Die Dateien werden beim Absenden des Antrags übertragen. Nach einem Neuladen der Seite wählen Sie sie bitte erneut aus.

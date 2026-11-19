@@ -18,9 +18,13 @@ export function Faq() {
           eintraege={FAQ.map((f) => ({
             titel: f.frage,
             inhalt: (
-              <p>
-                <MitPlatzhaltern text={f.antwort} />
-              </p>
+              <div className="grid gap-4">
+                {f.antwort.split(/\n{2,}/).map((absatz, i) => (
+                  <p key={i}>
+                    <MitPlatzhaltern text={absatz} />
+                  </p>
+                ))}
+              </div>
             ),
           }))}
         />

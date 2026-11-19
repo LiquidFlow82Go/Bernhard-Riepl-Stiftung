@@ -199,25 +199,25 @@ export function AntragWizard() {
       <div className="grid gap-10 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-16">
         {/* Fortschritt */}
         <nav aria-label="Schritte des Antrags" className="lg:sticky lg:top-28 lg:self-start">
-          <ol className="flex lg:flex-col gap-1 overflow-x-auto -mx-6 px-6 lg:mx-0 lg:px-0 pb-2 lg:pb-0 border-b lg:border-b-0 lg:border-l border-neutral-400">
+          <ol className="flex lg:flex-col justify-between lg:justify-start gap-1 pb-3 lg:pb-0 border-b lg:border-b-0 lg:border-l border-neutral-400">
             {SCHRITTE.map((s) => {
               const aktiv = s.nr === schritt;
               const erledigt = s.nr < schritt;
               return (
-                <li key={s.nr} className="shrink-0">
+                <li key={s.nr} className="lg:shrink-0">
                   <button
                     type="button"
                     onClick={() => geheZu(s.nr)}
                     aria-current={aktiv ? "step" : undefined}
-                    className={`flex items-center gap-3 py-2.5 px-3 lg:pl-5 text-left cursor-pointer whitespace-nowrap lg:-ml-px border-b-2 lg:border-b-0 lg:border-l-2 ${aktiv ? "border-neutral-800 text-neutral-800" : "border-transparent text-neutral-700 hover:text-neutral-800"}`}
+                    className={`flex items-center justify-center lg:justify-start gap-3 min-h-11 min-w-11 lg:py-2.5 lg:px-3 lg:pl-5 text-left cursor-pointer whitespace-nowrap lg:-ml-px lg:border-l-2 ${aktiv ? "lg:border-neutral-800 text-neutral-800" : "lg:border-transparent text-neutral-700 hover:text-neutral-800"}`}
                   >
                     <span
                       aria-hidden="true"
-                      className={`grid place-items-center size-7 rounded-pill text-xs tabular-nums ${aktiv ? "bg-neutral-800 text-neutral-100" : erledigt ? "bg-wiese text-neutral-100" : "border border-neutral-700"}`}
+                      className={`grid place-items-center size-9 lg:size-7 rounded-pill text-sm lg:text-xs tabular-nums ${aktiv ? "bg-neutral-800 text-neutral-100" : erledigt ? "bg-wiese text-neutral-100" : "border border-neutral-700 bg-neutral-100"}`}
                     >
                       {erledigt ? "✓" : s.nr}
                     </span>
-                    <span className={aktiv ? "font-medium" : ""}>
+                    <span className={`sr-only lg:not-sr-only ${aktiv ? "font-medium" : ""}`}>
                       <span className="sr-only">Schritt {s.nr}: </span>
                       {s.titel}
                       {erledigt && <span className="sr-only"> (bearbeitet)</span>}
@@ -286,24 +286,37 @@ export function AntragWizard() {
                 {sendeFehler}
               </div>
             )}
-            <div className="mt-16 pt-8 border-t border-neutral-400 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-wrap gap-3">
+            {schritt === 6 && (
+              <div className="mt-12 lg:hidden">
+                <Button variante="sekundaer" onClick={entwurfPdf} className="h-12">
+                  Entwurf als PDF
+                </Button>
+              </div>
+            )}
+            <div className="aktionsleiste sticky bottom-0 z-20 -mx-6 mt-10 px-6 pt-3 bg-neutral-200/95 backdrop-blur-sm border-t border-neutral-400 lg:static lg:mx-0 lg:mt-16 lg:px-0 lg:pt-8 lg:pb-0 lg:bg-transparent lg:backdrop-blur-none flex items-center justify-between gap-3">
+              <div className="flex gap-3">
                 {schritt > 1 && (
-                  <Button variante="ghost" onClick={zurueck}>
+                  <Button variante="ghost" onClick={zurueck} className="h-12 lg:h-auto max-[479px]:!w-auto">
                     Zurück
                   </Button>
                 )}
                 {schritt === 6 && (
-                  <Button variante="sekundaer" onClick={entwurfPdf}>
-                    Entwurf als PDF
-                  </Button>
+                  <span className="hidden lg:block">
+                    <Button variante="sekundaer" onClick={entwurfPdf}>
+                      Entwurf als PDF
+                    </Button>
+                  </span>
                 )}
               </div>
-              <Button type="submit" gross disabled={sendet} aria-disabled={sendet}>
-                {schritt === 6 ? (sendet ? "Wird gesendet …" : "Antrag verbindlich absenden") : `Weiter zu: ${SCHRITTE[schritt].titel}`}
+              <Button type="submit" gross disabled={sendet} aria-disabled={sendet} className="h-12 lg:h-auto flex-1 sm:flex-none max-[479px]:!w-auto">
+                {schritt === 6 ? (
+                  sendet ? "Wird gesendet …" : <><span className="sm:hidden">Absenden</span><span className="hidden sm:inline">Antrag verbindlich absenden</span></>
+                ) : (
+                  <><span className="sm:hidden">Weiter</span><span className="hidden sm:inline">Weiter zu: {SCHRITTE[schritt].titel}</span></>
+                )}
               </Button>
             </div>
-            <button type="button" onClick={verwerfen} className="lg:hidden mt-8 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer">
+            <button type="button" onClick={verwerfen} className="lg:hidden mt-6 min-h-11 text-sm underline underline-offset-4 text-neutral-800 cursor-pointer">
               Entwurf verwerfen
             </button>
           </form>

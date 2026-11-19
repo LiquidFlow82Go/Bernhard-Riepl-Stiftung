@@ -2,7 +2,7 @@ import { ABSAGE_VORLAGEN } from "@/content/absageVorlagen";
 import { absage } from "@/content/mailVorlagen";
 import { adressListe, archivAdressen, letzteVersuche, sendeMail, siteUrl } from "@/lib/mail";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { antwort, ladeAntragKern, MINUTEN, sitzung } from "@/lib/server/zugriff";
+import { antwort, istRatRolle, ladeAntragKern, MINUTEN, sitzung } from "@/lib/server/zugriff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const wer = await sitzung().catch(() => null);
   if (!wer) return antwort(401, { fehler: "Bitte melden Sie sich an." });
-  if (wer.rolle !== "stiftungsrat") return antwort(403, { fehler: "Nur der Stiftungsrat darf Absagen versenden." });
+  if (!istRatRolle(wer.rolle)) return antwort(403, { fehler: "Nur der Stiftungsrat darf Absagen versenden." });
 
   let body: { grundId?: unknown; betreff?: unknown; text?: unknown };
   try {

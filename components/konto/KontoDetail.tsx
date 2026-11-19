@@ -2,38 +2,47 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ladeAntrag } from "@/lib/antraege";
+import { ladeAntrag, nachreichenMoeglich } from "@/lib/antraege";
 import { formatEuro } from "@/lib/betrag";
 import { datumDe } from "@/lib/format";
 import type { Antrag } from "@/lib/types";
 import { AntragAnsicht } from "../antrag/AntragAnsicht";
 import { useAuth } from "../auth/AuthProvider";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
-import { DokumentAktionen, PdfButton, Zurueck } from "./Gemeinsam";
+import { Nachreichen } from "./Nachreichen";
+import { ansichtDokumente, NurLesenHinweis, PdfButton, Zurueck } from "./Gemeinsam";
 
-export function KontoDetail() {
+/** Lesende Ansicht (nur Admin): Antrag eines bestimmten Kontos ohne Upload. */
+export interface DetailLeseAnsicht {
+  benutzerId: string;
+  zurueck: string;
+}
+
+export function KontoDetail({ ansicht }: { ansicht?: DetailLeseAnsicht } = {}) {
   const { id } = useParams<{ id: string }>();
-  const { benutzer } = useAuth();
+  const { benutzer: angemeldet } = useAuth();
+  const kontoId = ansicht ? ansicht.benutzerId : angemeldet?.id;
+  const zurueck = ansicht?.zurueck ?? "/konto";
   const [antrag, setAntrag] = useState<Antrag | null | undefined>(undefined);
 
   useEffect(() => {
     ladeAntrag(id)
-      .then((a) => setAntrag(a && a.benutzerId === benutzer?.id ? a : null))
+      .then((a) => setAntrag(a && a.benutzerId === kontoId ? a : null))
       .catch(() => setAntrag(null));
-  }, [id, benutzer]);
+  }, [id, kontoId]);
 
   if (antrag === undefined) return <Laden />;
   if (antrag === null)
     return (
       <div className="container-site py-20">
-        <Zurueck href="/konto">Meine Anträge</Zurueck>
+        <Zurueck href={zurueck}>{ansicht ? "Anträge dieses Kontos" : "Meine Anträge"}</Zurueck>
         <h1 className="mt-6 text-4xl">Antrag nicht gefunden</h1>
       </div>
     );
 
   return (
     <div className="container-site py-12 lg:py-20">
-      <Zurueck href="/konto">Meine Anträge</Zurueck>
+      <Zurueck href={zurueck}>{ansicht ? "Anträge dieses Kontos" : "Meine Anträge"}</Zurueck>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-3xl">
           <p className="caps text-sm text-neutral-700 mb-3 tabular-nums">Antrag {antrag.nummer}</p>
@@ -72,12 +81,15 @@ export function KontoDetail() {
         </div>
       )}
 
+      {ansicht && <div className="mt-8"><NurLesenHinweis /></div>}
+      {!ansicht && nachreichenMoeglich(antrag) && <Nachreichen antrag={antrag} onAktualisiert={setAntrag} />}
+
       <h2 className="mt-16 mb-8 text-[30px] leading-[1.2]">Ihre Angaben</h2>
-      <p className="-mt-4 mb-10 text-sm text-neutral-700">Eingereichte Anträge können nicht mehr bearbeitet werden. Bei Änderungen wenden Sie sich bitte an die Stiftung.</p>
+      <p className="-mt-4 mb-10 text-sm text-neutral-700">Eingereichte Anträge können nicht mehr bearbeitet werden. Fehlende Unterlagen können Sie oben nachreichen; bei anderen Änderungen wenden Sie sich bitte an die Stiftung.</p>
       <AntragAnsicht
         daten={antrag.daten}
         bewilligt={antrag.status === "bewilligt" ? antrag.bewilligterBetrag : undefined}
-        dokumente={antrag.dokumente.map((d) => ({ ...d, aktionen: <DokumentAktionen d={d} /> }))}
+        dokumente={ansichtDokumente(antrag.dokumente)}
       />
     </div>
   );

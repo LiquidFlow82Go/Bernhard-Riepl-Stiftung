@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HAUPTMENUE } from "@/content/navigation";
 import { abmelden } from "@/lib/auth";
+import { anzeigeName } from "@/lib/format";
 import { useAuth } from "../auth/AuthProvider";
 
 /**
@@ -60,7 +61,11 @@ export function Header() {
   }, [offen]);
 
   const glas = startseite && ueberHero && !offen;
-  const bereich = benutzer ? (benutzer.rolle === "stiftungsrat" ? "/stiftungsrat" : "/konto") : null;
+  const rat = benutzer?.rolle === "stiftungsrat" || benutzer?.rolle === "admin";
+  const bereich = benutzer ? (rat ? "/stiftungsrat" : "/konto") : null;
+  const name = anzeigeName(benutzer);
+  const bereichKurz = rat ? (benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat") : "Mein Konto";
+  const bereichLang = rat ? `${bereichKurz} – ${name}` : `Konto von ${name}`;
 
   async function raus() {
     await abmelden();
@@ -76,7 +81,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-6 pointer-events-none">
+      <header className="fixed inset-x-0 top-0 z-40 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 sm:pt-[max(1rem,env(safe-area-inset-top))] lg:px-6 lg:pt-6 pointer-events-none">
         <div
           className={`pointer-events-auto mx-auto max-w-[1200px] flex items-center justify-between gap-4 rounded-pill border pl-4 pr-2 py-2 sm:pl-5 lg:pl-6 lg:pr-2.5 lg:py-2.5 transition-[background-color,border-color,box-shadow] duration-500 ease-out backdrop-blur-md ${
             glas
@@ -93,7 +98,7 @@ export function Header() {
             <span
               className={`font-display font-extralight text-[18px] sm:text-[21px] leading-none truncate transition-colors duration-500 ${glas ? "text-neutral-100" : "text-neutral-800"}`}
             >
-              Bernhard Riepl <span className="max-[359px]:hidden">Stiftung</span>
+              Bernhard Riepl <span className="max-[399px]:hidden">Stiftung</span>
             </span>
           </Link>
 
@@ -112,8 +117,14 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {benutzer ? (
               <>
-                <Link href={bereich!} className={glas ? btnHell : btnDunkel}>
-                  {benutzer.rolle === "stiftungsrat" ? "Stiftungsrat" : "Mein Konto"}
+                {benutzer.rolle === "admin" && (
+                  <Link href="/stiftungsrat/antragsteller" className={`${link} px-1`}>
+                    Ansicht Antragsteller
+                  </Link>
+                )}
+                <Link href={bereich!} className={`${glas ? btnHell : btnDunkel} max-w-[300px]`} title={bereichLang}>
+                  <span className="xl:hidden">{bereichKurz}</span>
+                  <span className="hidden xl:inline truncate">{bereichLang}</span>
                 </Link>
                 <button type="button" onClick={raus} className={`${link} px-2 cursor-pointer`}>
                   Abmelden
@@ -164,9 +175,14 @@ export function Header() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
             {benutzer ? (
               <>
-                <Link href={bereich!} className={`${btnDunkel} h-12 text-base`}>
-                  {benutzer.rolle === "stiftungsrat" ? "Stiftungsrat" : "Mein Konto"}
+                <Link href={bereich!} onClick={() => setOffen(false)} className={`${btnDunkel} h-12 text-base`}>
+                  <span className="truncate">{bereichLang}</span>
                 </Link>
+                {benutzer.rolle === "admin" && (
+                  <Link href="/stiftungsrat/antragsteller" onClick={() => setOffen(false)} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
+                    Ansicht Antragsteller
+                  </Link>
+                )}
                 <button type="button" onClick={raus} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
                   Abmelden
                 </button>

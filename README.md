@@ -84,10 +84,7 @@ Unter **Settings → Environment Variables** für **Production und Preview** ein
 - Auf Vorschau-Deployments mit [Ethereal](https://ethereal.email): Konto anlegen, `SMTP_HOST=smtp.ethereal.email`, `SMTP_PORT=587`, `SMTP_SECURE=false` und die angezeigten Zugangsdaten. Diese Werte nur für **Preview** eintragen.
 
 ### 3. Supabase Auth über dasselbe Postfach
-1. **Authentication → Emails → SMTP Settings → Enable custom SMTP**:
-   - Sender email: Wert von `MAIL_FROM`
-   - Sender name: `Bernhard Riepl Stiftung`
-   - Host, Port, Username, Password: wie `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`
+1. **Eigenes SMTP in Supabase einrichten** – Schritt für Schritt im Abschnitt [„Supabase: eigenes SMTP-Postfach“](#supabase-eigenes-smtp-postfach) weiter unten.
 2. **Authentication → Rate Limits:** Das E-Mail-Limit steht nach dem Aktivieren auf 30 pro Stunde, das reicht.
 3. **Authentication → Emails → Templates:**
    - „Confirm sign up“: Betreff und Inhalt aus `supabase/email-vorlagen/konto-bestaetigen.html`
@@ -102,6 +99,44 @@ Unter **Settings → Environment Variables** für **Production und Preview** ein
 
 Die Links in den Auth-E-Mails führen immer zur Site URL, also zur Produktion. Das gilt auch, wenn man sich auf einer Vorschau registriert. Da Vorschau und Produktion dieselbe Datenbank nutzen, funktioniert das trotzdem.
 
+### Supabase: eigenes SMTP-Postfach
+
+Ohne eigenes SMTP verschickt Supabase Bestätigungs- und Passwort-Mails nur an Teammitglieder des Projekts und höchstens wenige pro Stunde. Für den echten Betrieb braucht es das Postfach der Stiftung. Beispiel: `antrag@bernhard-riepl-stiftung.de`.
+
+**Vorher beim Mail-Anbieter bereitlegen** (Kundenbereich, meist unter „E-Mail → Postfach → Server-Einstellungen“):
+- SMTP-Server (Postausgang), z. B. `smtp.ionos.de` bei IONOS
+- Port und Verschlüsselung: `465` mit SSL/TLS oder `587` mit STARTTLS
+- Benutzername: in der Regel die vollständige Adresse `antrag@bernhard-riepl-stiftung.de`
+- Passwort des Postfachs
+
+**In Supabase eintragen:**
+1. [supabase.com/dashboard](https://supabase.com/dashboard) öffnen und das Projekt **B.R. Stiftung** wählen.
+2. Links **Authentication**, dann **Emails**, oben den Reiter **SMTP Settings**.
+3. **Enable custom SMTP** einschalten.
+4. Felder ausfüllen:
+
+   | Feld | Wert |
+   |---|---|
+   | Sender email address | `antrag@bernhard-riepl-stiftung.de` (gleich wie `MAIL_FROM` bei Vercel) |
+   | Sender name | `Bernhard Riepl Stiftung` |
+   | Host | SMTP-Server des Anbieters, z. B. `smtp.ionos.de` |
+   | Port number | `465` (SSL/TLS) oder `587` (STARTTLS) – so wie vom Anbieter angegeben |
+   | Minimum interval per user | `60` Sekunden (Standard lassen) |
+   | Username | `antrag@bernhard-riepl-stiftung.de` |
+   | Password | Postfach-Passwort – nur hier eingeben, nie in den Code oder in Chats |
+
+5. **Save changes**.
+6. **Authentication → Rate Limits:** „Rate limit for sending emails“ auf mindestens `30` pro Stunde stellen.
+7. Bei Vercel dieselben Werte als `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` (`true` bei 465, `false` bei 587), `SMTP_USER`, `SMTP_PASSWORD` und `MAIL_FROM` für **Production** eintragen (siehe [Abschnitt 2](#2-umgebungsvariablen-bei-vercel)) und neu deployen.
+
+**Testen:**
+1. In einem privaten Browserfenster unter `/registrieren` ein Konto mit einer eigenen, echten Adresse anlegen. Die Bestätigungs-Mail muss innerhalb einer Minute ankommen – Absender „Bernhard Riepl Stiftung“, Adresse `antrag@bernhard-riepl-stiftung.de`, Gestaltung wie in `supabase/email-vorlagen/`.
+2. Link in der Mail anklicken: Sie landen angemeldet im Konto.
+3. Abmelden, „Passwort vergessen?“ nutzen: Die Mail kommt an, der Link führt zu „Neues Passwort“.
+4. Spam-Ordner prüfen. Landet die Mail dort, fehlen meist SPF/DKIM (siehe [DNS](#4-dns-beim-mail-anbieter-für-die-domain-der-absenderadresse)).
+5. Kommt nichts an: **Supabase → Logs → Auth** zeigt die Fehlermeldung. Häufig sind falscher Port bzw. falsche Verschlüsselung (465 ↔ 587) oder ein Tippfehler im Passwort.
+6. Danach einen Testantrag absenden und prüfen, ob Eingangsbestätigung und Benachrichtigung des Stiftungsrats ankommen (diese laufen über die Vercel-Variablen, nicht über Supabase).
+
 ### 4. DNS beim Mail-Anbieter (für die Domain der Absenderadresse)
 - **SPF:** ein TXT-Eintrag auf der Domain, der den Mailserver des Anbieters erlaubt, z. B. `v=spf1 include:<vom Anbieter vorgegeben> ~all`. Pro Domain darf es nur einen SPF-Eintrag geben.
 - **DKIM:** im Kundenbereich des Anbieters aktivieren und den angezeigten Eintrag (TXT oder CNAME, z. B. `<selector>._domainkey`) setzen.
@@ -112,10 +147,87 @@ Prüfen lässt sich das mit einer Test-Mail an einen Gmail-Account („Original 
 ### Ablauf und Absicherung
 - **Antrag absenden:** Der Antrag wird zuerst gespeichert, danach versucht der Server die Mails 1 und 2. Ein Fehler beim Versand blockiert nichts. Er steht im Protokoll, und beim Stiftungsrat erscheinen ein Hinweis und „Benachrichtigung erneut senden“.
 - **Absage:** Nur der Stiftungsrat, serverseitig geprüft. Erst E-Mail, dann Status. Schlägt der Versand fehl, bleibt der Status unverändert und der Text im Dialog erhalten. Ein Datenbank-Trigger verhindert „Abgelehnt“ ohne Versand.
+- **Bewilligung:** Dialog mit Betrag, Empfänger, Betreff und vorbereitetem Text (`content/mailVorlagen.ts`, `BEWILLIGUNG_VORLAGE`). „Bewilligen und E-Mail senden“ setzt den Status erst nach erfolgreichem Versand (BCC an das Archiv); Abschnitte in eckigen Klammern müssen vorher ergänzt sein. „Nur bewilligen, keine E-Mail“ setzt Status und Betrag ohne Versand. Gespeichert werden Betrag, Text, Datum und Ratsmitglied (Tabelle `bewilligungen`).
+- **Unterlagen nachreichen:** Antragsteller können bei „Eingegangen“ und „In Prüfung“ Dateien ergänzen (nur hinzufügen). Der Stiftungsrat erhält eine E-Mail an `MAIL_STIFTUNGSRAT` und sieht „Neue Unterlagen seit …“.
 - **Empfänger** kommen immer aus der Datenbank (bestätigte Konto-Adresse) oder aus Umgebungsvariablen, nie aus der Anfrage.
 - **Wiederholungssperre:** Eingangsmails gibt es je Antrag nur einmal. Erneutes Senden ist frühestens nach 2 Minuten möglich, eine zweite Absage frühestens nach 10 Minuten.
 - **Protokoll** `mail_log` ohne Mailtext. Lesen darf nur der Stiftungsrat, schreiben nur der Server.
 - **Keine Anhänge:** Antragsdaten und Bankverbindung bleiben hinter dem Login.
+
+## Verbesserungen 2026-11 einrichten (Datenbank)
+
+Im Supabase **SQL Editor** nacheinander ausführen, jeweils den Dateiinhalt einfügen und **Run**. Bestehende Daten bleiben erhalten; jede Datei kann gefahrlos erneut ausgeführt werden.
+
+1. `20261118090000_admin_rolle_wert.sql` – **allein** ausführen (neuer Enum-Wert muss gespeichert sein, bevor er verwendet wird)
+2. `20261118090100_admin_rechte.sql`
+3. `20261118090200_unterlagen_nachreichen.sql`
+4. `20261118090300_bewilligung.sql`
+
+Jede Datei sollte mit „Success. No rows returned“ enden. Erst danach den Branch mergen bzw. deployen – sonst fehlen der Oberfläche die neuen Spalten und Funktionen.
+
+## Rollen und Namen
+
+| Rolle | Darf |
+|---|---|
+| `antragsteller` | Anträge stellen, eigene Anträge sehen, Unterlagen nachreichen. Standard für jede Registrierung. |
+| `stiftungsrat` | Alle Anträge sehen, Status setzen, bewilligen, absagen. |
+| `admin` | Alles wie der Stiftungsrat, dazu die lesende **Ansicht Antragsteller** (Menü bzw. `/stiftungsrat/antragsteller`). Admins können selbst keine Anträge einreichen. |
+
+Rollen werden nur per SQL vergeben (Supabase → **SQL Editor**), danach meldet sich die Person neu an:
+
+```sql
+-- Admin
+update public.profiles set rolle = 'admin' where email = 'name@beispiel.de';
+-- Stiftungsrat
+update public.profiles set rolle = 'stiftungsrat' where email = 'name@beispiel.de';
+-- Zurück zum Antragsteller
+update public.profiles set rolle = 'antragsteller' where email = 'name@beispiel.de';
+```
+
+Voraussetzung für `admin` sind die Migrationen `20261118090000_admin_rolle_wert.sql` und `20261118090100_admin_rechte.sql`.
+
+**Namen eintragen:** Menü und Seitenkopf zeigen „Stiftungsrat – [Name]“, „Admin – [Name]“ bzw. „Konto von [Name]“. Ohne Namen erscheint die E-Mail-Adresse. Antragsteller geben ihren Namen bei der Registrierung an. Für Ratsmitglieder und Admins tragen Sie ihn in Supabase ein: **Table Editor → profiles →** Spalte `name` doppelklicken, Namen eingeben, **Save**. Oder per SQL:
+
+```sql
+update public.profiles set name = 'Dr. Maria Huber' where email = 'name@beispiel.de';
+```
+
+Die Änderung erscheint nach dem nächsten Neuladen der Seite.
+
+## Go-live-Checkliste
+
+Erst abhaken, wenn die Seite unter der eigenen Domain öffentlich gehen soll.
+
+**Konten und Daten**
+- [ ] Echte Konten für alle Ratsmitglieder angelegt, Rollen vergeben und Namen eingetragen (siehe [Rollen und Namen](#rollen-und-namen)); mindestens ein Admin.
+- [ ] Testkonten `antrag@test.de` und `rat@test.de` samt Anträgen, Dokumenten und Protokolleinträgen entfernen: `supabase/migrations/MANUELL_vor_go_live_testkonten_loeschen.sql` im SQL Editor **abschnittsweise** ausführen (Vorschau → Storage-Dateien im Dashboard löschen → Löschen mit `rollback;` testen → auf `commit;` umstellen). Das Skript wird nie automatisch angewendet.
+- [ ] Prüfen, dass keine weiteren Test-Anträge anderer Konten übrig sind (letzte Abfrage der Vorschau).
+
+**E-Mail**
+- [ ] Test-Postfach (Ethereal) ersetzen: Vercel **Production** und **Preview** auf das echte SMTP-Postfach umstellen (`SMTP_*`, `MAIL_FROM`), danach neu deployen.
+- [ ] `MAIL_STIFTUNGSRAT` und `MAIL_BCC_ARCHIV` auf die echten Adressen setzen.
+- [ ] Supabase **SMTP Settings** mit dem echten Postfach (siehe [Supabase: eigenes SMTP-Postfach](#supabase-eigenes-smtp-postfach)) und Mailvorlagen eingetragen.
+- [ ] SPF, DKIM und DMARC gesetzt, Testmail landet nicht im Spam.
+
+**Tarife und Betrieb**
+- [ ] Supabase auf einen bezahlten Tarif (Pro) umstellen: Im kostenlosen Tarif pausiert das Projekt nach einer Woche ohne Zugriffe, und es gibt keine täglichen Backups.
+- [ ] Vercel auf **Pro** umstellen: Der Hobby-Tarif ist nur für private, nicht-kommerzielle Nutzung gedacht.
+- [ ] Backups in Supabase aktiv (Database → Backups).
+
+**Domain**
+- [ ] Domain bei Vercel unter **Settings → Domains** hinzugefügt und DNS beim Anbieter gesetzt, HTTPS aktiv.
+- [ ] `NEXT_PUBLIC_SITE_URL` auf die Domain umgestellt, neu deployt.
+- [ ] Supabase **URL Configuration**: Site URL auf die Domain, Domain in den Redirect URLs ergänzt.
+
+**Recht und Inhalte**
+- [ ] Impressum, Datenschutzerklärung und Haftungsausschluss rechtlich geprüft und freigegeben (`content/rechtstexte.ts`).
+- [ ] Alle Platzhalter in eckigen Klammern ersetzt (z. B. Sitzungsrhythmus in den FAQ) – auf der Seite gelb markiert.
+- [ ] Absage- und Bewilligungstexte vom Stiftungsrat freigegeben.
+
+**Abschlusstest**
+- [ ] Mit einem neuen Konto: registrieren, Antrag mit Dokumenten absenden, Eingangsbestätigung prüfen, Unterlagen nachreichen.
+- [ ] Als Stiftungsrat: Benachrichtigung erhalten, Antrag öffnen, bewilligen bzw. absagen, E-Mails prüfen.
+- [ ] Danach diesen Testantrag mit derselben Methode wie oben entfernen oder als Beispiel bewusst stehen lassen.
 
 ## Auf Vercel deployen
 

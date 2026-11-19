@@ -8,7 +8,8 @@ import { supabase } from "./supabase/client";
 import type { Dokument } from "./types";
 
 export const ERLAUBTE_TYPEN = ["application/pdf", "image/jpeg", "image/png"] as const;
-export const ERLAUBTE_ENDUNGEN = ".pdf,.jpg,.jpeg,.png";
+/** MIME-Typen und Endungen: iOS/Android bieten so Kamera, Fotomediathek und Dateien an. */
+export const ERLAUBTE_ENDUNGEN = "application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png";
 export const MAX_GROESSE = 10 * 1024 * 1024;
 
 export function pruefeDatei(f: File): string | null {

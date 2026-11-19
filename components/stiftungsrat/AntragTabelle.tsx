@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ladeAlleAntraege, verfuegbareJahre } from "@/lib/antraege";
+import { ladeAlleAntraege, neueUnterlagenSeit, verfuegbareJahre } from "@/lib/antraege";
 import { betrag, formatEuro } from "@/lib/betrag";
-import { datumDe } from "@/lib/format";
+import { anzeigeName, datumDe } from "@/lib/format";
 import { STATUS_LABEL, type Antrag, type AntragStatus } from "@/lib/types";
 import { AnderesKontoHinweis } from "../auth/AnderesKontoHinweis";
 import { useAuth } from "../auth/AuthProvider";
@@ -41,8 +41,17 @@ export function AntragTabelle() {
 
   return (
     <div className="container-site py-12 lg:py-20">
-      <p className="caps text-sm text-neutral-700 mb-3">Stiftungsrat · {benutzer?.name}</p>
+      <p className="caps text-sm text-neutral-700 mb-3">
+        {benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat"} – {anzeigeName(benutzer)}
+      </p>
       <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Förderanträge</h1>
+      {benutzer?.rolle === "admin" && (
+        <p className="mt-4">
+          <Link href="/stiftungsrat/antragsteller" className="inline-flex items-center min-h-11 underline underline-offset-4 text-neutral-800">
+            Zur Ansicht Antragsteller (nur lesend)
+          </Link>
+        </p>
+      )}
       <div className="mt-8 -mb-4 empty:hidden">
         <AnderesKontoHinweis fuer="antragsteller" />
       </div>
@@ -88,7 +97,27 @@ export function AntragTabelle() {
       ) : liste.length === 0 ? (
         <p className="py-12 border-y border-neutral-400 text-lg">Keine Anträge für diese Auswahl.</p>
       ) : (
-        <div className="overflow-x-auto -mx-6 px-6">
+        <>
+        <ul className="md:hidden border-t border-neutral-400">
+          {liste.map((a) => (
+            <li key={a.id} className="border-b border-neutral-400">
+              <Link href={`/stiftungsrat/antraege/${a.id}`} className="block py-5">
+                <span className="flex items-center justify-between gap-4">
+                  <span className="tabular-nums text-neutral-800 underline underline-offset-4">{a.nummer}</span>
+                  <StatusBadge status={a.status} />
+                </span>
+                {neueUnterlagenSeit(a) && <NeuBadge seit={neueUnterlagenSeit(a)!} />}
+                <span className="block mt-2 text-lg text-neutral-800">{a.daten.projekt.titel}</span>
+                <span className="block mt-1 text-sm text-neutral-700">{a.daten.antragsteller.name}</span>
+                <span className="block mt-1 text-sm text-neutral-700">
+                  {datumDe(a.eingereichtAm)} · beantragt {formatEuro(betrag(a.daten.finanzierung.stiftung))}
+                  {a.bewilligterBetrag != null ? ` · bewilligt ${formatEuro(a.bewilligterBetrag)}` : ""}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block overflow-x-auto -mx-6 px-6">
           <table className="tabelle w-full min-w-[860px]">
             <caption className="sr-only">Alle Förderanträge, neueste zuerst</caption>
             <thead>
@@ -116,13 +145,25 @@ export function AntragTabelle() {
                   <td className="whitespace-nowrap">{datumDe(a.eingereichtAm)}</td>
                   <td className="text-right tabular-nums whitespace-nowrap">{formatEuro(betrag(a.daten.finanzierung.stiftung))}</td>
                   <td className="text-right tabular-nums whitespace-nowrap">{a.bewilligterBetrag != null ? formatEuro(a.bewilligterBetrag) : "–"}</td>
-                  <td><StatusBadge status={a.status} /></td>
+                  <td>
+                    <StatusBadge status={a.status} />
+                    {neueUnterlagenSeit(a) && <NeuBadge seit={neueUnterlagenSeit(a)!} />}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
+  );
+}
+
+function NeuBadge({ seit }: { seit: string }) {
+  return (
+    <span className="mt-2 block w-fit rounded-pill bg-herbstgold/20 border border-herbstgold px-2.5 py-0.5 text-xs text-neutral-800">
+      Neue Unterlagen seit {datumDe(seit)}
+    </span>
   );
 }

@@ -47,8 +47,8 @@ export function Hero() {
             Fördern, was eine Gemeinschaft trägt
           </h1>
           <p className="hero-ein max-w-[560px] text-[17px] lg:text-lg leading-[1.556] text-neutral-200" style={{ animationDelay: "0.45s" }}>
-            Die Bernhard Riepl Stiftung unterstützt kirchliche und kulturelle – insbesondere künstlerische – Vorhaben, die
-            Bildung und Menschen in Not.
+            Die Bernhard Riepl Stiftung fördert kirchliche, kulturelle und künstlerische Vorhaben, unterstützt
+            Bildungsinitiativen und stärkt Institutionen, die Menschen in Not beistehen.
           </p>
           <div className="hero-ein mt-2 lg:mt-3 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4" style={{ animationDelay: "0.6s" }}>
             <ButtonLink href="/antrag" variante="aufDunkelVoll" gross className="!border-transparent">

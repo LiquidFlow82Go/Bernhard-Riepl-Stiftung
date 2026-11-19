@@ -5,15 +5,25 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ladeEigeneAntraege } from "@/lib/antraege";
 import { formatEuro, betrag } from "@/lib/betrag";
-import { datumDe } from "@/lib/format";
-import type { Antrag } from "@/lib/types";
+import { anzeigeName, datumDe } from "@/lib/format";
+import type { Antrag, Benutzer } from "@/lib/types";
 import { AnderesKontoHinweis } from "../auth/AnderesKontoHinweis";
 import { useAuth } from "../auth/AuthProvider";
 import { ButtonLink } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
+import { NurLesenHinweis, Zurueck } from "./Gemeinsam";
 
-export function KontoUebersicht() {
-  const { benutzer } = useAuth();
+/** Lesende Ansicht eines fremden Kontos (nur Admin). */
+export interface LeseAnsicht {
+  konto: Benutzer;
+  /** Basis der Detail-Links, z. B. /stiftungsrat/antragsteller/<id> */
+  basis: string;
+}
+
+export function KontoUebersicht({ ansicht }: { ansicht?: LeseAnsicht } = {}) {
+  const { benutzer: angemeldet } = useAuth();
+  const benutzer = ansicht?.konto ?? angemeldet;
+  const basis = ansicht ? `${ansicht.basis}/antraege` : "/konto/antraege";
   const neu = useSearchParams().get("neu");
   const [liste, setListe] = useState<Antrag[] | null>(null);
   const [ladefehler, setLadefehler] = useState(false);
@@ -24,19 +34,30 @@ export function KontoUebersicht() {
 
   return (
     <div className="container-site py-12 lg:py-20">
+      {ansicht && (
+        <div className="mb-8 grid gap-6">
+          <Zurueck href="/stiftungsrat/antragsteller">Alle Antragsteller</Zurueck>
+          <NurLesenHinweis />
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-6 mb-12">
         <div>
-          <p className="caps text-sm text-neutral-700 mb-3">{benutzer?.institution ?? benutzer?.name}</p>
+          <p className="caps text-sm text-neutral-700 mb-3">
+            Konto von {anzeigeName(benutzer)}
+            {benutzer?.institution && benutzer.institution !== benutzer.name ? ` · ${benutzer.institution}` : ""}
+          </p>
           <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Meine Anträge</h1>
         </div>
-        <ButtonLink href="/antrag" gross>
-          Neuen Antrag stellen
-        </ButtonLink>
+        {!ansicht && (
+          <ButtonLink href="/antrag" gross>
+            Neuen Antrag stellen
+          </ButtonLink>
+        )}
       </div>
 
-      <AnderesKontoHinweis fuer="stiftungsrat" />
+      {!ansicht && <AnderesKontoHinweis fuer="stiftungsrat" />}
 
-      {neu && (
+      {neu && !ansicht && (
         <div className="mb-10">
           <Hinweisbox art="ok" rolle="status">
             Ihr Konto wurde angelegt. Sie können jetzt Ihren ersten Förderantrag stellen.
@@ -50,10 +71,14 @@ export function KontoUebersicht() {
         <Laden />
       ) : liste.length === 0 ? (
         <p className="py-16 text-lg border-y border-neutral-400">
-          Sie haben noch keine Anträge gestellt.{" "}
-          <Link href="/antrag" className="underline underline-offset-4 text-neutral-800">
-            Jetzt Antrag stellen
-          </Link>
+          {ansicht ? "Dieses Konto hat noch keine Anträge gestellt." : (
+            <>
+              Sie haben noch keine Anträge gestellt.{" "}
+              <Link href="/antrag" className="underline underline-offset-4 text-neutral-800">
+                Jetzt Antrag stellen
+              </Link>
+            </>
+          )}
         </p>
       ) : (
         <>
@@ -73,7 +98,7 @@ export function KontoUebersicht() {
               {liste.map((a) => (
                 <tr key={a.id} className="hover:bg-neutral-100">
                   <td className="tabular-nums whitespace-nowrap">
-                    <Link href={`/konto/antraege/${a.id}`} className="text-neutral-800 underline underline-offset-4">
+                    <Link href={`${basis}/${a.id}`} className="text-neutral-800 underline underline-offset-4">
                       {a.nummer}
                     </Link>
                   </td>
@@ -89,7 +114,7 @@ export function KontoUebersicht() {
           <ul className="md:hidden border-t border-neutral-400">
             {liste.map((a) => (
               <li key={a.id} className="border-b border-neutral-400">
-                <Link href={`/konto/antraege/${a.id}`} className="block py-5">
+                <Link href={`${basis}/${a.id}`} className="block py-5">
                   <span className="flex items-center justify-between gap-4">
                     <span className="tabular-nums text-neutral-800 underline underline-offset-4">{a.nummer}</span>
                     <StatusBadge status={a.status} />

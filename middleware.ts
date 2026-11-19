@@ -43,7 +43,11 @@ export async function middleware(request: NextRequest) {
 
   if (pfad.startsWith("/stiftungsrat") || pfad.startsWith("/konto") || pfad.startsWith("/antrag")) {
     const { data: profil } = await supabase.from("profiles").select("rolle").eq("id", user.id).single();
-    const rat = profil?.rolle === "stiftungsrat";
+    const rat = profil?.rolle === "stiftungsrat" || profil?.rolle === "admin";
+    // Lesende Antragsteller-Ansicht nur für Admins
+    if (pfad.startsWith("/stiftungsrat/antragsteller") && profil?.rolle !== "admin") {
+      return NextResponse.redirect(new URL("/stiftungsrat", request.url));
+    }
     // Falsche Rolle (z. B. Link aus einer E-Mail): in den eigenen Bereich mit Hinweis
     // und der Möglichkeit, sich mit dem passenden Konto neu anzumelden.
     if (pfad.startsWith("/stiftungsrat") && !rat) {

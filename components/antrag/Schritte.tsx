@@ -31,9 +31,15 @@ export function Schritt1() {
   return (
     <>
       <div className="border-l-4 border-herbstgold bg-[#e0a21a1f] px-5 py-4 text-neutral-800 mb-10 max-w-[80ch]">
-        <strong className="font-medium">Wichtiger Hinweis:</strong> Die Bernhard Riepl Stiftung fördert keine Privatpersonen,
-        sondern nur Institutionen, die ihrerseits gemeinnützig tätig sind. Ohne Nachweis über die Steuerbegünstigung
-        (Freistellungsbescheinigung des Finanzamtes) wird der Antrag nicht bearbeitet.
+        <strong className="font-medium">Wichtiger Hinweis:</strong> Die Bernhard Riepl Stiftung fördert regulär keine
+        Privatpersonen, sondern gemeinnützige Institutionen und öffentliche Einrichtungen. Ohne Nachweis über die
+        Steuerbegünstigung (Freistellungsbescheinigung des Finanzamtes) wird der Antrag nicht bearbeitet. Zu möglichen
+        Ausnahmen und den dann geforderten Nachweisen siehe{" "}
+        <a href="/#faq" target="_blank" rel="noopener" className="underline underline-offset-4">
+          „Wer kann einen Förderantrag stellen?“ in den Fragen und Antworten
+          <span className="sr-only"> (öffnet in neuem Tab)</span>
+        </a>
+        .
       </div>
       <Untertitel>1.1 Bezeichnung der Institution</Untertitel>
       <div className="grid gap-6 md:grid-cols-2">

@@ -109,6 +109,16 @@
   }
 }
 
+/* Feste Aktionsleiste im Antragsformular: Abstand zum Home-Indikator (iPhone) */
+.aktionsleiste {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+@media (max-width: 1023px) {
+  html {
+    scroll-padding-bottom: 104px;
+  }
+}
+
 @layer components {
   .container-site {
     max-width: var(--container-site);

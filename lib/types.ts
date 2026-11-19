@@ -3,7 +3,12 @@
  * (Tabellen: profiles, antraege, dokumente, absagen).
  */
 
-export type Rolle = "antragsteller" | "stiftungsrat";
+export type Rolle = "antragsteller" | "stiftungsrat" | "admin";
+
+/** Stiftungsrat-Bereich: Ratsmitglieder und Admins. */
+export function istRat(rolle: Rolle | null | undefined): boolean {
+  return rolle === "stiftungsrat" || rolle === "admin";
+}
 
 export interface Benutzer {
   id: string;
@@ -106,6 +111,8 @@ export interface Dokument {
   hochgeladenAm: string;
   /** In Phase 2: Pfad im Supabase-Storage-Bucket */
   speicherpfad?: string;
+  /** Nach dem Einreichen nachgereicht (setzt die Datenbank) */
+  nachgereicht?: boolean;
 }
 
 export type AntragStatus = "eingegangen" | "in_pruefung" | "bewilligt" | "abgelehnt";
@@ -131,11 +138,24 @@ export interface Antrag {
   dokumente: Dokument[];
   /** Bestätigte Konto-Adresse des Antragstellers (Empfänger aller E-Mails) */
   kontoEmail?: string;
+  /** Letzte Bewilligung (Betrag, ggf. gesendete E-Mail, Datum) */
+  bewilligung?: Bewilligung | null;
+  /** Stiftungsrat hat nachgereichte Unterlagen bis zu diesem Zeitpunkt gesehen */
+  unterlagenGesehenAm?: string | null;
   aktualisiertAm: string;
 }
 
+export interface Bewilligung {
+  betrag: number;
+  mailGesendet: boolean;
+  betreff: string | null;
+  text: string | null;
+  empfaenger: string | null;
+  datum: string;
+}
+
 export interface MailProtokollEintrag {
-  art: "eingang_antragsteller" | "eingang_stiftungsrat" | "absage";
+  art: "eingang_antragsteller" | "eingang_stiftungsrat" | "absage" | "nachreichung" | "bewilligung";
   empfaenger: string;
   zeitpunkt: string;
   erfolgreich: boolean;
@@ -146,6 +166,8 @@ export const MAIL_ART_LABEL: Record<MailProtokollEintrag["art"], string> = {
   eingang_antragsteller: "Eingangsbestätigung an Antragsteller",
   eingang_stiftungsrat: "Benachrichtigung Stiftungsrat",
   absage: "Absage",
+  nachreichung: "Hinweis auf nachgereichte Unterlagen",
+  bewilligung: "Bewilligung",
 };
 
 export const STATUS_LABEL: Record<AntragStatus, string> = {
