@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HAUPTMENUE } from "@/content/navigation";
 import { abmelden } from "@/lib/auth";
-import { anzeigeName } from "@/lib/format";
 import { useAuth } from "../auth/AuthProvider";
 
 /**
@@ -63,9 +62,9 @@ export function Header() {
   const glas = startseite && ueberHero && !offen;
   const rat = benutzer?.rolle === "stiftungsrat" || benutzer?.rolle === "admin";
   const bereich = benutzer ? (rat ? "/stiftungsrat" : "/konto") : null;
-  const name = anzeigeName(benutzer);
-  const bereichKurz = rat ? (benutzer?.rolle === "admin" ? "Admin" : "Stiftungsrat") : "Mein Konto";
-  const bereichLang = rat ? `${bereichKurz} – ${name}` : `Konto von ${name}`;
+  // Der Name steht im jeweiligen Bereich (Seitenkopf), nicht in der Navigation.
+  const bereichLabel = rat ? "Stiftungsrat" : "Mein Konto";
+  const rolleLabel = benutzer?.rolle === "admin" ? "Admin" : rat ? "Stiftungsrat" : "Antragsteller";
 
   async function raus() {
     await abmelden();
@@ -74,7 +73,7 @@ export function Header() {
   }
 
   const fokus = glas ? "focus-visible:outline-white" : "focus-visible:outline-eisenhut";
-  const link = `caps text-[14px] leading-[22px] underline-offset-[6px] hover:underline transition-colors duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 ${fokus} ${glas ? "text-neutral-100" : "text-neutral-800"}`;
+  const link = `caps whitespace-nowrap text-[14px] leading-[22px] underline-offset-[6px] hover:underline transition-colors duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 ${fokus} ${glas ? "text-neutral-100" : "text-neutral-800"}`;
   const pillBtn = `inline-flex items-center justify-center rounded-pill px-5 h-11 font-display text-[15px] transition-[background-color,color,transform] duration-500 motion-safe:hover:scale-[.97] focus-visible:outline-2 focus-visible:outline-offset-2 ${fokus}`;
   const btnHell = `${pillBtn} bg-neutral-100 text-neutral-800`;
   const btnDunkel = `${pillBtn} bg-neutral-800 text-neutral-100`;
@@ -94,16 +93,33 @@ export function Header() {
             aria-label="Bernhard Riepl Stiftung – zur Startseite"
             className={`inline-flex items-center gap-2.5 min-w-0 rounded-pill focus-visible:outline-2 focus-visible:outline-offset-4 ${fokus}`}
           >
-            <Image src="/stiftungssymbol.svg" alt="" width={26} height={32} priority className="h-8 w-[26px] shrink-0" />
+            <span className="relative shrink-0 h-6 w-[60px] lg:h-8 lg:w-[80px]">
+              <Image
+                src="/logo/zeichen-dunkel.png"
+                alt=""
+                fill
+                sizes="80px"
+                priority
+                className={`object-contain transition-opacity duration-500 ${glas ? "opacity-0" : "opacity-100"}`}
+              />
+              <Image
+                src="/logo/zeichen-hell.png"
+                alt=""
+                fill
+                sizes="80px"
+                priority
+                className={`object-contain transition-opacity duration-500 ${glas ? "opacity-100" : "opacity-0"}`}
+              />
+            </span>
             <span
-              className={`font-display font-extralight text-[18px] sm:text-[21px] leading-none truncate transition-colors duration-500 ${glas ? "text-neutral-100" : "text-neutral-800"}`}
+              className={`font-display font-extralight text-[18px] sm:text-[21px] leading-none truncate transition-colors duration-500 lg:max-xl:sr-only ${glas ? "text-neutral-100" : "text-neutral-800"}`}
             >
               Bernhard Riepl <span className="max-[399px]:hidden">Stiftung</span>
             </span>
           </Link>
 
           <nav aria-label="Hauptmenü" className="hidden lg:block">
-            <ul className="flex items-center gap-7">
+            <ul className="flex items-center gap-5 xl:gap-7">
               {HAUPTMENUE.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className={link}>
@@ -117,18 +133,15 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {benutzer ? (
               <>
-                {benutzer.rolle === "admin" && (
-                  <Link href="/stiftungsrat/antragsteller" className={`${link} px-1`}>
-                    Ansicht Antragsteller
-                  </Link>
-                )}
-                <Link href={bereich!} className={`${glas ? btnHell : btnDunkel} max-w-[300px]`} title={bereichLang}>
-                  <span className="xl:hidden">{bereichKurz}</span>
-                  <span className="hidden xl:inline truncate">{bereichLang}</span>
-                </Link>
-                <button type="button" onClick={raus} className={`${link} px-2 cursor-pointer`}>
-                  Abmelden
-                </button>
+                <KontoMenue
+                  knopfKlassen={glas ? btnHell : btnDunkel}
+                  rolleLabel={rolleLabel}
+                  eintraege={[
+                    { href: bereich!, label: bereichLabel },
+                    ...(benutzer.rolle === "admin" ? [{ href: "/stiftungsrat/antragsteller", label: "Ansicht Antragsteller" }] : []),
+                  ]}
+                  onAbmelden={raus}
+                />
               </>
             ) : (
               <Link href="/login" className={glas ? btnHell : btnDunkel}>
@@ -172,11 +185,12 @@ export function Header() {
               </li>
             ))}
           </ul>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
+          <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap gap-4">
             {benutzer ? (
               <>
+                <p className="sm:basis-full text-sm text-neutral-700">Angemeldet als {rolleLabel}</p>
                 <Link href={bereich!} onClick={() => setOffen(false)} className={`${btnDunkel} h-12 text-base`}>
-                  <span className="truncate">{bereichLang}</span>
+                  {bereichLabel}
                 </Link>
                 {benutzer.rolle === "admin" && (
                   <Link href="/stiftungsrat/antragsteller" onClick={() => setOffen(false)} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
@@ -200,5 +214,93 @@ export function Header() {
       {/* Platzhalter für die schwebende Navigation auf allen Seiten außer der Startseite */}
       {!startseite && <div aria-hidden="true" className="h-[76px] sm:h-[84px] lg:h-[104px]" />}
     </>
+  );
+}
+
+/** Kompaktes Kontomenü (Desktop): ein Knopf „Angemeldet“, darunter Bereich(e) und Abmelden. */
+function KontoMenue({
+  knopfKlassen, rolleLabel, eintraege, onAbmelden,
+}: {
+  knopfKlassen: string;
+  rolleLabel: string;
+  eintraege: { href: string; label: string }[];
+  onAbmelden: () => void;
+}) {
+  const [auf, setAuf] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const knopf = useRef<HTMLButtonElement>(null);
+  const pfad = usePathname();
+
+  useEffect(() => setAuf(false), [pfad]);
+
+  useEffect(() => {
+    if (!auf) return;
+    const klick = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setAuf(false);
+    };
+    const taste = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setAuf(false);
+        knopf.current?.focus();
+      }
+    };
+    const fokus = (e: FocusEvent) => {
+      if (!wrap.current?.contains(e.relatedTarget as Node)) setAuf(false);
+    };
+    document.addEventListener("mousedown", klick);
+    document.addEventListener("keydown", taste);
+    wrap.current?.addEventListener("focusout", fokus);
+    const w = wrap.current;
+    return () => {
+      document.removeEventListener("mousedown", klick);
+      document.removeEventListener("keydown", taste);
+      w?.removeEventListener("focusout", fokus);
+    };
+  }, [auf]);
+
+  const eintrag =
+    "block w-full text-left px-4 py-2.5 min-h-11 font-display text-[15px] text-neutral-800 rounded-[14px] hover:bg-neutral-300/60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-eisenhut";
+
+  return (
+    <div ref={wrap} className="relative">
+      <button
+        ref={knopf}
+        type="button"
+        aria-expanded={auf}
+        aria-controls="kontomenue"
+        onClick={() => setAuf((a) => !a)}
+        className={`${knopfKlassen} gap-2 cursor-pointer`}
+      >
+        <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4">
+          <circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M2.8 14c.7-2.8 2.7-4.2 5.2-4.2s4.5 1.4 5.2 4.2" fill="none" stroke="currentColor" strokeWidth="1.2" />
+        </svg>
+        Angemeldet
+        <svg aria-hidden="true" viewBox="0 0 12 8" className={`w-2.5 transition-transform duration-300 ${auf ? "rotate-180" : ""}`}>
+          <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      </button>
+      <div
+        id="kontomenue"
+        hidden={!auf}
+        className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-[22px] border border-neutral-400 bg-neutral-100 p-2 shadow-card"
+      >
+        <p className="px-4 pt-2 pb-2 text-xs caps text-neutral-700">Angemeldet als {rolleLabel}</p>
+        <ul>
+          {eintraege.map((e) => (
+            <li key={e.href}>
+              <Link href={e.href} className={eintrag} onClick={() => setAuf(false)}>
+                {e.label}
+              </Link>
+            </li>
+          ))}
+          <li className="mt-1 pt-1 border-t border-neutral-400">
+            <button type="button" onClick={onAbmelden} className={eintrag}>
+              Abmelden
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
   );
 }
