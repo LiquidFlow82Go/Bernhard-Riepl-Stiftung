@@ -171,7 +171,7 @@ Jede Datei sollte mit „Success. No rows returned“ enden. Erst danach den Bra
 |---|---|
 | `antragsteller` | Anträge stellen, eigene Anträge sehen, Unterlagen nachreichen. Standard für jede Registrierung. |
 | `stiftungsrat` | Alle Anträge sehen, Status setzen, bewilligen, absagen. |
-| `admin` | Alles wie der Stiftungsrat, dazu die lesende **Ansicht Antragsteller** (Menü bzw. `/stiftungsrat/antragsteller`). Admins können selbst keine Anträge einreichen. |
+| `admin` | Alles wie der Stiftungsrat, dazu die lesende **Ansicht Antragsteller** (Menü bzw. `/stiftungsrat/antragsteller`) und **Anträge löschen** (Detailansicht, Bestätigung mit der Antragsnummer; löscht auch alle Dateien, Absagen, Bewilligungen und Protokolleinträge). Admins können selbst keine Anträge einreichen. |
 
 Rollen werden nur per SQL vergeben (Supabase → **SQL Editor**), danach meldet sich die Person neu an:
 

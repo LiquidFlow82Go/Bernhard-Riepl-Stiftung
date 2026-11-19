@@ -13,10 +13,13 @@ import { Button } from "../ui/Button";
 import { Hinweisbox, Laden, StatusBadge } from "../ui/Diverses";
 import { AbsageDialog } from "./AbsageDialog";
 import { BewilligungDialog } from "./BewilligungDialog";
+import { AntragLoeschen } from "./LoeschenDialog";
+import { useAuth } from "../auth/AuthProvider";
 import { MailStatus } from "./MailStatus";
 
 export function RatDetail() {
   const { id } = useParams<{ id: string }>();
+  const { benutzer } = useAuth();
   const [antrag, setAntrag] = useState<Antrag | null | undefined>(undefined);
   const [status, setStatus] = useState<AntragStatus>("eingegangen");
   const [meldung, setMeldung] = useState<string>("");
@@ -210,6 +213,7 @@ export function RatDetail() {
             </ul>
           </section>
           )}
+          {benutzer?.rolle === "admin" && <AntragLoeschen antrag={antrag} />}
         </aside>
       </div>
 

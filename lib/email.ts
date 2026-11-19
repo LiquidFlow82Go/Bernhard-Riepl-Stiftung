@@ -88,3 +88,10 @@ export async function sendeBewilligung(n: {
   if (ok) return { ok: true };
   return { ok: false, fehler: (daten.fehler as string) ?? "Die Bewilligung konnte nicht gespeichert werden." };
 }
+
+/** Admin: Antrag endgültig löschen (Bestätigung mit der Antragsnummer). Wirft nie. */
+export async function loescheAntrag(antragId: string, bestaetigung: string): Promise<{ ok: true } | { ok: false; fehler: string }> {
+  const { ok, daten } = await post(`/api/antraege/${antragId}/loeschen`, { bestaetigung });
+  if (ok) return { ok: true };
+  return { ok: false, fehler: (daten.fehler as string) ?? "Der Antrag konnte nicht gelöscht werden." };
+}

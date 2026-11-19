@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ladeAlleAntraege, neueUnterlagenSeit, verfuegbareJahre } from "@/lib/antraege";
 import { betrag, formatEuro } from "@/lib/betrag";
@@ -16,6 +17,7 @@ const SELECT =
 
 export function AntragTabelle() {
   const { benutzer } = useAuth();
+  const geloescht = useSearchParams().get("geloescht");
   const [jahre, setJahre] = useState<number[]>([]);
   const [jahr, setJahr] = useState<number | "alle">("alle");
   const [status, setStatus] = useState<AntragStatus | "alle">("alle");
@@ -55,6 +57,11 @@ export function AntragTabelle() {
       <div className="mt-8 -mb-4 empty:hidden">
         <AnderesKontoHinweis fuer="antragsteller" />
       </div>
+      {geloescht && (
+        <div className="mt-8">
+          <Hinweisbox art="ok" rolle="status">Antrag {geloescht} wurde endgültig gelöscht.</Hinweisbox>
+        </div>
+      )}
 
       <dl className="mt-10 grid grid-cols-2 md:grid-cols-4 border-y border-neutral-400">
         {(Object.keys(STATUS_LABEL) as AntragStatus[]).map((s, i) => (
