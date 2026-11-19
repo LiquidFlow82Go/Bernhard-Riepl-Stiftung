@@ -43,7 +43,7 @@ export function Stiftungszweck() {
         <Einblenden className="mt-[80px] lg:mt-[120px] grid gap-8 lg:grid-cols-[4fr_8fr] lg:gap-16">
           <div>
             <h3 className="text-[30px] leading-[1.2]">Satzung im Wortlaut</h3>
-            <p className="mt-4 text-base">Auszug, §§ 1 bis 4. Stand: {STAND}.</p>
+            <p className="mt-4 text-base">Auszug, §§ 1 bis 3. Stand: {STAND}.</p>
           </div>
           <Akkordeon
             ueberschriftEbene={4}

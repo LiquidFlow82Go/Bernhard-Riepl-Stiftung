@@ -77,14 +77,6 @@ export const SATZUNG: Paragraph[] = [
       "(2) Ein Rechtsanspruch auf Gewährung des jederzeit widerruflichen Stiftungsgenusses besteht nicht.",
     ],
   },
-  {
-    nr: "§ 4",
-    titel: "Stiftungsvermögen",
-    absaetze: [
-      "(1) Das Stiftungsvermögen der Stiftung ist in seinem Bestand dauernd und ungeschmälert zu erhalten. Es beträgt EUR 500.000,– in Barmitteln und Wertpapieren.",
-      "(2) Zustiftungen sind zulässig.",
-    ],
-  },
 ];
 
 /** Förderbereiche für die Sektion „Stiftungszweck“ (aus § 2 Abs. 1 und 2). */
