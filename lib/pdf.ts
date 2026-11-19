@@ -260,8 +260,8 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
   const N = doc.getNumberOfPages();
   for (let i = 1; i <= N; i++) {
     doc.setPage(i);
-    // Logo rechts oben (1077 × 616 px → 26 × 14,9 mm)
-    if (logo) doc.addImage(logo, "PNG", PW - M - 26, 6.5, 26, 14.9, "logo", "FAST");
+    // Logo rechts oben (1077 × 616 px → 22 × 12,6 mm), endet über „Seite x von y“
+    if (logo) doc.addImage(logo, "PNG", PW - M - 22, 5.5, 22, 12.6, "logo", "FAST");
     font(12.5, "bold"); doc.text(clean("Antrag auf Förderung durch die Bernhard Riepl Stiftung"), M, 17);
     font(8.5, "normal", GREY);
     doc.text(e.nummer ? `Antragsnr. ${e.nummer}` : "Entwurf – noch nicht eingereicht", M, 23.5);
