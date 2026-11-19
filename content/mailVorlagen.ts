@@ -38,7 +38,7 @@ const ABSENDER_ZEILEN = ["Bernhard Riepl Stiftung", "Stadlbergstraße 56", "8371
 
 /** Gemeinsamer Rahmen im Stil der Webseite (warmes Fast-Weiß, dunkle Schrift). */
 export function rahmen(o: { siteUrl: string; vorspann: string; inhalt: string }): string {
-  const logo = `${o.siteUrl}/icon-512.png`;
+  const logo = `${o.siteUrl}/logo/zeichen-dunkel.png`;
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -58,7 +58,7 @@ export function rahmen(o: { siteUrl: string; vorspann: string; inhalt: string })
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td style="padding-right:12px; vertical-align:middle;">
-                  <img src="${esc(logo)}" width="40" height="40" alt="" style="display:block; border:0;">
+                  <img src="${esc(logo)}" width="70" height="28" alt="" style="display:block; border:0; width:70px; height:auto;">
                 </td>
                 <td style="vertical-align:middle; font-family:Arial, Helvetica, sans-serif; font-size:20px; line-height:24px; color:#0f0b08;">
                   Bernhard Riepl Stiftung

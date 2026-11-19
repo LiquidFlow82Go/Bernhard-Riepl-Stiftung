@@ -39,6 +39,17 @@ function pdfAmt(v: string): string {
   return p.leer || !p.ok ? "" : `${formatBetrag(p.n)} EUR`;
 }
 
+/** Logo für den PDF-Kopf (dunkle Variante). Fehlt es, entsteht das PDF ohne Logo. */
+async function ladeLogo(): Promise<Uint8Array | null> {
+  try {
+    const r = await fetch("/logo/logo-dunkel.png");
+    if (!r.ok) return null;
+    return new Uint8Array(await r.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
 function datumDe(iso?: string): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -49,7 +60,7 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
   const tag = (iso: string) =>
     new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
   const fusszeile = e.eingereichtAm ? `Eingereicht am ${tag(e.eingereichtAm)}` : `Entwurf vom ${tag(new Date().toISOString())}`;
-  const { jsPDF } = await import("jspdf");
+  const [{ jsPDF }, logo] = await Promise.all([import("jspdf"), ladeLogo()]);
   const d = e.daten;
   const A = d.antragsteller, P = d.projekt, K = d.kosten, F = d.finanzierung;
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
@@ -249,6 +260,8 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
   const N = doc.getNumberOfPages();
   for (let i = 1; i <= N; i++) {
     doc.setPage(i);
+    // Logo rechts oben (1077 × 616 px → 26 × 14,9 mm)
+    if (logo) doc.addImage(logo, "PNG", PW - M - 26, 6.5, 26, 14.9, "logo", "FAST");
     font(12.5, "bold"); doc.text(clean("Antrag auf Förderung durch die Bernhard Riepl Stiftung"), M, 17);
     font(8.5, "normal", GREY);
     doc.text(e.nummer ? `Antragsnr. ${e.nummer}` : "Entwurf – noch nicht eingereicht", M, 23.5);
