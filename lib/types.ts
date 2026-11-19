@@ -69,9 +69,15 @@ export interface FinanzierungDaten {
   eigenleistung: string;
   einnahmen: string;
   gemeinde: string;
+  /** Name der Gemeinde / Stadt */
+  gemeindeName: string;
   landkreis: string;
+  landkreisName: string;
   land: string;
+  /** Land bzw. Bundesstelle, z. B. Bayerisches Staatsministerium … */
+  landName: string;
   sonstige: string;
+  sonstigeName: string;
   weitere: string;
   stiftung: string;
 }
@@ -223,9 +229,13 @@ export function leererAntrag(): AntragDaten {
       eigenleistung: "",
       einnahmen: "",
       gemeinde: "",
+      gemeindeName: "",
       landkreis: "",
+      landkreisName: "",
       land: "",
+      landName: "",
       sonstige: "",
+      sonstigeName: "",
       weitere: "",
       stiftung: "",
     },

@@ -208,7 +208,7 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
   mrow("Gesamtkosten", `${formatBetrag(s.kosten)} EUR`, { bold: true });
   y += 4;
 
-  ensure(112);
+  ensure(124);
   h2("4.2  Finanzierung");
   const top0 = y;
   font(8, "bold", GREY);
@@ -220,12 +220,14 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
   mrow("Eigenleistung", pdfAmt(F.eigenleistung), { indent: 5 });
   mrow("Zu erwartende Einnahmen", pdfAmt(F.einnahmen));
   mrow("Öffentliche Mittel", `${formatBetrag(s.oeffentlich)} EUR`, { bold: true, hint: "durch Anträge belegen" });
-  mrow("Gemeinde / Stadt", pdfAmt(F.gemeinde), { indent: 5 });
-  mrow("Landkreis", pdfAmt(F.landkreis), { indent: 5 });
-  mrow("Land / Bund", pdfAmt(F.land), { indent: 5 });
-  mrow("Sonstige", pdfAmt(F.sonstige), { indent: 5 });
+  const stelle = (n?: string) => (n?.trim() ? n.trim().slice(0, 70) : undefined);
+  mrow("Gemeinde / Stadt", pdfAmt(F.gemeinde), { indent: 5, hint: stelle(F.gemeindeName) });
+  mrow("Landkreis", pdfAmt(F.landkreis), { indent: 5, hint: stelle(F.landkreisName) });
+  mrow("Land / Bund", pdfAmt(F.land), { indent: 5, hint: stelle(F.landName) });
+  mrow("Sonstige", pdfAmt(F.sonstige), { indent: 5, hint: stelle(F.sonstigeName) });
   mrow("Weitere Mittel", pdfAmt(F.weitere), { hint: "z. B. durch Firmen o. ä." });
-  mrow("Bernhard Riepl Stiftung", pdfAmt(F.stiftung), {
+  mrow("Bernhard Riepl Stiftung – beantragte Förderung", pdfAmt(F.stiftung), {
+    bold: true,
     col2: e.bewilligterBetrag != null ? `${formatBetrag(e.bewilligterBetrag)} EUR` : undefined,
   });
   hr(M, M + CW, y + 1, INK, 0.5); y += 1.5;

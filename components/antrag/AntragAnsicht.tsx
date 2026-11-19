@@ -44,6 +44,18 @@ function Abschnitt({
   );
 }
 
+const OEFFENTLICH = [
+  ["gemeinde", "gemeindeName", "Gemeinde / Stadt"],
+  ["landkreis", "landkreisName", "Landkreis"],
+  ["land", "landName", "Land / Bund"],
+  ["sonstige", "sonstigeName", "Sonstige"],
+] as const;
+
+function betragVon(v: string): number {
+  const p = parseBetrag(v ?? "");
+  return p.ok && !p.leer ? p.n : 0;
+}
+
 function euro(v: string) {
   const p = parseBetrag(v);
   return p.leer || !p.ok ? "" : `${formatBetrag(p.n)} €`;
@@ -113,6 +125,20 @@ export function AntragAnsicht({
       </Abschnitt>
 
       <Abschnitt nr="4" titel="Finanzen" schritt={4} onBearbeiten={onBearbeiten}>
+        <div className="mt-6 mb-8 rounded-[22px] border-2 border-herbstgold bg-[#f8eedf] px-6 py-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div>
+            <p className="font-display text-xl leading-snug text-neutral-800">Summe Stiftungsfinanzierung</p>
+            <p className="text-sm text-neutral-700">Bei der Bernhard Riepl Stiftung beantragte Förderung</p>
+          </div>
+          <div className="sm:text-right">
+            <p className="font-display text-[34px] leading-none tabular-nums text-[#9a4a0f]">{formatBetrag(betragVon(F.stiftung))} €</p>
+            {bewilligt != null && (
+              <p className="mt-2 text-sm text-neutral-800">
+                bewilligt: <strong className="font-medium tabular-nums">{formatBetrag(bewilligt)} €</strong>
+              </p>
+            )}
+          </div>
+        </div>
         <div className="grid gap-10 lg:grid-cols-2 mt-2">
           <dl>
             <Zeile label="Sachkosten" wert={euro(K.sach)} />
@@ -129,8 +155,16 @@ export function AntragAnsicht({
             <Zeile label="Eigenleistung" wert={euro(F.eigenleistung)} />
             <Zeile label="Zu erwartende Einnahmen" wert={euro(F.einnahmen)} />
             <Zeile label="Öffentliche Mittel (Summe)" wert={`${formatBetrag(s.oeffentlich)} €`} />
+            {OEFFENTLICH.map(([schluessel, name, label]) => {
+              const b = F[schluessel], n = F[name];
+              if (!b?.trim() && !n?.trim()) return null;
+              return <Zeile key={schluessel} label={`– ${label}`} wert={[n?.trim(), euro(b)].filter(Boolean).join(": ")} />;
+            })}
             <Zeile label="Weitere Mittel" wert={euro(F.weitere)} />
-            <Zeile label="Bernhard Riepl Stiftung (beantragt)" wert={euro(F.stiftung)} />
+            <div className="grid gap-1 py-3 border-b border-neutral-400 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6 bg-[#f8eedf] px-3 rounded-[10px]">
+              <dt className="text-sm font-medium text-neutral-800">Bernhard Riepl Stiftung (beantragt)</dt>
+              <dd className="font-medium text-neutral-800 tabular-nums">{euro(F.stiftung) || "keine Angabe"}</dd>
+            </div>
             {bewilligt != null && <Zeile label="Bernhard Riepl Stiftung (bewilligt)" wert={`${formatBetrag(bewilligt)} €`} />}
             <div className="grid sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-1 sm:gap-6 py-3 border-t-2 border-neutral-800">
               <dt className="font-medium text-neutral-800">Summe Finanzierung</dt>
