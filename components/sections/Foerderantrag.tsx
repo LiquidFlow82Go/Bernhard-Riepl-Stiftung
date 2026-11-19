@@ -1,7 +1,8 @@
 import Image from "next/image";
-import { ABLAUF, FOERDERVORAUSSETZUNGEN } from "@/content/foerderantrag";
+import { FOERDERVORAUSSETZUNGEN } from "@/content/foerderantrag";
 import { ButtonLink } from "../ui/Button";
 import { Einblenden, Kicker } from "../ui/Diverses";
+import { SchrittKacheln } from "./SchrittKacheln";
 
 export function Foerderantrag() {
   return (
@@ -18,22 +19,7 @@ export function Foerderantrag() {
           </p>
         </Einblenden>
 
-        <ol className="grid gap-x-7 gap-y-12 sm:grid-cols-2 lg:grid-cols-4 border-t border-neutral-400">
-          {ABLAUF.map((s, i) => (
-            <li key={s.nr} className="pt-8">
-              <Einblenden verzoegerung={i * 0.08}>
-                <span aria-hidden="true" className="block font-display font-extralight text-[60px] leading-none text-neutral-800">
-                  {s.nr}
-                </span>
-                <h3 className="mt-6 mb-3 text-2xl leading-[1.333]">
-                  <span className="sr-only">Schritt {i + 1}: </span>
-                  {s.titel}
-                </h3>
-                <p className="text-base">{s.text}</p>
-              </Einblenden>
-            </li>
-          ))}
-        </ol>
+        <SchrittKacheln />
 
         <Einblenden className="mt-[80px] lg:mt-[120px] grid bg-neutral-800 lg:grid-cols-2">
           <div className="relative min-h-[280px] lg:min-h-[520px]">
