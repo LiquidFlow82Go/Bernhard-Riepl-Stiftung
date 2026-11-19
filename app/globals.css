@@ -192,20 +192,25 @@
   transform-origin: left;
   transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.schritt-nr {
-  transition: color 450ms ease, transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+.schritt-nr,
+.schritt-titel {
+  transition: color 400ms ease, transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Desktop: Hover nur mit Maus */
 @media (hover: hover) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  /* Wie bei Webflow-Feature-Karten: Kachel wächst leicht, weicher großer
+     Schatten, Überschrift und Ziffer wechseln in die Akzentfarbe. */
   .schritt-linie { transform: scaleX(0.18); }
+  .schritt-kachel { box-shadow: 0 2px 4px rgba(120, 72, 20, 0.06); }
   .schritt-kachel:hover {
-    transform: translateY(-6px);
-    background-color: #f5e4cb;
-    border-color: #e0a21a;
-    box-shadow: 0 18px 40px -18px rgba(120, 72, 20, 0.35);
+    transform: scale(1.03);
+    background-color: #f6e7d1;
+    border-color: #e9c993;
+    box-shadow: 0 6px 16px rgba(120, 72, 20, 0.08), 0 24px 48px -12px rgba(120, 72, 20, 0.22);
   }
   .schritt-kachel:hover .schritt-linie { transform: scaleX(1); }
-  .schritt-kachel:hover .schritt-nr { color: #9a4a0f; transform: translateX(4px); }
+  .schritt-kachel:hover .schritt-nr { color: #9a4a0f; }
+  .schritt-kachel:hover .schritt-titel { color: #9a4a0f; }
 }
 /* Smartphone/Tablet: kleine Einblend-Animation beim Scrollen */
 @media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {

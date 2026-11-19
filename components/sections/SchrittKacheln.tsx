@@ -47,7 +47,7 @@ export function SchrittKacheln() {
           <span aria-hidden="true" className="schritt-nr block font-display font-extralight text-[56px] leading-none text-[#b5651d]">
             {s.nr}
           </span>
-          <h3 className="mt-6 mb-3 text-2xl leading-[1.333] text-neutral-800">
+          <h3 className="schritt-titel mt-6 mb-3 text-2xl leading-[1.333] text-neutral-800">
             <span className="sr-only">Schritt {i + 1}: </span>
             {s.titel}
           </h3>
