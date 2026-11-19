@@ -7,17 +7,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Antrag bewilligen (nur Stiftungsrat/Admin, serverseitig geprüft).
+ * Antrag bewilligen (nur Stiftungsvorstand/Admin, serverseitig geprüft).
  * - mitMail = true:  E-Mail an die Konto-Adresse, BCC an MAIL_BCC_ARCHIV.
  *                    Erst nach erfolgreichem Versand wird der Status gesetzt.
  * - mitMail = false: Status und Betrag ohne E-Mail setzen.
- * Gespeichert werden Betrag, gesendeter Text, Datum und Ratsmitglied.
+ * Gespeichert werden Betrag, gesendeter Text, Datum und Vorstandsmitglied.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const wer = await sitzung().catch(() => null);
   if (!wer) return antwort(401, { fehler: "Bitte melden Sie sich an." });
-  if (!istRatRolle(wer.rolle)) return antwort(403, { fehler: "Nur der Stiftungsrat darf Anträge bewilligen." });
+  if (!istRatRolle(wer.rolle)) return antwort(403, { fehler: "Nur der Stiftungsvorstand darf Anträge bewilligen." });
 
   let body: { betrag?: unknown; mitMail?: unknown; betreff?: unknown; text?: unknown };
   try {

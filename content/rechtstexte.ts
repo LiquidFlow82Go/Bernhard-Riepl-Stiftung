@@ -108,7 +108,7 @@ export const DATENSCHUTZ: Rechtstext = {
       titel: "6. Förderantrag und hochgeladene Dokumente",
       absaetze: [
         "Ihre Daten im Antrag auf Förderung (Förderantrag) werden ausschließlich zur Bearbeitung Ihrer Anfrage elektronisch gespeichert. Alle mit der Verarbeitung der Daten betrauten Firmen und deren Mitarbeiter haben die Verpflichtung auf das Datengeheimnis gemäß den Regelungen des Art. 5 DS-GVO unterzeichnet.",
-        "Verarbeitet werden die Angaben im Formular (Institution, Ansprechpersonen, Projekt, Finanzierung, Kontoverbindung) sowie die hochgeladenen Nachweise. Zugriff haben nur die Mitglieder des Stiftungsrats und des Stiftungsvorstands. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DS-GVO.",
+        "Verarbeitet werden die Angaben im Formular (Institution, Ansprechpersonen, Projekt, Finanzierung, Kontoverbindung) sowie die hochgeladenen Nachweise. Zugriff haben nur die Mitglieder des Stiftungsvorstands und des Stiftungsvorstands. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DS-GVO.",
         "Die Daten werden gelöscht, sobald sie für die Bearbeitung nicht mehr erforderlich sind und keine gesetzlichen Aufbewahrungspflichten (insbesondere nach Abgabenordnung, bis zu 10 Jahre bei bewilligten Förderungen) entgegenstehen. [Löschfristen bitte festlegen.]",
       ],
     },

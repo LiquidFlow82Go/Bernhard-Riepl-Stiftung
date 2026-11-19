@@ -22,7 +22,7 @@ export function RoleGuard({ rollen, children }: { rollen: Rolle[]; children: Rea
 
   if (!bereit || !benutzer) return <Laden text="Anmeldung wird geprüft …" />;
 
-  // Admins haben alle Rechte des Stiftungsrats.
+  // Admins haben alle Rechte des Stiftungsvorstands.
   const erlaubt = rollen.includes(benutzer.rolle) || (benutzer.rolle === "admin" && rollen.includes("stiftungsrat"));
   if (!erlaubt) {
     const rat = istRat(benutzer.rolle);
@@ -30,11 +30,11 @@ export function RoleGuard({ rollen, children }: { rollen: Rolle[]; children: Rea
       <div className="container-site py-24 max-w-2xl">
         <h1 className="text-4xl md:text-5xl leading-tight">Kein Zugriff</h1>
         <p className="mt-6 text-lg">
-          Dieser Bereich ist für {rollen.includes("admin") && !rollen.includes("stiftungsrat") ? "Admins" : rollen.includes("stiftungsrat") ? "den Stiftungsrat" : "Antragsteller"} bestimmt. Sie sind als{" "}
-          {benutzer.rolle === "admin" ? "Admin" : rat ? "Mitglied des Stiftungsrats" : "Antragsteller"} angemeldet.
+          Dieser Bereich ist für {rollen.includes("admin") && !rollen.includes("stiftungsrat") ? "Admins" : rollen.includes("stiftungsrat") ? "den Stiftungsvorstand" : "Antragsteller"} bestimmt. Sie sind als{" "}
+          {benutzer.rolle === "admin" ? "Admin" : rat ? "Mitglied des Stiftungsvorstands" : "Antragsteller"} angemeldet.
         </p>
         <div className="mt-8">
-          <ButtonLink href={rat ? "/stiftungsrat" : "/konto"}>Zu meinem Bereich</ButtonLink>
+          <ButtonLink href={rat ? "/stiftungsvorstand" : "/konto"}>Zu meinem Bereich</ButtonLink>
         </div>
       </div>
     );

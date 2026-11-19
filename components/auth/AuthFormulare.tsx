@@ -45,12 +45,12 @@ function FehlerZusammenfassung({ fehler, refEl }: { fehler: string | null; refEl
 
 function zielNachLogin(rolle: Rolle, weiter: string | null) {
   if (weiter && weiter.startsWith("/") && !weiter.startsWith("//")) {
-    if (istRat(rolle) && !weiter.startsWith("/stiftungsrat")) return "/stiftungsrat";
-    if (rolle === "stiftungsrat" && weiter.startsWith("/stiftungsrat/antragsteller")) return "/stiftungsrat";
-    if (rolle === "antragsteller" && weiter.startsWith("/stiftungsrat")) return "/konto";
+    if (istRat(rolle) && !weiter.startsWith("/stiftungsvorstand")) return "/stiftungsvorstand";
+    if (rolle === "stiftungsrat" && weiter.startsWith("/stiftungsvorstand/antragsteller")) return "/stiftungsvorstand";
+    if (rolle === "antragsteller" && weiter.startsWith("/stiftungsvorstand")) return "/konto";
     return weiter;
   }
-  return istRat(rolle) ? "/stiftungsrat" : "/konto";
+  return istRat(rolle) ? "/stiftungsvorstand" : "/konto";
 }
 
 export function LoginFormular() {

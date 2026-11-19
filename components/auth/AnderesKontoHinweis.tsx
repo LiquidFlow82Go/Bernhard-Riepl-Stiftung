@@ -30,12 +30,12 @@ export function AnderesKontoHinweis({ fuer }: { fuer: "stiftungsrat" | "antragst
       <Hinweisbox art="warn" rolle="status">
         <p>
           {fuer === "stiftungsrat"
-            ? "Der aufgerufene Link führt in den Bereich des Stiftungsrats. Sie sind derzeit als Antragsteller angemeldet."
-            : "Der aufgerufene Link führt in den Bereich eines Antragstellers. Sie sind derzeit als Mitglied des Stiftungsrats angemeldet."}
+            ? "Der aufgerufene Link führt in den Bereich des Stiftungsvorstands. Sie sind derzeit als Antragsteller angemeldet."
+            : "Der aufgerufene Link führt in den Bereich eines Antragstellers. Sie sind derzeit als Mitglied des Stiftungsvorstands angemeldet."}
         </p>
         <div className="mt-4">
           <Button variante="sekundaer" onClick={wechseln} disabled={laedt}>
-            {laedt ? "Wird abgemeldet …" : fuer === "stiftungsrat" ? "Abmelden und als Stiftungsrat anmelden" : "Abmelden und mit anderem Konto anmelden"}
+            {laedt ? "Wird abgemeldet …" : fuer === "stiftungsrat" ? "Abmelden und als Stiftungsvorstand anmelden" : "Abmelden und mit anderem Konto anmelden"}
           </Button>
         </div>
       </Hinweisbox>

@@ -77,8 +77,8 @@ export function Nachreichen({ antrag, onAktualisiert }: { antrag: Antrag; onAktu
       `${r.hochgeladen === 1 ? "Eine Datei wurde" : `${r.hochgeladen} Dateien wurden`} nachgereicht.`,
       r.fehlgeschlagen.length ? `Nicht übertragen: ${r.fehlgeschlagen.join(", ")}.` : "",
       mail.status === "gesendet" || mail.status === "gesperrt"
-        ? "Der Stiftungsrat wurde informiert."
-        : "Der Stiftungsrat sieht die neuen Unterlagen bei der nächsten Durchsicht.",
+        ? "Der Stiftungsvorstand wurde informiert."
+        : "Der Stiftungsvorstand sieht die neuen Unterlagen bei der nächsten Durchsicht.",
     ];
     setErgebnis({ art: r.fehlgeschlagen.length ? "info" : "ok", text: teile.filter(Boolean).join(" ") });
   }

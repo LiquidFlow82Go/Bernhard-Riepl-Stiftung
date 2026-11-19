@@ -5,7 +5,7 @@ import { berechneSummen, deckungspruefung, formatBetrag, parseBetrag } from "@/l
 import { formatGroesse } from "@/lib/dokumente";
 import { DOKUMENT_LABEL, type AntragDaten, type DokumentKategorie } from "@/lib/types";
 
-/** Schreibgeschützte Darstellung aller Antragsdaten (Zusammenfassung, Konto, Stiftungsrat). */
+/** Schreibgeschützte Darstellung aller Antragsdaten (Zusammenfassung, Konto, Stiftungsvorstand). */
 
 function Zeile({ label, wert, lang }: { label: string; wert?: string; lang?: boolean }) {
   const leer = !wert || !wert.trim();

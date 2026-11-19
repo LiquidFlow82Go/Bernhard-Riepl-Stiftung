@@ -38,7 +38,7 @@ export function AntragLoeschen({ antrag }: { antrag: Antrag }) {
       document.getElementById("loeschen-nummer")?.focus();
       return;
     }
-    router.push(`/stiftungsrat?geloescht=${encodeURIComponent(antrag.nummer)}`);
+    router.push(`/stiftungsvorstand?geloescht=${encodeURIComponent(antrag.nummer)}`);
   }
 
   return (

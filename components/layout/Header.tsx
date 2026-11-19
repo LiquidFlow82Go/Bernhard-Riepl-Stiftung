@@ -61,10 +61,10 @@ export function Header() {
 
   const glas = startseite && ueberHero && !offen;
   const rat = benutzer?.rolle === "stiftungsrat" || benutzer?.rolle === "admin";
-  const bereich = benutzer ? (rat ? "/stiftungsrat" : "/konto") : null;
+  const bereich = benutzer ? (rat ? "/stiftungsvorstand" : "/konto") : null;
   // Der Name steht im jeweiligen Bereich (Seitenkopf), nicht in der Navigation.
-  const bereichLabel = rat ? "Stiftungsrat" : "Mein Konto";
-  const rolleLabel = benutzer?.rolle === "admin" ? "Admin" : rat ? "Stiftungsrat" : "Antragsteller";
+  const bereichLabel = rat ? "Stiftungsvorstand" : "Mein Konto";
+  const rolleLabel = benutzer?.rolle === "admin" ? "Admin" : rat ? "Stiftungsvorstand" : "Antragsteller";
 
   async function raus() {
     await abmelden();
@@ -138,7 +138,7 @@ export function Header() {
                   rolleLabel={rolleLabel}
                   eintraege={[
                     { href: bereich!, label: bereichLabel },
-                    ...(benutzer.rolle === "admin" ? [{ href: "/stiftungsrat/antragsteller", label: "Ansicht Antragsteller" }] : []),
+                    ...(benutzer.rolle === "admin" ? [{ href: "/stiftungsvorstand/antragsteller", label: "Ansicht Antragsteller" }] : []),
                   ]}
                   onAbmelden={raus}
                 />
@@ -193,7 +193,7 @@ export function Header() {
                   {bereichLabel}
                 </Link>
                 {benutzer.rolle === "admin" && (
-                  <Link href="/stiftungsrat/antragsteller" onClick={() => setOffen(false)} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
+                  <Link href="/stiftungsvorstand/antragsteller" onClick={() => setOffen(false)} className={`${pillBtn} h-12 text-base border border-neutral-700 text-neutral-800`}>
                     Ansicht Antragsteller
                   </Link>
                 )}

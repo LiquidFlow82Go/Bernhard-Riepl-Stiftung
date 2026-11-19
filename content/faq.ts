@@ -26,7 +26,7 @@ export const FAQ: { frage: string; antwort: string }[] = [
   {
     frage: "Wie lange dauert die Bearbeitung?",
     antwort:
-      "Der Stiftungsrat entscheidet über die eingegangenen Anträge in seinen Sitzungen. [Sitzungsrhythmus bzw. Antragsfristen bitte ergänzen.] Den aktuellen Stand sehen Sie jederzeit in Ihrem Konto.",
+      "Der Stiftungsvorstand entscheidet über die eingegangenen Anträge in seinen Sitzungen. [Sitzungsrhythmus bzw. Antragsfristen bitte ergänzen.] Den aktuellen Stand sehen Sie jederzeit in Ihrem Konto.",
   },
   {
     frage: "Besteht ein Anspruch auf Förderung?",

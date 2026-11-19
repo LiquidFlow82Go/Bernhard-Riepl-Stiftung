@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Absage versenden (nur Stiftungsrat, serverseitig geprüft).
+ * Absage versenden (nur Stiftungsvorstand, serverseitig geprüft).
  * Ablauf: E-Mail an die Konto-Adresse des Antragstellers, BCC an MAIL_BCC_ARCHIV.
  * Erst nach erfolgreichem Versand wird der Status auf „Abgelehnt“ gesetzt und
  * der tatsächlich gesendete Text gespeichert. Schlägt der Versand fehl, bleibt
@@ -18,7 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const wer = await sitzung().catch(() => null);
   if (!wer) return antwort(401, { fehler: "Bitte melden Sie sich an." });
-  if (!istRatRolle(wer.rolle)) return antwort(403, { fehler: "Nur der Stiftungsrat darf Absagen versenden." });
+  if (!istRatRolle(wer.rolle)) return antwort(403, { fehler: "Nur der Stiftungsvorstand darf Absagen versenden." });
 
   let body: { grundId?: unknown; betreff?: unknown; text?: unknown };
   try {

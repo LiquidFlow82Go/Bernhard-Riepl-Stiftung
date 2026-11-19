@@ -16,7 +16,7 @@ import { NurLesenHinweis, Zurueck } from "./Gemeinsam";
 /** Lesende Ansicht eines fremden Kontos (nur Admin). */
 export interface LeseAnsicht {
   konto: Benutzer;
-  /** Basis der Detail-Links, z. B. /stiftungsrat/antragsteller/<id> */
+  /** Basis der Detail-Links, z. B. /stiftungsvorstand/antragsteller/<id> */
   basis: string;
 }
 
@@ -36,7 +36,7 @@ export function KontoUebersicht({ ansicht }: { ansicht?: LeseAnsicht } = {}) {
     <div className="container-site py-12 lg:py-20">
       {ansicht && (
         <div className="mb-8 grid gap-6">
-          <Zurueck href="/stiftungsrat/antragsteller">Alle Antragsteller</Zurueck>
+          <Zurueck href="/stiftungsvorstand/antragsteller">Alle Antragsteller</Zurueck>
           <NurLesenHinweis />
         </div>
       )}

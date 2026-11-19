@@ -16,8 +16,8 @@ export const ABLAUF = [
   },
   {
     nr: "04",
-    titel: "Entscheidung des Stiftungsrats",
-    text: "Nach dem Absenden erhalten Sie eine Antragsnummer. Der Stiftungsrat prüft Ihren Antrag und informiert Sie über das Ergebnis.",
+    titel: "Entscheidung des Stiftungsvorstands",
+    text: "Nach dem Absenden erhalten Sie eine Antragsnummer. Der Stiftungsvorstand prüft Ihren Antrag und informiert Sie über das Ergebnis.",
   },
 ];
 

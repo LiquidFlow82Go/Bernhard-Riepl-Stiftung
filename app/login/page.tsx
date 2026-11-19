@@ -9,7 +9,7 @@ export default function Seite() {
   return (
     <AuthRahmen
       titel="Anmelden"
-      einleitung="Für Antragsteller und den Stiftungsrat."
+      einleitung="Für Antragsteller und den Stiftungsvorstand."
       fuss={
         <p>
           Noch kein Konto?{" "}

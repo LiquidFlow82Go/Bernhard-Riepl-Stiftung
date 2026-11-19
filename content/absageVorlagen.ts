@@ -1,5 +1,5 @@
 /**
- * Vorlagen für Absagen. Acht Ausschlussgründe – je ein Button im Stiftungsrat.
+ * Vorlagen für Absagen. Acht Ausschlussgründe – je ein Button im Stiftungsvorstand.
  *
  * Platzhalter, die beim Öffnen des Dialogs ersetzt werden:
  *   {anrede}          – „Sehr geehrte Damen und Herren“ bzw. Name der Ansprechperson
@@ -24,7 +24,7 @@ const GRUSS = `Wir danken Ihnen für Ihr Engagement und wünschen Ihnen für Ihr
 
 Mit freundlichen Grüßen
 
-Der Stiftungsrat der Bernhard Riepl Stiftung`;
+Der Stiftungsvorstand der Bernhard Riepl Stiftung`;
 
 const EINLEITUNG = `{anrede},
 
@@ -64,7 +64,7 @@ ${GRUSS}`,
     betreff: "Ihr Förderantrag {antragsnummer} – Bernhard Riepl Stiftung",
     text: `${EINLEITUNG}
 
-Der Stiftungsrat hat Ihren Antrag sorgfältig geprüft. Die Stiftung ist durch ihre Satzung an die Förderung kirchlicher, kultureller – insbesondere künstlerischer – Zwecke, der Bildung und der Hilfe für notleidende Menschen gebunden. Ihr Vorhaben lässt sich diesen Zwecken leider nicht ausreichend zuordnen, sodass wir es nicht fördern können.
+Der Stiftungsvorstand hat Ihren Antrag sorgfältig geprüft. Die Stiftung ist durch ihre Satzung an die Förderung kirchlicher, kultureller – insbesondere künstlerischer – Zwecke, der Bildung und der Hilfe für notleidende Menschen gebunden. Ihr Vorhaben lässt sich diesen Zwecken leider nicht ausreichend zuordnen, sodass wir es nicht fördern können.
 
 ${GRUSS}`,
   },
@@ -88,7 +88,7 @@ ${GRUSS}`,
     betreff: "Ihr Förderantrag {antragsnummer} – Bernhard Riepl Stiftung",
     text: `${EINLEITUNG}
 
-Der Stiftungsrat hat Ihren Antrag geprüft. Der vorgelegte Kosten- und Finanzierungsplan ist für uns nicht ausreichend nachvollziehbar bzw. die Gesamtfinanzierung des Vorhabens erscheint nicht gesichert. Da die Stiftung nur Vorhaben unterstützen kann, deren Durchführung insgesamt gewährleistet ist, müssen wir Ihren Antrag ablehnen.
+Der Stiftungsvorstand hat Ihren Antrag geprüft. Der vorgelegte Kosten- und Finanzierungsplan ist für uns nicht ausreichend nachvollziehbar bzw. die Gesamtfinanzierung des Vorhabens erscheint nicht gesichert. Da die Stiftung nur Vorhaben unterstützen kann, deren Durchführung insgesamt gewährleistet ist, müssen wir Ihren Antrag ablehnen.
 
 Bei einer überarbeiteten Planung mit belegten Eigen- und Drittmitteln können Sie gerne einen neuen Antrag stellen.
 

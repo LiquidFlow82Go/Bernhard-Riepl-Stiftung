@@ -1,4 +1,4 @@
--- Ein registriertes Konto zum Stiftungsrat machen.
+-- Ein registriertes Konto zum Stiftungsvorstand machen.
 -- Ausführen im Supabase SQL Editor; E-Mail-Adresse anpassen.
 update public.profiles
 set rolle = 'stiftungsrat'
