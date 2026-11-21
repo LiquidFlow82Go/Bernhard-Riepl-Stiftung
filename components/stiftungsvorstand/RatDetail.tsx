@@ -38,7 +38,7 @@ export function RatDetail() {
   if (antrag === null)
     return (
       <div className="container-site py-20">
-        <Zurueck href="/stiftungsvorstand">Alle Anträge</Zurueck>
+        <Zurueck href="/stiftungsvorstand/antraege">Alle Anträge</Zurueck>
         <h1 className="mt-6 text-4xl">Antrag nicht gefunden</h1>
       </div>
     );
@@ -87,8 +87,8 @@ export function RatDetail() {
   }
 
   return (
-    <div className="container-site py-12 lg:py-20">
-      <Zurueck href="/stiftungsvorstand">Alle Anträge</Zurueck>
+    <div className="container-site pt-8 pb-12 lg:pt-12 lg:pb-20">
+      <Zurueck href="/stiftungsvorstand/antraege">Alle Anträge</Zurueck>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-3xl">
           <p className="caps text-sm text-neutral-700 mb-3 tabular-nums">Antrag {antrag.nummer} · {A.name}</p>

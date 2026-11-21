@@ -36,9 +36,9 @@ export async function aktuellerBenutzer(): Promise<Benutzer | null> {
     data: { user },
   } = await sb.auth.getUser();
   if (!user) return null;
-  const { data: p } = await sb.from("profiles").select("id, email, name, institution, rolle").eq("id", user.id).single();
+  const { data: p } = await sb.from("profiles").select("*").eq("id", user.id).single();
   if (!p) return null;
-  return { id: p.id, email: p.email, name: p.name, institution: p.institution || undefined, rolle: p.rolle };
+  return { id: p.id, email: p.email, name: p.name, institution: p.institution || undefined, rolle: p.rolle, kuerzel: p.kuerzel || undefined };
 }
 
 export async function anmelden(email: string, passwort: string): Promise<AuthErgebnis> {

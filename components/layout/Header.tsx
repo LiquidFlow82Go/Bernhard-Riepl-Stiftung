@@ -61,7 +61,7 @@ export function Header() {
 
   const glas = startseite && ueberHero && !offen;
   const rat = benutzer?.rolle === "stiftungsrat" || benutzer?.rolle === "admin";
-  const bereich = benutzer ? (rat ? "/stiftungsvorstand" : "/konto") : null;
+  const bereich = benutzer ? (rat ? "/stiftungsvorstand/antraege" : "/konto") : null;
   // Der Name steht im jeweiligen Bereich (Seitenkopf), nicht in der Navigation.
   const bereichLabel = rat ? "Stiftungsvorstand" : "Mein Konto";
   const rolleLabel = benutzer?.rolle === "admin" ? "Admin" : rat ? "Stiftungsvorstand" : "Antragsteller";

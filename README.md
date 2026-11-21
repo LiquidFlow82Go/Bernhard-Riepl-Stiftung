@@ -165,6 +165,24 @@ Im Supabase **SQL Editor** nacheinander ausführen, jeweils den Dateiinhalt einf
 
 Jede Datei sollte mit „Success. No rows returned“ enden. Erst danach den Branch mergen bzw. deployen – sonst fehlen der Oberfläche die neuen Spalten und Funktionen.
 
+## Eigene Initiativen (Initiativförderung)
+
+Der Stiftungsvorstand legt Förderungen auch selbst an, ohne Antrag von außen. Im Bereich des Vorstands gibt es dazu zwei Tabs: **Eingegangene Anträge** (`/stiftungsvorstand/antraege`) und **Eigene Initiativen** (`/stiftungsvorstand/initiativen`). Beide haben eine eigene Farbe, ein Symbol und eine Überschrift; Initiativen tragen zusätzlich das Kennzeichen „Initiative“.
+
+**Einrichten** – im Supabase SQL Editor nacheinander:
+1. `20261121120000_profil_kuerzel.sql` (Spalte `kuerzel`, aus den Initialen vorbelegt)
+2. `20261121120100_initiativen.sql` (Tabellen, Aktenzeichen-Nummernkreis, Zugriff, Speicher-Bucket `initiativen`)
+
+**Ablauf**
+- „Neue Initiative anlegen“ öffnet ein Formular in sechs Schritten (Stammdaten, Zweckbindung, Finanzen, Beschluss, Abschluss, Zusammenfassung). Beim ersten Speichern wird das Aktenzeichen `IF-JJJJ-NNN` vergeben (eigener Nummernkreis je Jahr, nie doppelt, gelöschte Entwürfe hinterlassen eine Lücke). Entwürfe sind für den ganzen Vorstand sichtbar und lassen sich jederzeit fortsetzen.
+- Status in der Detailansicht: Entwurf → Beschlossen → Ausgezahlt → Abgeschlossen. „Beschlossen“ und „Ausgezahlt“ setzen vollständige Schritte 1–4 voraus (inkl. Beschlussdatum und Gemeinnützigkeit), „Abgeschlossen“ zusätzlich Schritt 5. Zurücksetzen ist mit kurzer Begründung möglich. Jeder Wechsel steht mit Datum und Vorstandsmitglied im Verlauf.
+- Löschen nur im Entwurf, nur durch das Mitglied, das ihn angelegt hat, oder einen Admin; Dateien werden mit entfernt.
+- PDF „Interne Projektdokumentation – Initiativförderung“ in Liste und Detailansicht; dazu ein leeres Formular zum Ausdrucken.
+
+**Zugriff:** Lesen und Bearbeiten nur Stiftungsvorstand und Admin (RLS); Status und Löschen nur über Server-Routen mit Rollenprüfung. Antragsteller sehen Initiativen nicht, auch nicht über die API. Dokumente liegen im privaten Bucket `initiativen` unter `<Aktenzeichen>/…`.
+
+**Kürzel ändern:** Table Editor → `profiles` → Spalte `kuerzel`.
+
 ## Rollen und Namen
 
 | Rolle | Darf |

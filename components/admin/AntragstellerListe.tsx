@@ -20,7 +20,7 @@ export function AntragstellerListe() {
 
   return (
     <div className="container-site py-12 lg:py-20">
-      <Zurueck href="/stiftungsvorstand">Alle Anträge</Zurueck>
+      <Zurueck href="/stiftungsvorstand/antraege">Alle Anträge</Zurueck>
       <p className="mt-8 caps text-sm text-neutral-700 mb-3">Admin</p>
       <h1 className="text-[44px] leading-[1.1] lg:text-[60px] lg:leading-none">Ansicht Antragsteller</h1>
       <div className="mt-8 mb-10 max-w-3xl"><NurLesenHinweis /></div>
