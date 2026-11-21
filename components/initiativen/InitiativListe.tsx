@@ -75,7 +75,7 @@ export function InitiativListe() {
           <BereichSymbol art="initiativen" className="size-9 lg:size-12 text-[#8a3f0c] shrink-0" />
           Eigene Initiativen
         </h1>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col-reverse sm:flex-row flex-wrap gap-3 max-sm:w-full">
           <LeeresFormularKnopf />
           <ButtonLink href="/stiftungsvorstand/initiativen/neu" gross>
             Neue Initiative anlegen
