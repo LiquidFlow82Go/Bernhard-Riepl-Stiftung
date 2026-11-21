@@ -6,7 +6,15 @@ import { useEffect, useMemo, useState } from "react";
 import { formatEuro } from "@/lib/betrag";
 import { anzeigeName } from "@/lib/format";
 import { ladeInitiativen } from "@/lib/initiativen";
-import { INITIATIV_STATUS, INITIATIV_STATUS_LABEL, personName, type Initiative, type InitiativStatus } from "@/lib/initiativeTypen";
+import {
+  EMPFAENGER,
+  INITIATIV_STATUS,
+  INITIATIV_STATUS_LABEL,
+  personName,
+  type EmpfaengerArt,
+  type Initiative,
+  type InitiativStatus,
+} from "@/lib/initiativeTypen";
 import { useAuth } from "../auth/AuthProvider";
 import { ButtonLink } from "../ui/Button";
 import { Hinweisbox, Laden } from "../ui/Diverses";
@@ -24,6 +32,7 @@ export function InitiativListe() {
   const [jahr, setJahr] = useState<number | "alle">("alle");
   const [status, setStatus] = useState<InitiativStatus | "alle">("alle");
   const [suche, setSuche] = useState("");
+  const [empfaenger, setEmpfaenger] = useState<EmpfaengerArt | "alle">("alle");
 
   useEffect(() => {
     ladeInitiativen().then(setAlle).catch(() => setFehler(true));
@@ -42,9 +51,10 @@ export function InitiativListe() {
       (i) =>
         (jahr === "alle" || i.jahr === jahr) &&
         (status === "alle" || i.status === status) &&
+        (empfaenger === "alle" || i.empfaengerArt === empfaenger) &&
         (!q || [i.aktenzeichen, i.projektTitel, i.partnerName].some((t) => t.toLowerCase().includes(q))),
     );
-  }, [alle, jahr, status, suche]);
+  }, [alle, jahr, status, suche, empfaenger]);
 
   const sort = useSortierung(
     liste,
@@ -125,7 +135,7 @@ export function InitiativListe() {
             ))}
           </dl>
 
-          <search className="mt-10 grid gap-5 md:grid-cols-[1fr_1fr_2fr]" aria-label="Initiativen filtern">
+          <search className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1.3fr_2fr]" aria-label="Initiativen filtern">
             <div className="flex flex-col gap-2">
               <label htmlFor="if-jahr" className="text-sm font-medium text-neutral-800">Jahr</label>
               <select id="if-jahr" className={SELECT} value={jahr} onChange={(e) => setJahr(e.target.value === "alle" ? "alle" : Number(e.target.value))}>
@@ -141,8 +151,15 @@ export function InitiativListe() {
               </select>
             </div>
             <div className="flex flex-col gap-2">
+              <label htmlFor="if-empfaenger" className="text-sm font-medium text-neutral-800">Empfänger</label>
+              <select id="if-empfaenger" className={SELECT} value={empfaenger} onChange={(e) => setEmpfaenger(e.target.value as EmpfaengerArt | "alle")}>
+                <option value="alle">Alle Empfänger</option>
+                {EMPFAENGER.map((e) => <option key={e.id} value={e.id}>{e.label}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
               <label htmlFor="if-suche" className="text-sm font-medium text-neutral-800">Suche</label>
-              <input id="if-suche" type="search" className={eingabeKlassen} placeholder="Aktenzeichen, Titel oder Partner" value={suche} onChange={(e) => setSuche(e.target.value)} />
+              <input id="if-suche" type="search" className={eingabeKlassen} placeholder="Aktenzeichen, Titel, Partner oder Initialen" value={suche} onChange={(e) => setSuche(e.target.value)} />
             </div>
           </search>
 

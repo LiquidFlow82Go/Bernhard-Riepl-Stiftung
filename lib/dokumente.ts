@@ -1,7 +1,7 @@
 /**
  * Dokumente zu Anträgen. Die Dateien liegen im privaten Supabase-Bucket
- * „antragsdokumente“; Ansehen und Herunterladen laufen über kurzlebige,
- * signierte Links. Wer was sehen darf, regeln die Storage-Policies.
+ * „antragsdokumente“; Ansehen und Herunterladen laden die Datei
+ * angemeldet und öffnen sie lokal (siehe zeigeDatei). Wer was sehen darf, regeln die Storage-Policies.
  */
 import { DOKUMENTE_BUCKET } from "./supabase/env";
 import { supabase } from "./supabase/client";
@@ -27,26 +27,46 @@ export function formatGroesse(bytes: number): string {
   return `${(bytes / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDigits: 1 })} MB`;
 }
 
-async function signierterLink(d: Dokument, herunterladen: boolean): Promise<string> {
+async function ladeAntragsdatei(d: Dokument): Promise<Blob> {
   if (!d.speicherpfad) throw new Error("Für dieses Dokument ist keine Datei gespeichert.");
-  const { data, error } = await supabase()
-    .storage.from(DOKUMENTE_BUCKET)
-    .createSignedUrl(d.speicherpfad, 120, herunterladen ? { download: d.dateiname } : undefined);
+  const { data, error } = await supabase().storage.from(DOKUMENTE_BUCKET).download(d.speicherpfad);
   if (error || !data) throw new Error("Das Dokument konnte nicht geladen werden.");
-  return data.signedUrl;
+  return data;
 }
 
-/** Öffnet das Dokument in einem neuen Tab. */
-export async function dokumentAnsehen(d: Dokument): Promise<void> {
-  // Fenster sofort öffnen, damit der Popup-Blocker den Klick erkennt.
-  const fenster = window.open("about:blank", "_blank");
+/**
+ * Zeigt eine Datei in einem neuen Tab an bzw. lädt sie herunter.
+ * Die Datei wird angemeldet geladen und als lokale Blob-Adresse geöffnet:
+ * Die aktuelle Seite wird nie verlassen (keine Warnung „Website verlassen?“
+ * bei ungespeicherten Formularen), und es entsteht kein weitergebbarer Link.
+ */
+export async function zeigeDatei(
+  laden: () => Promise<Blob>,
+  dateiname: string,
+  mimeType: string,
+  herunterladen: boolean,
+): Promise<void> {
+  // Tab sofort öffnen, solange der Klick noch als Nutzeraktion gilt (Popup-Blocker).
+  const fenster = herunterladen ? null : window.open("", "_blank");
+  if (fenster) {
+    try {
+      fenster.document.title = dateiname;
+      fenster.document.body.style.font = "16px system-ui, sans-serif";
+      fenster.document.body.textContent = "Dokument wird geladen …";
+    } catch {
+      /* ohne Ladehinweis weiter */
+    }
+  }
   try {
-    const url = await signierterLink(d, false);
-    if (fenster) {
-      fenster.opener = null;
+    const roh = await laden();
+    const blob = roh.type ? roh : new Blob([roh], { type: mimeType });
+    if (fenster && !fenster.closed) {
+      const url = URL.createObjectURL(blob);
       fenster.location.href = url;
+      setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
     } else {
-      window.location.href = url;
+      // Herunterladen oder Popup blockiert
+      ladeBlobHerunter(blob, dateiname);
     }
   } catch (e) {
     fenster?.close();
@@ -54,14 +74,13 @@ export async function dokumentAnsehen(d: Dokument): Promise<void> {
   }
 }
 
-export async function dokumentHerunterladen(d: Dokument): Promise<void> {
-  const url = await signierterLink(d, true);
-  const a = document.createElement("a");
-  a.href = url;
-  a.rel = "noopener";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+/** Öffnet das Dokument in einem neuen Tab. */
+export function dokumentAnsehen(d: Dokument): Promise<void> {
+  return zeigeDatei(() => ladeAntragsdatei(d), d.dateiname, d.mimeType, false);
+}
+
+export function dokumentHerunterladen(d: Dokument): Promise<void> {
+  return zeigeDatei(() => ladeAntragsdatei(d), d.dateiname, d.mimeType, true);
 }
 
 export function ladeBlobHerunter(blob: Blob, dateiname: string): void {

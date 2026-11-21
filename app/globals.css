@@ -229,3 +229,25 @@
   .schritt-kachel.ist-sichtbar .schritt-linie { transform: scaleX(1); transition-delay: calc(var(--verzoegerung, 0ms) + 250ms); transition-duration: 800ms; }
   .schritt-kachel.ist-sichtbar .schritt-nr { transform: none; opacity: 1; transition-delay: calc(var(--verzoegerung, 0ms) + 180ms); }
 }
+
+/* ---------- Formularfelder: Beschriftung, Hinweis, Eingabe, Fehler in festen Zeilen ---------- */
+.feld {
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  align-content: start;
+}
+.feld > .feld-label { grid-row: 1; }
+.feld > .feld-hinweis { grid-row: 2; }
+.feld > .feld-eingabe { grid-row: 3; }
+.feld > .feld-fehler { grid-row: 4; }
+
+/* Feldpaare: gemeinsame Zeilen über subgrid → Eingaben bündig, Fehler verschieben das Nachbarfeld nicht */
+.feldreihe { display: grid; gap: 1.5rem; }
+@media (min-width: 640px) {
+  .feldreihe-sm { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.5rem; row-gap: 0; margin-bottom: -1.5rem; }
+  .feldreihe-sm > .feld { grid-row: span 4; grid-template-rows: subgrid; margin-bottom: 1.5rem; }
+}
+@media (min-width: 768px) {
+  .feldreihe-md { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.5rem; row-gap: 0; margin-bottom: -1.5rem; }
+  .feldreihe-md > .feld { grid-row: span 4; grid-template-rows: subgrid; margin-bottom: 1.5rem; }
+}

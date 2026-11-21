@@ -3,13 +3,21 @@
 import { useState, type ReactNode } from "react";
 import { formatBetrag, parseBetrag } from "@/lib/betrag";
 import { formatGroesse } from "@/lib/dokumente";
-import { initiativDateiLink } from "@/lib/initiativen";
+import { zeigeDatei } from "@/lib/dokumente";
+import { ladeInitiativDatei } from "@/lib/initiativen";
 import {
   BELEG_ANGEBOT_TEXT,
   BELEG_RECHNUNG_TEXT,
+  BEDUERFTIGKEIT,
+  brauchtBescheid,
+  EINZELFALL_VERMERK,
+  EMPFAENGER_LABEL,
+  NICHT_VERWANDT_TEXT,
+  STEUER_NACHWEISE,
   INITIATIV_DOK_LABEL,
   SATZUNGSZWECKE,
   VERFLECHTUNG_TEXT,
+  nachweisArtLabel,
   type InitiativDaten,
   type InitiativDokKategorie,
   type InitiativDokument,
@@ -51,22 +59,9 @@ export function DokumentAktion({ d }: { d: InitiativDokument }) {
   const [fehler, setFehler] = useState("");
   async function oeffnen(herunterladen: boolean) {
     setFehler("");
-    const fenster = herunterladen ? null : window.open("about:blank", "_blank");
     try {
-      const url = await initiativDateiLink(d, herunterladen);
-      if (herunterladen) {
-        const a = document.createElement("a");
-        a.href = url;
-        a.rel = "noopener";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } else if (fenster) {
-        fenster.opener = null;
-        fenster.location.href = url;
-      }
+      await zeigeDatei(() => ladeInitiativDatei(d), d.dateiname, d.mimeType, herunterladen);
     } catch (e) {
-      fenster?.close();
       setFehler((e as Error).message);
     }
   }
@@ -91,7 +86,10 @@ function Dokumente({ liste, kategorien }: { liste: InitiativDokument[]; kategori
       {passend.map((d) => (
         <li key={d.id} className="flex flex-wrap items-center justify-between gap-x-4">
           <span className="min-w-0 break-all">
-            {d.dateiname} <span className="text-sm text-neutral-700">· {formatGroesse(d.groesse)} · {INITIATIV_DOK_LABEL[d.kategorie]}</span>
+            {d.dateiname}{" "}
+            <span className="text-sm text-neutral-700">
+              · {formatGroesse(d.groesse)} · {d.nachweisArt ? nachweisArtLabel(d.nachweisArt) : INITIATIV_DOK_LABEL[d.kategorie]}
+            </span>
           </span>
           <DokumentAktion d={d} />
         </li>
@@ -123,7 +121,7 @@ export function InitiativAnsicht({
   dokumente: InitiativDokument[];
   onBearbeiten?: (s: number) => void;
 }) {
-  const S = daten.stammdaten, Z = daten.zweck, F = daten.finanzen, B = daten.beschluss, A = daten.abschluss;
+  const S = daten.stammdaten, Z = daten.zweck, F = daten.finanzen, B = daten.beschluss, A = daten.abschluss, E = daten.einzelfall;
   const p = parseBetrag(F.betrag);
   const betrag = p.ok && !p.leer ? `${formatBetrag(p.n)} €` : "";
   return (
@@ -132,9 +130,16 @@ export function InitiativAnsicht({
         <Zeile label="Aktenzeichen" wert={aktenzeichen ?? "wird beim ersten Speichern vergeben"} />
         <Zeile label="Datum" wert={tag(S.datum)} />
         <Zeile label="Projekttitel" wert={S.titel} />
-        <Zeile label="Durchführungspartner" wert={S.partnerName} />
-        <Zeile label="Träger bzw. Rechtsform" wert={S.partnerTraeger} />
-        <Zeile label="Ansprechperson" wert={S.ansprechperson} />
+        <Zeile label="Empfänger der Förderung" wert={S.empfaengerArt ? EMPFAENGER_LABEL[S.empfaengerArt] : ""} />
+        {S.empfaengerArt === "privat" ? (
+          <Zeile label="Geförderte Person" wert={`${S.vorname} ${S.nachname}`.trim()} />
+        ) : (
+          <>
+            <Zeile label="Durchführungspartner" wert={S.partnerName} />
+            <Zeile label="Träger bzw. Rechtsform" wert={S.partnerTraeger} />
+            <Zeile label="Ansprechperson" wert={S.ansprechperson} />
+          </>
+        )}
         <Zeile label="E-Mail" wert={S.email} />
         <Zeile label="Telefon" wert={S.telefon} />
         <Zeile label="Anschrift" wert={S.anschrift} />
@@ -172,10 +177,38 @@ export function InitiativAnsicht({
       <Abschnitt nr="4" titel="Gremienbeschluss & Compliance" schritt={4} onBearbeiten={onBearbeiten}>
         <Zeile label="Beschluss vom" wert={tag(B.datum)} />
         <Zeile label="Protokoll / TOP" wert={B.protokoll} />
-        <Zeile label="Gemeinnützigkeit des Partners" wert={B.gemeinnuetzigkeit} />
-        <Zeile label="Nachweis der Gemeinnützigkeit (Datei)">
-          <Dokumente liste={dokumente} kategorien={["gemeinnuetzigkeit"]} />
-        </Zeile>
+        {S.empfaengerArt === "privat" ? (
+          <>
+            <Zeile label="Gemeinnützigkeit" wert={EINZELFALL_VERMERK} />
+            <Zeile label="Art der Bedürftigkeit">
+              {E.beduerftigkeit.length ? (
+                <ul className="list-disc pl-5">
+                  {BEDUERFTIGKEIT.filter((b) => E.beduerftigkeit.includes(b.id)).map((b) => <li key={b.id}>{b.label}</li>)}
+                </ul>
+              ) : (
+                <span className="text-neutral-700 italic">keine Angabe</span>
+              )}
+            </Zeile>
+            <Zeile label="Nachweise der Bedürftigkeit">
+              <Dokumente liste={dokumente} kategorien={["beduerftigkeit"]} />
+            </Zeile>
+            <Zeile label="Bedürftigkeit geprüft" wert={[tag(E.geprueftAm), E.geprueftVon.trim()].filter(Boolean).join(" · von ")} />
+            <Zeile label="Verwandtschaft">
+              <Haken an={E.nichtVerwandt}>{NICHT_VERWANDT_TEXT}</Haken>
+            </Zeile>
+          </>
+        ) : (
+          <>
+            <Zeile label="Nachweis der Steuerbegünstigung" wert={STEUER_NACHWEISE.find((s) => s.id === B.steuerNachweis)?.label ?? ""} />
+            {brauchtBescheid(B.steuerNachweis) && <Zeile label="Datum des Bescheids" wert={tag(B.bescheidDatum)} />}
+            {brauchtBescheid(B.steuerNachweis) && (
+              <Zeile label="Bescheid (Datei)">
+                <Dokumente liste={dokumente} kategorien={["gemeinnuetzigkeit"]} />
+              </Zeile>
+            )}
+            <Zeile label="Ergänzende Hinweise" wert={B.ergaenzendeHinweise} />
+          </>
+        )}
         <Zeile label="Interessenkonflikte">
           <Haken an={B.keineVerflechtung}>{VERFLECHTUNG_TEXT}</Haken>
           {!B.keineVerflechtung && B.verflechtungText.trim() && <p className="mt-2">Erläuterung: {B.verflechtungText}</p>}

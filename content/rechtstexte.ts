@@ -108,18 +108,27 @@ export const DATENSCHUTZ: Rechtstext = {
       titel: "6. Förderantrag und hochgeladene Dokumente",
       absaetze: [
         "Ihre Daten im Antrag auf Förderung (Förderantrag) werden ausschließlich zur Bearbeitung Ihrer Anfrage elektronisch gespeichert. Alle mit der Verarbeitung der Daten betrauten Firmen und deren Mitarbeiter haben die Verpflichtung auf das Datengeheimnis gemäß den Regelungen des Art. 5 DS-GVO unterzeichnet.",
-        "Verarbeitet werden die Angaben im Formular (Institution, Ansprechpersonen, Projekt, Finanzierung, Kontoverbindung) sowie die hochgeladenen Nachweise. Zugriff haben nur die Mitglieder des Stiftungsvorstands und des Stiftungsvorstands. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DS-GVO.",
+        "Verarbeitet werden die Angaben im Formular (Institution, Ansprechpersonen, Projekt, Finanzierung, Kontoverbindung) sowie die hochgeladenen Nachweise. Zugriff haben nur die Mitglieder des Stiftungsvorstands und die Administratoren der Webseite. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DS-GVO.",
         "Die Daten werden gelöscht, sobald sie für die Bearbeitung nicht mehr erforderlich sind und keine gesetzlichen Aufbewahrungspflichten (insbesondere nach Abgabenordnung, bis zu 10 Jahre bei bewilligten Förderungen) entgegenstehen. [Löschfristen bitte festlegen.]",
       ],
     },
     {
-      titel: "7. E-Mail-Kommunikation",
+      titel: "7. Einzelfallhilfe für Privatpersonen",
+      absaetze: [
+        "Unterstützt die Stiftung im Einzelfall eine natürliche Person (mildtätiger Zweck nach § 53 AO, unmittelbar verwirklicht nach § 57 AO), verarbeiten wir: Name, Anschrift und – falls angegeben – E-Mail-Adresse und Telefonnummer der geförderten Person, Angaben zum Vorhaben und zur Höhe der Unterstützung, die Art der Bedürftigkeit (persönlich nach § 53 Nr. 1 AO bzw. wirtschaftlich nach § 53 Nr. 2 AO) sowie die vorgelegten Nachweise, etwa Leistungs-, Einkommens- oder Steuerbescheide, Bestätigungen von Sozialleistungsträgern, Immatrikulations- oder ärztliche bzw. amtliche Bescheinigungen. Angaben zur persönlichen Bedürftigkeit können Gesundheitsdaten im Sinne von Art. 9 DS-GVO enthalten.",
+        "Zweck ist die Prüfung der Bedürftigkeit, die Entscheidung über die Unterstützung und der Nachweis der satzungsgemäßen und steuerbegünstigten Mittelverwendung gegenüber Finanzbehörden und Stiftungsaufsicht. Rechtsgrundlagen sind Art. 6 Abs. 1 lit. c DS-GVO in Verbindung mit den Nachweispflichten der Abgabenordnung sowie für besondere Kategorien personenbezogener Daten [Rechtsgrundlage nach Art. 9 Abs. 2 DS-GVO, z. B. Einwilligung der geförderten Person – bitte rechtlich prüfen].",
+        "Zugriff haben ausschließlich die Mitglieder des Stiftungsvorstands und die Administratoren der Webseite. Die Angaben und Nachweise werden in einem gesonderten, nicht öffentlichen Speicher abgelegt, nicht per E-Mail versendet und nicht in Protokolldateien aufgenommen. In Übersichtslisten erscheinen nur die Initialen der geförderten Person.",
+        "Die Daten werden gelöscht nach Ablauf von [Frist – mit dem Steuerberater festlegen].",
+      ],
+    },
+    {
+      titel: "8. E-Mail-Kommunikation",
       absaetze: [
         "Eingangsbestätigungen und Entscheidungen zu Ihrem Antrag versenden wir über das E-Mail-Postfach der Stiftung bei [E-Mail-Anbieter, z. B. IONOS SE oder hosting.de GmbH].",
       ],
     },
     {
-      titel: "8. Ihre Rechte",
+      titel: "9. Ihre Rechte",
       liste: [
         "Auskunft über Ihre gespeicherten Daten (Art. 15 DS-GVO)",
         "Berichtigung unrichtiger Daten (Art. 16 DS-GVO)",
@@ -130,7 +139,7 @@ export const DATENSCHUTZ: Rechtstext = {
       ],
     },
     {
-      titel: "9. Informationspflichten",
+      titel: "10. Informationspflichten",
       absaetze: [
         "Die Informationspflichten gemäß Art. 13 DS-GVO sind auf dieser Seite und in den Büroräumen (Empfangsbereich) einzusehen oder per Post zu erhalten.",
       ],

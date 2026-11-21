@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { antwort, istRatRolle, sitzung } from "@/lib/server/zugriff";
 
 export const runtime = "nodejs";
+// Datenschutz: In Logs nur Aktenzeichen bzw. IDs, nie Angaben zur Person oder Bedürftigkeit.
 export const dynamic = "force-dynamic";
 
 const BUCKET = "initiativen";

@@ -6,7 +6,9 @@
 import { betrag as betragVon } from "./betrag";
 import { pruefeDatei } from "./dokumente";
 import {
+  partnerAnzeige,
   vervollstaendige,
+  type EmpfaengerArt,
   type InitiativDaten,
   type InitiativDokKategorie,
   type InitiativDokument,
@@ -35,6 +37,7 @@ interface Zeile {
   status: InitiativStatus;
   projekt_titel: string;
   partner_name: string;
+  empfaenger_art?: EmpfaengerArt;
   foerderbetrag: number | string | null;
   daten: Partial<InitiativDaten>;
   erstellt_von: string | null;
@@ -49,6 +52,7 @@ interface Zeile {
     groesse: number | string;
     speicherpfad: string;
     hochgeladen_am: string;
+    nachweis_art?: string | null;
   }[];
   initiativ_status_verlauf?: {
     von_status: InitiativStatus | null;
@@ -74,6 +78,7 @@ function zuInitiative(z: Zeile): Initiative {
       groesse: Number(d.groesse),
       speicherpfad: d.speicherpfad,
       hochgeladenAm: d.hochgeladen_am,
+      nachweisArt: d.nachweis_art ?? null,
     }))
     .sort((a, b) => a.hochgeladenAm.localeCompare(b.hochgeladenAm));
   return {
@@ -84,6 +89,7 @@ function zuInitiative(z: Zeile): Initiative {
     status: z.status,
     projektTitel: z.projekt_titel,
     partnerName: z.partner_name,
+    empfaengerArt: z.empfaenger_art ?? "organisation",
     foerderbetrag: z.foerderbetrag == null ? null : Number(z.foerderbetrag),
     daten: vervollstaendige(z.daten),
     erstelltVon: eins(z.ersteller),
@@ -127,7 +133,9 @@ function spalten(d: InitiativDaten) {
   return {
     datum: /^\d{4}-\d{2}-\d{2}$/.test(d.stammdaten.datum) ? d.stammdaten.datum : undefined,
     projekt_titel: d.stammdaten.titel.trim().slice(0, 300),
-    partner_name: d.stammdaten.partnerName.trim().slice(0, 300),
+    // Bei Einzelfallhilfe nur „Einzelfallhilfe – M. K.“ in der Listenspalte (Datensparsamkeit)
+    partner_name: partnerAnzeige(d).slice(0, 300),
+    empfaenger_art: d.stammdaten.empfaengerArt || "organisation",
     foerderbetrag: b > 0 ? b : null,
     daten: d,
   };
@@ -157,7 +165,7 @@ function sichererDateiname(n: string): string {
 }
 
 /** Lädt eine Datei zur Initiative hoch (Pfad <Aktenzeichen>/<uuid>-<name>). */
-export async function ladeInitiativDateiHoch(i: Initiative, kategorie: InitiativDokKategorie, datei: File): Promise<void> {
+export async function ladeInitiativDateiHoch(i: Initiative, kategorie: InitiativDokKategorie, datei: File, nachweisArt?: string): Promise<void> {
   const p = pruefeDatei(datei);
   if (p) throw new Error(p);
   const sb = supabase();
@@ -174,6 +182,7 @@ export async function ladeInitiativDateiHoch(i: Initiative, kategorie: Initiativ
     mime_type: datei.type || "application/octet-stream",
     groesse: datei.size,
     speicherpfad: pfad,
+    ...(nachweisArt ? { nachweis_art: nachweisArt } : {}),
   });
   if (error) {
     await sb.storage.from(INITIATIV_BUCKET).remove([pfad]);
@@ -190,12 +199,11 @@ export async function entferneInitiativDatei(d: InitiativDokument): Promise<void
   await sb.storage.from(INITIATIV_BUCKET).remove([d.speicherpfad]);
 }
 
-export async function initiativDateiLink(d: InitiativDokument, herunterladen: boolean): Promise<string> {
-  const { data, error } = await supabase()
-    .storage.from(INITIATIV_BUCKET)
-    .createSignedUrl(d.speicherpfad, 120, herunterladen ? { download: d.dateiname } : undefined);
+/** Lädt eine Datei zur Initiative angemeldet herunter (RLS des Buckets gilt). */
+export async function ladeInitiativDatei(d: InitiativDokument): Promise<Blob> {
+  const { data, error } = await supabase().storage.from(INITIATIV_BUCKET).download(d.speicherpfad);
   if (error || !data) throw new Error("Das Dokument konnte nicht geladen werden.");
-  return data.signedUrl;
+  return data;
 }
 
 /* ---------- Server-Routen ---------- */

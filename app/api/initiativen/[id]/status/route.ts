@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { antwort, istRatRolle, sitzung } from "@/lib/server/zugriff";
 
 export const runtime = "nodejs";
+// Datenschutz: In Logs nur Aktenzeichen bzw. IDs, nie Angaben zur Person oder Bedürftigkeit.
 export const dynamic = "force-dynamic";
 
 /**
@@ -37,7 +38,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const vorwaerts = INITIATIV_STATUS.indexOf(status) > INITIATIV_STATUS.indexOf(alt);
   if (vorwaerts) {
-    const fehlend = fehltFuerStatus(vervollstaendige(zeile.daten), status);
+    const { data: doks } = await sb.from("initiativ_dokumente").select("kategorie").eq("initiative_id", id);
+    const fehlend = fehltFuerStatus(vervollstaendige(zeile.daten), status, (doks ?? []) as { kategorie: string }[]);
     if (Object.keys(fehlend).length)
       return antwort(422, { fehler: "Für diesen Status fehlen noch Angaben.", fehlend });
   } else if (!grund) {

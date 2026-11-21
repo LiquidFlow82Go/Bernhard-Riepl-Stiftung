@@ -8,6 +8,17 @@ import { ladeBlobHerunter } from "@/lib/dokumente";
 import { ladeInitiative, legeInitiativeAn, speichereInitiative } from "@/lib/initiativen";
 import { initiativFeldId, istInitiativPflicht, pruefeInitiative, regelLabel, regelSchritt, wertAn, type InitiativFehler } from "@/lib/initiativeSchema";
 import {
+  EMPFAENGER,
+  EMPFAENGER_LABEL,
+  verworfeneFelder,
+  wendeEmpfaengerAn,
+  type EmpfaengerArt,
+  BEDUERFTIGKEIT,
+  brauchtBescheid,
+  EINZELFALL_VERMERK,
+  NACHWEIS_ARTEN,
+  NICHT_VERWANDT_TEXT,
+  STEUER_NACHWEISE,
   BELEG_ANGEBOT_TEXT,
   BELEG_RECHNUNG_TEXT,
   SATZUNGSZWECKE,
@@ -19,11 +30,13 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { setzeAnPfad } from "../antrag/AntragKontext";
 import { Button, ButtonLink } from "../ui/Button";
+import { Dialog } from "../ui/Dialog";
 import { Hinweisbox } from "../ui/Diverses";
-import { Checkbox, Fehlertext, Textbereich, Textfeld } from "../ui/Feld";
+import { Checkbox, FeldReihe, Fehlertext, Textbereich, Textfeld } from "../ui/Feld";
 import { InitiativeKennzeichen } from "../stiftungsvorstand/Bereich";
 import { InitiativAnsicht } from "./InitiativAnsicht";
 import { InitiativUpload } from "./InitiativUpload";
+import { nachweisarten } from "./PdfKnopf";
 
 const SCHRITTE = [
   { nr: 1, titel: "Stammdaten", lang: "Projekt-Stammdaten" },
@@ -54,6 +67,7 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
   const [hinweis, setHinweis] = useState("");
   const [speichert, setSpeichert] = useState(false);
   const [geaendert, setGeaendert] = useState(false);
+  const [wechsel, setWechsel] = useState<{ neu: EmpfaengerArt; felder: { pfad: string; label: string }[] } | null>(null);
   const titelRef = useRef<HTMLHeadingElement>(null);
   const uebersichtRef = useRef<HTMLDivElement>(null);
   const navigiert = useRef(false);
@@ -64,6 +78,15 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
     if (!vorhanden && benutzer?.kuerzel)
       setDaten((d) => (d.abschluss.kuerzel ? d : setzeAnPfad(d, "abschluss.kuerzel", benutzer.kuerzel)));
   }, [benutzer?.kuerzel, vorhanden]);
+
+  // Prüfvermerk Einzelfallhilfe: „von“ mit dem angemeldeten Mitglied vorbelegen
+  const prueferGesetzt = useRef(false);
+  useEffect(() => {
+    const name = benutzer ? benutzer.name?.trim() || benutzer.email : "";
+    if (prueferGesetzt.current || !name || daten.stammdaten.empfaengerArt !== "privat") return;
+    prueferGesetzt.current = true;
+    if (!daten.einzelfall.geprueftVon) setDaten((d) => setzeAnPfad(d, "einzelfall.geprueftVon", name));
+  }, [benutzer, daten.stammdaten.empfaengerArt, daten.einzelfall.geprueftVon]);
 
   // Warnung beim Verlassen mit ungespeicherten Änderungen
   useEffect(() => {
@@ -104,8 +127,33 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
     value: String(wertAn(daten, pfad) ?? ""),
     onChange: (e: { target: { value: string } }) => setze(pfad, e.target.value),
     fehler: fehler[pfad],
-    pflicht: istInitiativPflicht(pfad),
+    pflicht: istInitiativPflicht(pfad, daten),
   });
+
+  /** Empfängerart wählen; gehen dabei Angaben verloren, erst nachfragen. */
+  function empfaengerWaehlen(neu: EmpfaengerArt) {
+    if (neu === daten.stammdaten.empfaengerArt) return;
+    const weg = verworfeneFelder(daten, neu);
+    if (weg.length) {
+      setWechsel({ neu, felder: weg });
+      return;
+    }
+    setDaten((d) => wendeEmpfaengerAn(d, neu));
+    setGeaendert(true);
+    setFehler((f) => {
+      const n = { ...f };
+      delete n["stammdaten.empfaengerArt"];
+      return n;
+    });
+  }
+
+  function wechselBestaetigen() {
+    if (!wechsel) return;
+    setDaten((d) => wendeEmpfaengerAn(d, wechsel.neu));
+    setGeaendert(true);
+    setHinweis(`Empfänger geändert: ${EMPFAENGER_LABEL[wechsel.neu]}. Ausgeblendete Angaben wurden entfernt.`);
+    setWechsel(null);
+  }
 
   async function neuLaden() {
     if (!initiative) return;
@@ -172,7 +220,11 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
 
   async function pdfVorschau() {
     const m = await import("@/lib/pdfInitiative");
-    const blob = await m.erzeugeInitiativPdf({ daten, aktenzeichen: initiative?.aktenzeichen });
+    const blob = await m.erzeugeInitiativPdf({
+      daten,
+      aktenzeichen: initiative?.aktenzeichen,
+      nachweisarten: initiative ? nachweisarten(initiative) : [],
+    });
     ladeBlobHerunter(blob, m.initiativPdfDateiname(initiative?.aktenzeichen ?? "Entwurf", daten.stammdaten.titel));
   }
 
@@ -272,27 +324,82 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
               <motion.div key={schritt} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2 }}>
                 {schritt === 1 && (
                   <div className="grid gap-6 max-w-[760px]">
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <div className="flex flex-col gap-2">
-                        <p className="text-sm leading-5 text-neutral-800 font-medium">Aktenzeichen</p>
-                        <p className="h-12 flex items-center rounded-pill border border-neutral-400 bg-neutral-100/60 px-[18px] tabular-nums text-neutral-800">
+                    <FeldReihe>
+                      <div className="feld min-w-0">
+                        <p className="feld-label pb-2 text-sm leading-5 text-neutral-800 font-medium">Aktenzeichen</p>
+                        <p className="feld-eingabe h-12 flex items-center rounded-pill border border-neutral-400 bg-neutral-100/60 px-[18px] tabular-nums text-neutral-800">
                           {initiative?.aktenzeichen ?? <span className="text-neutral-700 italic">wird beim ersten Speichern vergeben</span>}
                         </p>
                       </div>
                       <Textfeld {...feld("stammdaten.datum")} label="Datum" type="date" />
-                    </div>
+                    </FeldReihe>
                     <Textbereich {...feld("stammdaten.titel")} label="Projekttitel" rows={2} />
-                    <fieldset className="grid gap-6 min-w-0">
-                      <legend className="text-xl font-display mb-4">Durchführungspartner</legend>
-                      <Textfeld {...feld("stammdaten.partnerName")} label="Name der Institution" hinweis="Die Institution, die gefördert wird." autoComplete="off" />
-                      <Textfeld {...feld("stammdaten.partnerTraeger")} label="Träger bzw. Rechtsform" placeholder="z. B. Bayerisches Rotes Kreuz – Körperschaft des öffentlichen Rechts" />
-                      <div className="grid gap-6 sm:grid-cols-2">
-                        <Textfeld {...feld("stammdaten.ansprechperson")} label="Ansprechperson" autoComplete="off" />
-                        <Textfeld {...feld("stammdaten.telefon")} label="Telefon" type="tel" autoComplete="off" />
+                    <fieldset
+                      className="min-w-0"
+                      aria-describedby={fehler["stammdaten.empfaengerArt"] ? `${initiativFeldId("stammdaten.empfaengerArt")}-fehler` : undefined}
+                    >
+                      <legend className="text-base font-medium text-neutral-800">
+                        Empfänger der Förderung
+                        <span aria-hidden="true" className="text-fehler"> *</span>
+                        <span className="sr-only"> (Pflichtfeld)</span>
+                      </legend>
+                      <div className="mt-3 grid gap-3 md:grid-cols-3">
+                        {EMPFAENGER.map((e, n) => {
+                          const an = daten.stammdaten.empfaengerArt === e.id;
+                          return (
+                            <label
+                              key={e.id}
+                              className={`flex items-start gap-3 rounded-[16px] border px-4 py-3 cursor-pointer min-h-12 transition-colors ${an ? "border-[#8a3f0c] bg-[#f6e3c8]" : "border-[#e4c9a5] bg-neutral-100"}`}
+                            >
+                              <input
+                                type="radio"
+                                name="empfaengerArt"
+                                id={n === 0 ? initiativFeldId("stammdaten.empfaengerArt") : undefined}
+                                value={e.id}
+                                checked={an}
+                                onChange={() => empfaengerWaehlen(e.id)}
+                                className="mt-1 size-5 shrink-0 accent-neutral-800 cursor-pointer"
+                              />
+                              <span>
+                                <span className="block text-neutral-800 font-medium">{e.label}</span>
+                                <span className="block text-sm text-neutral-700">{e.beispiel}</span>
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
-                      <Textfeld {...feld("stammdaten.email")} label="E-Mail" type="email" autoComplete="off" />
-                      <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
+                      <div className="mt-2">
+                        <Fehlertext id={`${initiativFeldId("stammdaten.empfaengerArt")}-fehler`} text={fehler["stammdaten.empfaengerArt"]} />
+                      </div>
                     </fieldset>
+                    {daten.stammdaten.empfaengerArt === "privat" ? (
+                      <fieldset className="grid gap-6 min-w-0">
+                        <legend className="text-xl font-display mb-4">Geförderte Person</legend>
+                        <FeldReihe>
+                          <Textfeld {...feld("stammdaten.vorname")} label="Vorname" autoComplete="off" />
+                          <Textfeld {...feld("stammdaten.nachname")} label="Nachname" autoComplete="off" />
+                        </FeldReihe>
+                        <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
+                        <FeldReihe>
+                          <Textfeld {...feld("stammdaten.email")} label="E-Mail (optional)" type="email" autoComplete="off" />
+                          <Textfeld {...feld("stammdaten.telefon")} label="Telefon (optional)" type="tel" autoComplete="off" />
+                        </FeldReihe>
+                      </fieldset>
+                    ) : daten.stammdaten.empfaengerArt ? (
+                      <fieldset className="grid gap-6 min-w-0">
+                        <legend className="text-xl font-display mb-4">Durchführungspartner</legend>
+                        <Textfeld {...feld("stammdaten.partnerName")} label="Name der Institution" hinweis="Die Institution, die gefördert wird." autoComplete="off" />
+                        <Textfeld {...feld("stammdaten.partnerTraeger")} label="Träger bzw. Rechtsform" placeholder="z. B. Bayerisches Rotes Kreuz – Körperschaft des öffentlichen Rechts" />
+                        <FeldReihe>
+                          <Textfeld {...feld("stammdaten.ansprechperson")} label="Ansprechperson" autoComplete="off" />
+                          <Textfeld {...feld("stammdaten.telefon")} label="Telefon" type="tel" autoComplete="off" />
+                        </FeldReihe>
+                        <Textfeld {...feld("stammdaten.email")} label="E-Mail" type="email" autoComplete="off" />
+                        <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
+                      </fieldset>
+                    ) : (
+                      <p className="text-sm text-neutral-700">Nach der Auswahl erscheinen die passenden Angaben zum Empfänger.</p>
+                    )}
                     <Textbereich {...feld("stammdaten.art")} label="Art der Initiative" rows={3} />
                   </div>
                 )}
@@ -339,28 +446,142 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                 {schritt === 3 && (
                   <div className="grid gap-6 max-w-[760px]">
                     <Textbereich {...feld("finanzen.gegenstand")} label="Fördergegenstand" rows={2} />
-                    <div className="grid gap-6 sm:grid-cols-2">
+                    <FeldReihe>
                       <BetragEingabe
                         {...feld("finanzen.betrag")}
                         label="Förderbetrag"
                         onBlur={() => setze("finanzen.betrag", normalisiereBetrag(daten.finanzen.betrag))}
                       />
                       <Textfeld {...feld("finanzen.angebotVom")} label="Kostenvoranschlag / Angebot vom" type="date" />
-                    </div>
+                    </FeldReihe>
                     <InitiativUpload initiative={initiative} kategorie="angebot" hinweis="Das Angebot bzw. den Kostenvoranschlag als Grundlage des Förderbetrags." onGeaendert={neuLaden} onErstSpeichern={() => speichern()} />
-                    <Textbereich {...feld("finanzen.auszahlung")} label="Auszahlungsmodalität" rows={3} />
+                    <Textbereich {...feld("finanzen.auszahlung")} label="Auszahlungsmodalität" hinweis={daten.stammdaten.empfaengerArt === "privat" ? "Bei Einzelfallhilfe bitte die eckige Klammer ergänzen oder den Satz entfernen." : undefined} rows={4} />
                   </div>
                 )}
 
                 {schritt === 4 && (
                   <div className="grid gap-6 max-w-[760px]">
                     <p className="text-sm text-neutral-700">Felder mit „für den Beschluss nötig“ müssen ausgefüllt sein, bevor der Status auf „Beschlossen“ gesetzt werden kann.</p>
-                    <div className="grid gap-6 sm:grid-cols-2">
+                    <FeldReihe>
                       <Textfeld {...feld("beschluss.datum")} label="Beschluss vom" hinweis="für den Beschluss nötig" type="date" />
                       <Textfeld {...feld("beschluss.protokoll")} label="Protokoll / TOP" placeholder="z. B. Protokoll 4/2026, TOP 3" />
-                    </div>
-                    <Textbereich {...feld("beschluss.gemeinnuetzigkeit")} label="Gemeinnützigkeit des Partners" hinweis="für den Beschluss nötig – z. B. wie und wodurch die Gemeinnützigkeit anerkannt ist" rows={3} />
-                    <InitiativUpload initiative={initiative} kategorie="gemeinnuetzigkeit" hinweis="Freistellungsbescheid o. Ä." onGeaendert={neuLaden} onErstSpeichern={() => speichern()} />
+                    </FeldReihe>
+                    {!daten.stammdaten.empfaengerArt && (
+                      <Hinweisbox art="warn">
+                        Bitte wählen Sie zuerst in Schritt 1 den Empfänger der Förderung – davon hängen die Angaben in diesem Schritt ab.{" "}
+                        <button type="button" onClick={() => geheZu(1, "stammdaten.empfaengerArt")} className="underline underline-offset-4 cursor-pointer">
+                          Zu Schritt 1
+                        </button>
+                      </Hinweisbox>
+                    )}
+                    {daten.stammdaten.empfaengerArt && daten.stammdaten.empfaengerArt !== "privat" && (
+                      <div className="grid gap-6 rounded-[22px] border border-[#e4c9a5] bg-neutral-100/80 p-5">
+                        <fieldset
+                          className="min-w-0"
+                          aria-describedby={fehler["beschluss.steuerNachweis"] ? `${initiativFeldId("beschluss.steuerNachweis")}-fehler` : `${initiativFeldId("beschluss.steuerNachweis")}-hinweis`}
+                        >
+                          <legend className="text-base font-medium text-neutral-800">Nachweis der Steuerbegünstigung</legend>
+                          <p id={`${initiativFeldId("beschluss.steuerNachweis")}-hinweis`} className="text-sm text-neutral-700">für den Beschluss nötig</p>
+                          <div className="mt-3 grid gap-2">
+                            {STEUER_NACHWEISE.map((n, k) => (
+                              <label key={n.id} className="flex items-start gap-3 cursor-pointer min-h-11">
+                                <input
+                                  type="radio"
+                                  name="steuerNachweis"
+                                  id={k === 0 ? initiativFeldId("beschluss.steuerNachweis") : undefined}
+                                  checked={daten.beschluss.steuerNachweis === n.id}
+                                  onChange={() => setze("beschluss.steuerNachweis", n.id)}
+                                  className="mt-0.5 size-5 shrink-0 accent-neutral-800 cursor-pointer"
+                                />
+                                <span className="text-neutral-800">{n.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <Fehlertext id={`${initiativFeldId("beschluss.steuerNachweis")}-fehler`} text={fehler["beschluss.steuerNachweis"]} />
+                        </fieldset>
+                        {brauchtBescheid(daten.beschluss.steuerNachweis) && (
+                          <>
+                            <div className="max-w-xs">
+                              <Textfeld {...feld("beschluss.bescheidDatum")} label="Datum des Bescheids" hinweis="für den Beschluss nötig" type="date" />
+                            </div>
+                            <InitiativUpload
+                              initiative={initiative}
+                              kategorie="gemeinnuetzigkeit"
+                              hinweis="für den Beschluss nötig – Freistellungs-, Körperschaftsteuer- bzw. Feststellungsbescheid"
+                              feldId={initiativFeldId("dokument.gemeinnuetzigkeit")}
+                              fehler={fehler["dokument.gemeinnuetzigkeit"]}
+                              onGeaendert={neuLaden}
+                              onErstSpeichern={() => speichern()}
+                            />
+                          </>
+                        )}
+                        <Textbereich {...feld("beschluss.ergaenzendeHinweise")} label="Ergänzende Hinweise (optional)" hinweis="z. B. Spendensiegel, Mitgliedschaft im Dachverband" rows={2} />
+                      </div>
+                    )}
+                    {daten.stammdaten.empfaengerArt === "privat" && (
+                      <div className="grid gap-6 rounded-[22px] border border-[#e4c9a5] bg-neutral-100/80 p-5">
+                        <div>
+                          <p className="text-base font-medium text-neutral-800">Gemeinnützigkeit</p>
+                          <p className="mt-1 text-neutral-800">{EINZELFALL_VERMERK}</p>
+                        </div>
+                        <fieldset
+                          className="min-w-0"
+                          aria-describedby={fehler["einzelfall.beduerftigkeit"] ? `${initiativFeldId("einzelfall.beduerftigkeit")}-fehler` : undefined}
+                        >
+                          <legend className="text-base font-medium text-neutral-800">
+                            Art der Bedürftigkeit
+                            <span aria-hidden="true" className="text-fehler"> *</span>
+                            <span className="sr-only"> (Pflichtfeld)</span>
+                          </legend>
+                          <div className="mt-3 grid gap-2">
+                            {BEDUERFTIGKEIT.map((b, k) => (
+                              <label key={b.id} className="flex items-start gap-3 cursor-pointer min-h-11">
+                                <input
+                                  type="checkbox"
+                                  id={k === 0 ? initiativFeldId("einzelfall.beduerftigkeit") : undefined}
+                                  checked={daten.einzelfall.beduerftigkeit.includes(b.id)}
+                                  onChange={(e) =>
+                                    setze(
+                                      "einzelfall.beduerftigkeit",
+                                      e.target.checked
+                                        ? [...daten.einzelfall.beduerftigkeit, b.id]
+                                        : daten.einzelfall.beduerftigkeit.filter((x) => x !== b.id),
+                                    )
+                                  }
+                                  className="mt-0.5 size-6 shrink-0 accent-neutral-800 cursor-pointer"
+                                />
+                                <span className="text-neutral-800">{b.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <Fehlertext id={`${initiativFeldId("einzelfall.beduerftigkeit")}-fehler`} text={fehler["einzelfall.beduerftigkeit"]} />
+                        </fieldset>
+                        <InitiativUpload
+                          initiative={initiative}
+                          kategorie="beduerftigkeit"
+                          titel="Nachweise der Bedürftigkeit"
+                          hinweis="für den Beschluss nötig – mindestens ein Nachweis. Besonders schutzbedürftig: nur der Stiftungsvorstand hat Zugriff."
+                          arten={NACHWEIS_ARTEN}
+                          feldId={initiativFeldId("dokument.beduerftigkeit")}
+                          fehler={fehler["dokument.beduerftigkeit"]}
+                          onGeaendert={neuLaden}
+                          onErstSpeichern={() => speichern()}
+                        />
+                        <FeldReihe>
+                          <Textfeld {...feld("einzelfall.geprueftAm")} label="Bedürftigkeit geprüft am" hinweis="für den Beschluss nötig" type="date" />
+                          <Textfeld {...feld("einzelfall.geprueftVon")} label="von" hinweis="für den Beschluss nötig" autoComplete="off" />
+                        </FeldReihe>
+                        <Checkbox
+                          id={initiativFeldId("einzelfall.nichtVerwandt")}
+                          checked={daten.einzelfall.nichtVerwandt}
+                          onChange={(v) => setze("einzelfall.nichtVerwandt", v)}
+                          fehler={fehler["einzelfall.nichtVerwandt"]}
+                          pflicht
+                        >
+                          {NICHT_VERWANDT_TEXT}
+                        </Checkbox>
+                      </div>
+                    )}
                     <div className="rounded-[22px] border border-[#e4c9a5] bg-neutral-100/80 p-5 grid gap-4">
                       <Checkbox
                         id={initiativFeldId("beschluss.keineVerflechtung")}
@@ -401,10 +622,12 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                       </Checkbox>
                       <InitiativUpload initiative={initiative} kategorie="beleg_rechnung" onGeaendert={neuLaden} onErstSpeichern={() => speichern()} />
                     </div>
-                    <fieldset className="grid gap-6 sm:grid-cols-2 min-w-0">
+                    <fieldset className="min-w-0">
                       <legend className="text-xl font-display mb-4">Abschlussvermerk: zweckentsprechende Mittelverwendung</legend>
+                      <FeldReihe>
                       <Textfeld {...feld("abschluss.geprueftAm")} label="Geprüft am" type="date" />
                       <Textfeld {...feld("abschluss.kuerzel")} label="Kürzel" hinweis={benutzer?.kuerzel ? `Ihr Kürzel: ${benutzer.kuerzel}` : undefined} autoComplete="off" />
+                      </FeldReihe>
                     </fieldset>
                   </div>
                 )}
@@ -450,6 +673,24 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
           </form>
         </div>
       </div>
+      <Dialog
+        offen={!!wechsel}
+        onSchliessen={() => setWechsel(null)}
+        titel="Empfängerart ändern?"
+        beschreibung={wechsel ? `Neu: ${EMPFAENGER_LABEL[wechsel.neu]}` : undefined}
+      >
+        <div className="grid gap-6">
+          <p>Diese Angaben gelten für die neue Empfängerart nicht. Sie werden ausgeblendet und beim Speichern nicht übernommen:</p>
+          <ul className="list-disc pl-5">
+            {wechsel?.felder.map((f) => <li key={f.pfad}>{f.label}</li>)}
+          </ul>
+          <p className="text-sm text-neutral-700">Bereits hochgeladene Dateien bleiben in der Akte; im Entwurf können Sie sie entfernen.</p>
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button variante="ghost" onClick={() => setWechsel(null)}>Abbrechen</Button>
+            <Button onClick={wechselBestaetigen}>Empfängerart ändern</Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }
@@ -468,8 +709,8 @@ function BetragEingabe({
   pflicht?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 min-w-0">
-      <label htmlFor={id} className="text-sm leading-5 text-neutral-800 font-medium">
+    <div className="feld min-w-0">
+      <label htmlFor={id} className="feld-label pb-2 text-sm leading-5 text-neutral-800 font-medium">
         {label}
         {pflicht && (
           <>
@@ -478,7 +719,7 @@ function BetragEingabe({
           </>
         )}
       </label>
-      <div className="relative">
+      <div className="feld-eingabe relative">
         <input
           id={id}
           name={name}
@@ -496,7 +737,7 @@ function BetragEingabe({
         />
         <span aria-hidden="true" className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-700">€</span>
       </div>
-      <Fehlertext id={`${id}-fehler`} text={fehler} />
+      <Fehlertext id={`${id}-fehler`} text={fehler} className="feld-fehler pt-2" />
     </div>
   );
 }
