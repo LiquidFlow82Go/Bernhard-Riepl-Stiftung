@@ -231,7 +231,7 @@ export async function erzeugeInitiativPdf(e: InitiativPdfEingabe): Promise<Blob>
     [{ an: B.keineVerflechtung, text: VERFLECHTUNG_TEXT }],
     !B.keineVerflechtung && B.verflechtungText.trim() ? text(`Erläuterung: ${B.verflechtungText}`) : undefined,
   );
-  z.zeile("Gemeinnützigkeit & Interessenkonflikte", folge(text(B.gemeinnuetzigkeit, 2), verflechtung));
+  z.zeile("Gemeinnützigkeit & Interessenkonflikte", folge(text(B.ergaenzendeHinweise, 2), verflechtung));
 
   /* ---------- 5. Abschluss & Verwendungsnachweis ---------- */
 

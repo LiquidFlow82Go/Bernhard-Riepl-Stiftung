@@ -52,6 +52,7 @@ interface Zeile {
     groesse: number | string;
     speicherpfad: string;
     hochgeladen_am: string;
+    nachweis_art?: string | null;
   }[];
   initiativ_status_verlauf?: {
     von_status: InitiativStatus | null;
@@ -77,6 +78,7 @@ function zuInitiative(z: Zeile): Initiative {
       groesse: Number(d.groesse),
       speicherpfad: d.speicherpfad,
       hochgeladenAm: d.hochgeladen_am,
+      nachweisArt: d.nachweis_art ?? null,
     }))
     .sort((a, b) => a.hochgeladenAm.localeCompare(b.hochgeladenAm));
   return {
@@ -163,7 +165,7 @@ function sichererDateiname(n: string): string {
 }
 
 /** Lädt eine Datei zur Initiative hoch (Pfad <Aktenzeichen>/<uuid>-<name>). */
-export async function ladeInitiativDateiHoch(i: Initiative, kategorie: InitiativDokKategorie, datei: File): Promise<void> {
+export async function ladeInitiativDateiHoch(i: Initiative, kategorie: InitiativDokKategorie, datei: File, nachweisArt?: string): Promise<void> {
   const p = pruefeDatei(datei);
   if (p) throw new Error(p);
   const sb = supabase();
@@ -180,6 +182,7 @@ export async function ladeInitiativDateiHoch(i: Initiative, kategorie: Initiativ
     mime_type: datei.type || "application/octet-stream",
     groesse: datei.size,
     speicherpfad: pfad,
+    ...(nachweisArt ? { nachweis_art: nachweisArt } : {}),
   });
   if (error) {
     await sb.storage.from(INITIATIV_BUCKET).remove([pfad]);

@@ -43,6 +43,53 @@ export const ART_VORBELEGUNG =
 export const AUSZAHLUNG_VORBELEGUNG =
   "Überweisung auf das offizielle Konto des Durchführungspartners nach Vorlage von Angebot/Rechnung sowie Nachweis der Gemeinnützigkeit";
 
+/** Nachweis der Steuerbegünstigung (Organisation / öffentliche Einrichtung). */
+export type SteuerNachweis = "freistellung" | "feststellung60a" | "koerperschaft";
+
+export const STEUER_NACHWEISE: { id: SteuerNachweis; label: string; bescheid: boolean }[] = [
+  { id: "freistellung", label: "Freistellungsbescheid / Körperschaftsteuerbescheid des Finanzamts", bescheid: true },
+  { id: "feststellung60a", label: "Feststellungsbescheid nach § 60a AO", bescheid: true },
+  { id: "koerperschaft", label: "Körperschaft des öffentlichen Rechts (kein Bescheid erforderlich)", bescheid: false },
+];
+
+export function brauchtBescheid(n: SteuerNachweis | ""): boolean {
+  return STEUER_NACHWEISE.some((s) => s.id === n && s.bescheid);
+}
+
+/** Feststehender Vermerk bei Einzelfallhilfe (auch im PDF). */
+export const EINZELFALL_VERMERK =
+  "Nicht zutreffend – Einzelfallhilfe für eine natürliche Person. Die Stiftung verwirklicht ihren mildtätigen Zweck (§ 53 AO) hier unmittelbar selbst (§ 57 AO).";
+
+export type Beduerftigkeit = "persoenlich" | "wirtschaftlich";
+
+export const BEDUERFTIGKEIT: { id: Beduerftigkeit; label: string }[] = [
+  {
+    id: "persoenlich",
+    label: "persönlich – aufgrund des körperlichen, geistigen oder seelischen Zustands auf die Hilfe anderer angewiesen (§ 53 Nr. 1 AO)",
+  },
+  { id: "wirtschaftlich", label: "wirtschaftlich (§ 53 Nr. 2 AO)" },
+];
+
+/** Arten von Nachweisen der Bedürftigkeit (nur die Art erscheint im PDF). */
+export const NACHWEIS_ARTEN = [
+  { id: "leistungsbescheid", label: "Leistungsbescheid (z. B. Bürgergeld, Sozialhilfe, Wohngeld)" },
+  { id: "traeger", label: "Bestätigung des Sozialleistungsträgers" },
+  { id: "einkommen", label: "Einkommensnachweis bzw. Steuerbescheid" },
+  { id: "immatrikulation", label: "Immatrikulationsbescheinigung" },
+  { id: "ablehnung", label: "Ablehnungsbescheid anderer Förderstellen" },
+  { id: "bescheinigung", label: "Ärztliche oder amtliche Bescheinigung" },
+  { id: "sonstiges", label: "Sonstiges" },
+] as const;
+
+export type NachweisArt = (typeof NACHWEIS_ARTEN)[number]["id"];
+
+export function nachweisArtLabel(id: string | null | undefined): string {
+  return NACHWEIS_ARTEN.find((n) => n.id === id)?.label ?? "Nachweis";
+}
+
+export const NICHT_VERWANDT_TEXT =
+  "Die geförderte Person ist nicht mit dem Stifter oder mit Mitgliedern der Stiftungsorgane verwandt.";
+
 export const VERFLECHTUNG_TEXT =
   "Es bestehen keine persönlichen oder wirtschaftlichen Verflechtungen zu Mitgliedern der Stiftungsorgane.";
 
@@ -83,9 +130,19 @@ export interface InitiativDaten {
   beschluss: {
     datum: string;
     protokoll: string;
-    gemeinnuetzigkeit: string;
+    /** Organisation / öffentliche Einrichtung */
+    steuerNachweis: SteuerNachweis | "";
+    bescheidDatum: string;
+    ergaenzendeHinweise: string;
     keineVerflechtung: boolean;
     verflechtungText: string;
+  };
+  /** Privatperson (Einzelfallhilfe) – besonders schutzbedürftige Angaben */
+  einzelfall: {
+    beduerftigkeit: Beduerftigkeit[];
+    geprueftAm: string;
+    geprueftVon: string;
+    nichtVerwandt: boolean;
   };
   abschluss: {
     belegAngebot: boolean;
@@ -119,7 +176,16 @@ export function leereInitiative(kuerzel = ""): InitiativDaten {
     },
     zweck: { bereiche: [], begruendung: "", ausgangslage: "" },
     finanzen: { gegenstand: "", betrag: "", angebotVom: "", auszahlung: AUSZAHLUNG_VORBELEGUNG },
-    beschluss: { datum: "", protokoll: "", gemeinnuetzigkeit: "", keineVerflechtung: false, verflechtungText: "" },
+    beschluss: {
+      datum: "",
+      protokoll: "",
+      steuerNachweis: "",
+      bescheidDatum: "",
+      ergaenzendeHinweise: "",
+      keineVerflechtung: false,
+      verflechtungText: "",
+    },
+    einzelfall: { beduerftigkeit: [], geprueftAm: "", geprueftVon: "", nichtVerwandt: false },
     abschluss: { belegAngebot: false, belegRechnung: false, geprueftAm: "", kuerzel },
   };
 }
@@ -135,16 +201,34 @@ export function vervollstaendige(d: Partial<InitiativDaten> | null | undefined):
     stammdaten,
     zweck: { ...l.zweck, ...x.zweck, bereiche: Array.isArray(x.zweck?.bereiche) ? x.zweck!.bereiche : [] },
     finanzen: { ...l.finanzen, ...x.finanzen },
-    beschluss: { ...l.beschluss, ...x.beschluss },
+    beschluss: (() => {
+      const b = { ...l.beschluss, ...x.beschluss } as InitiativDaten["beschluss"] & { gemeinnuetzigkeit?: string };
+      // Früheres Freitextfeld „Gemeinnützigkeit des Partners“ → „Ergänzende Hinweise“
+      if (b.gemeinnuetzigkeit?.trim() && !b.ergaenzendeHinweise.trim()) b.ergaenzendeHinweise = b.gemeinnuetzigkeit;
+      delete b.gemeinnuetzigkeit;
+      return b;
+    })(),
+    einzelfall: {
+      ...l.einzelfall,
+      ...x.einzelfall,
+      beduerftigkeit: Array.isArray(x.einzelfall?.beduerftigkeit) ? x.einzelfall!.beduerftigkeit : [],
+    },
     abschluss: { ...l.abschluss, ...x.abschluss },
   };
 }
 
-export type InitiativDokKategorie = "angebot" | "gemeinnuetzigkeit" | "beleg_angebot" | "beleg_rechnung" | "sonstige";
+export type InitiativDokKategorie =
+  | "angebot"
+  | "gemeinnuetzigkeit"
+  | "beduerftigkeit"
+  | "beleg_angebot"
+  | "beleg_rechnung"
+  | "sonstige";
 
 export const INITIATIV_DOK_LABEL: Record<InitiativDokKategorie, string> = {
   angebot: "Kostenvoranschlag / Angebot",
-  gemeinnuetzigkeit: "Nachweis der Gemeinnützigkeit",
+  gemeinnuetzigkeit: "Bescheid zur Steuerbegünstigung",
+  beduerftigkeit: "Nachweis der Bedürftigkeit",
   beleg_angebot: "Angebot und Zuwendungsbestätigung",
   beleg_rechnung: "Rechnung und Empfangsbestätigung / Foto",
   sonstige: "Sonstige Unterlagen",
@@ -158,6 +242,8 @@ export interface InitiativDokument {
   groesse: number;
   speicherpfad: string;
   hochgeladenAm: string;
+  /** Nur bei Nachweisen der Bedürftigkeit: Art des Nachweises */
+  nachweisArt?: string | null;
 }
 
 export interface Person {
@@ -262,14 +348,24 @@ function NUR_INSTITUTION_ALLE(): [string, string][] {
 function NUR_PRIVAT_ALLE(): [string, string][] {
   return [...NUR_PRIVAT, ...NUR_PRIVAT_SCHRITT4];
 }
-const NUR_INSTITUTION_SCHRITT4: [string, string][] = [];
-const NUR_PRIVAT_SCHRITT4: [string, string][] = [];
+const NUR_INSTITUTION_SCHRITT4: [string, string][] = [
+  ["beschluss.steuerNachweis", "Nachweis der Steuerbegünstigung"],
+  ["beschluss.bescheidDatum", "Datum des Bescheids"],
+  ["beschluss.ergaenzendeHinweise", "Ergänzende Hinweise"],
+];
+const NUR_PRIVAT_SCHRITT4: [string, string][] = [
+  ["einzelfall.beduerftigkeit", "Art der Bedürftigkeit"],
+  ["einzelfall.geprueftAm", "Bedürftigkeit geprüft am"],
+  ["einzelfall.nichtVerwandt", "Bestätigung „nicht verwandt“"],
+];
 
 /** Setzt die Empfängerart; Felder der anderen Gruppe werden geleert. */
 export function wendeEmpfaengerAn(d: InitiativDaten, neu: EmpfaengerArt): InitiativDaten {
   const n: InitiativDaten = structuredClone(d);
   const alt = gruppe(d.stammdaten.empfaengerArt);
   n.stammdaten.empfaengerArt = neu;
+  // Öffentliche Einrichtung: „Körperschaft des öffentlichen Rechts“ vorbelegen
+  if (neu === "oeffentlich" && !n.beschluss.steuerNachweis) n.beschluss.steuerNachweis = "koerperschaft";
   if (alt && alt !== gruppe(neu)) {
     for (const [p] of alt === "institution" ? NUR_INSTITUTION_ALLE() : NUR_PRIVAT_ALLE()) {
       const teile = p.split(".");

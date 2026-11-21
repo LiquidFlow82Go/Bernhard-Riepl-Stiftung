@@ -9,7 +9,7 @@
  */
 import { z } from "zod";
 import { parseBetrag } from "./betrag";
-import type { InitiativDaten, InitiativStatus } from "./initiativeTypen";
+import { brauchtBescheid, type InitiativDaten, type InitiativDokKategorie, type InitiativStatus } from "./initiativeTypen";
 
 export type Stufe = "formular" | "beschluss" | "abschluss";
 
@@ -61,7 +61,42 @@ export const INITIATIV_REGELN: InitiativRegel[] = [
   { pfad: "finanzen.gegenstand", label: "Fördergegenstand", schritt: 3, stufe: "formular", schema: text("Fördergegenstand") },
   { pfad: "finanzen.betrag", label: "Förderbetrag", schritt: 3, stufe: "formular", schema: betrag("Förderbetrag") },
   { pfad: "beschluss.datum", label: "Beschluss vom", schritt: 4, stufe: "beschluss", schema: datum("Beschluss vom") },
-  { pfad: "beschluss.gemeinnuetzigkeit", label: "Gemeinnützigkeit des Partners", schritt: 4, stufe: "beschluss", schema: text("Gemeinnützigkeit des Partners") },
+  // Organisation / öffentliche Einrichtung
+  {
+    pfad: "beschluss.steuerNachweis",
+    label: "Nachweis der Steuerbegünstigung",
+    schritt: 4,
+    stufe: "beschluss",
+    schema: z.enum(["freistellung", "feststellung60a", "koerperschaft"], { error: "Bitte wählen Sie den Nachweis der Steuerbegünstigung." }),
+    wenn: istInstitution,
+  },
+  {
+    pfad: "beschluss.bescheidDatum",
+    label: "Datum des Bescheids",
+    schritt: 4,
+    stufe: "beschluss",
+    schema: datum("Datum des Bescheids"),
+    wenn: (d) => istInstitution(d) && brauchtBescheid(d.beschluss.steuerNachweis),
+  },
+  // Privatperson (Einzelfallhilfe)
+  {
+    pfad: "einzelfall.beduerftigkeit",
+    label: "Art der Bedürftigkeit",
+    schritt: 4,
+    stufe: "formular",
+    schema: z.array(z.string()).min(1, "Bitte wählen Sie mindestens eine Art der Bedürftigkeit."),
+    wenn: istPrivat,
+  },
+  {
+    pfad: "einzelfall.nichtVerwandt",
+    label: "Bestätigung „nicht verwandt“",
+    schritt: 4,
+    stufe: "formular",
+    schema: haken("Bitte bestätigen Sie, dass die geförderte Person nicht mit dem Stifter oder Mitgliedern der Stiftungsorgane verwandt ist."),
+    wenn: istPrivat,
+  },
+  { pfad: "einzelfall.geprueftAm", label: "Bedürftigkeit geprüft am", schritt: 4, stufe: "beschluss", schema: datum("Bedürftigkeit geprüft am"), wenn: istPrivat },
+  { pfad: "einzelfall.geprueftVon", label: "Bedürftigkeit geprüft von", schritt: 4, stufe: "beschluss", schema: text("geprüft von"), wenn: istPrivat },
   {
     pfad: "abschluss.belegAngebot",
     label: "Belegprüfung Angebot",
@@ -90,8 +125,27 @@ export function istInitiativPflicht(pfad: string, d?: InitiativDaten): boolean {
   return INITIATIV_REGELN.some((r) => r.pfad === pfad && r.stufe === "formular" && (!d || !r.wenn || r.wenn(d)));
 }
 
-/** Prüft Regeln; optional nur bestimmte Stufen bzw. einen Schritt. */
-export function pruefeInitiative(d: InitiativDaten, o: { stufen?: Stufe[]; schritt?: number } = {}): InitiativFehler {
+/** Pflicht-Uploads für den Beschluss (Pfad „dokument.<kategorie>“). */
+const PFLICHT_DOKUMENTE: { kategorie: InitiativDokKategorie; label: string; meldung: string; wenn: (d: InitiativDaten) => boolean }[] = [
+  {
+    kategorie: "gemeinnuetzigkeit",
+    label: "Bescheid zur Steuerbegünstigung (Upload)",
+    meldung: "Bitte laden Sie den Bescheid zur Steuerbegünstigung hoch.",
+    wenn: (d) => istInstitution(d) && brauchtBescheid(d.beschluss.steuerNachweis),
+  },
+  {
+    kategorie: "beduerftigkeit",
+    label: "Nachweis der Bedürftigkeit (Upload)",
+    meldung: "Bitte laden Sie mindestens einen Nachweis der Bedürftigkeit hoch.",
+    wenn: istPrivat,
+  },
+];
+
+/** Prüft Regeln; optional nur bestimmte Stufen bzw. einen Schritt. Uploads nur, wenn `dokumente` übergeben wird. */
+export function pruefeInitiative(
+  d: InitiativDaten,
+  o: { stufen?: Stufe[]; schritt?: number; dokumente?: { kategorie: string }[] } = {},
+): InitiativFehler {
   const stufen = o.stufen ?? ["formular"];
   const fehler: InitiativFehler = {};
   for (const r of INITIATIV_REGELN) {
@@ -100,6 +154,10 @@ export function pruefeInitiative(d: InitiativDaten, o: { stufen?: Stufe[]; schri
     if (r.wenn && !r.wenn(d)) continue;
     const res = r.schema.safeParse(wertAn(d, r.pfad) ?? (r.schema instanceof z.ZodArray ? [] : ""));
     if (!res.success) fehler[r.pfad] = res.error.issues[0]?.message ?? `Bitte prüfen Sie „${r.label}“.`;
+  }
+  if (stufen.includes("beschluss") && o.dokumente && (!o.schritt || o.schritt === 4)) {
+    for (const p of PFLICHT_DOKUMENTE)
+      if (p.wenn(d) && !o.dokumente.some((x) => x.kategorie === p.kategorie)) fehler[`dokument.${p.kategorie}`] = p.meldung;
   }
   // Schritt 4: ohne Bestätigung „keine Verflechtungen“ ist eine Erläuterung Pflicht
   if (stufen.includes("formular") && (!o.schritt || o.schritt === 4)) {
@@ -126,12 +184,14 @@ export function stufenFuer(status: InitiativStatus): Stufe[] {
 }
 
 /** Fehlende Angaben für einen Statuswechsel (leer = möglich). */
-export function fehltFuerStatus(d: InitiativDaten, status: InitiativStatus): InitiativFehler {
+export function fehltFuerStatus(d: InitiativDaten, status: InitiativStatus, dokumente: { kategorie: string }[]): InitiativFehler {
   const stufen = stufenFuer(status);
-  return stufen.length ? pruefeInitiative(d, { stufen }) : {};
+  return stufen.length ? pruefeInitiative(d, { stufen, dokumente }) : {};
 }
 
 export function regelLabel(pfad: string): string {
+  const dok = PFLICHT_DOKUMENTE.find((p) => `dokument.${p.kategorie}` === pfad);
+  if (dok) return dok.label;
   if (pfad === "beschluss.verflechtungText") return "Verflechtungen";
   if (pfad === "stammdaten.email") return "E-Mail";
   if (pfad === "finanzen.angebotVom") return "Angebot vom";
@@ -139,6 +199,7 @@ export function regelLabel(pfad: string): string {
 }
 
 export function regelSchritt(pfad: string): number {
+  if (pfad.startsWith("dokument.")) return 4;
   if (pfad === "beschluss.verflechtungText") return 4;
   if (pfad === "stammdaten.email") return 1;
   if (pfad === "finanzen.angebotVom") return 3;

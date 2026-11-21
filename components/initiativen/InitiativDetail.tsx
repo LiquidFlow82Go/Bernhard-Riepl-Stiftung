@@ -54,7 +54,7 @@ export function InitiativDetail() {
     );
 
   const zurueck = INITIATIV_STATUS.indexOf(ziel) < INITIATIV_STATUS.indexOf(i.status);
-  const vorschau = ziel !== i.status && !zurueck ? fehltFuerStatus(i.daten, ziel) : {};
+  const vorschau = ziel !== i.status && !zurueck ? fehltFuerStatus(i.daten, ziel, i.dokumente) : {};
   const darfLoeschen = i.status === "entwurf" && (i.erstelltVonId === benutzer?.id || benutzer?.rolle === "admin");
 
   async function statusSetzen() {
