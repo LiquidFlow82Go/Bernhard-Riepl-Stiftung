@@ -36,6 +36,7 @@ import { Checkbox, Fehlertext, Textbereich, Textfeld } from "../ui/Feld";
 import { InitiativeKennzeichen } from "../stiftungsvorstand/Bereich";
 import { InitiativAnsicht } from "./InitiativAnsicht";
 import { InitiativUpload } from "./InitiativUpload";
+import { nachweisarten } from "./PdfKnopf";
 
 const SCHRITTE = [
   { nr: 1, titel: "Stammdaten", lang: "Projekt-Stammdaten" },
@@ -219,7 +220,11 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
 
   async function pdfVorschau() {
     const m = await import("@/lib/pdfInitiative");
-    const blob = await m.erzeugeInitiativPdf({ daten, aktenzeichen: initiative?.aktenzeichen });
+    const blob = await m.erzeugeInitiativPdf({
+      daten,
+      aktenzeichen: initiative?.aktenzeichen,
+      nachweisarten: initiative ? nachweisarten(initiative) : [],
+    });
     ladeBlobHerunter(blob, m.initiativPdfDateiname(initiative?.aktenzeichen ?? "Entwurf", daten.stammdaten.titel));
   }
 

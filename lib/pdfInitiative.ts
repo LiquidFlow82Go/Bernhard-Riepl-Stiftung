@@ -7,9 +7,15 @@
  */
 import { formatBetrag, parseBetrag } from "./betrag";
 import {
+  BEDUERFTIGKEIT,
   BELEG_ANGEBOT_TEXT,
   BELEG_RECHNUNG_TEXT,
+  brauchtBescheid,
+  EINZELFALL_VERMERK,
+  EMPFAENGER,
+  NICHT_VERWANDT_TEXT,
   SATZUNGSZWECKE,
+  STEUER_NACHWEISE,
   VERFLECHTUNG_TEXT,
   leereInitiative,
   type InitiativDaten,
@@ -19,6 +25,8 @@ import { clean, datumTT, FARBEN, ladeLogo, Zeichner } from "./pdfBasis";
 export interface InitiativPdfEingabe {
   daten: InitiativDaten;
   aktenzeichen?: string;
+  /** Arten der hochgeladenen Nachweise zur Bedürftigkeit (nur Bezeichnungen, keine Inhalte) */
+  nachweisarten?: string[];
 }
 
 const LH = 4.3; // Zeilenhöhe Text
@@ -183,13 +191,18 @@ export async function erzeugeInitiativPdf(e: InitiativPdfEingabe): Promise<Blob>
   kopf("Merkmal", "Angaben zum Fördervorhaben");
   z.zeile("Aktenzeichen / Datum", inline(["Az.:", { wert: az, breite: 30 }, "   Datum:", { wert: datumTT(S.datum), breite: 30 }]));
   z.zeile("Projekttitel", text(S.titel, 2));
-  const partner = [
-    S.partnerName.trim() + (S.partnerTraeger.trim() ? ` (${S.partnerTraeger.trim()})` : ""),
-    S.ansprechperson.trim() ? `Ansprechperson: ${S.ansprechperson.trim()}` : "",
-    [S.email.trim(), S.telefon.trim()].filter(Boolean).join(" / "),
-    S.anschrift.trim(),
-  ].filter(Boolean).join("\n");
-  z.zeile("Durchführungspartner", text(partner, 3));
+  z.zeile("Empfänger der Förderung", kaestchen(EMPFAENGER.map((x) => ({ an: S.empfaengerArt === x.id, text: x.label }))));
+  const privat = S.empfaengerArt === "privat";
+  const kontakt = [S.email.trim(), S.telefon.trim()].filter(Boolean).join(" / ");
+  const partner = privat
+    ? [`${S.vorname.trim()} ${S.nachname.trim()}`.trim(), S.anschrift.trim(), kontakt].filter(Boolean).join("\n")
+    : [
+        S.partnerName.trim() + (S.partnerTraeger.trim() ? ` (${S.partnerTraeger.trim()})` : ""),
+        S.ansprechperson.trim() ? `Ansprechperson: ${S.ansprechperson.trim()}` : "",
+        kontakt,
+        S.anschrift.trim(),
+      ].filter(Boolean).join("\n");
+  z.zeile(privat ? "Geförderte Person" : S.empfaengerArt ? "Durchführungspartner" : "Durchführungspartner / geförderte Person", text(partner, 3));
   z.zeile("Art der Initiative", text(S.art, 2));
 
   /* ---------- 2. Zweckbindung & Bedarfsbegründung ---------- */
@@ -227,11 +240,34 @@ export async function erzeugeInitiativPdf(e: InitiativPdfEingabe): Promise<Blob>
     "Gremienbeschluss",
     inline(["Genehmigt durch Beschluss vom", { wert: datumTT(B.datum), breite: 28 }, "(Protokoll / TOP:", { wert: B.protokoll, breite: 28 }, ")"]),
   );
-  const verflechtung = kaestchen(
-    [{ an: B.keineVerflechtung, text: VERFLECHTUNG_TEXT }],
-    !B.keineVerflechtung && B.verflechtungText.trim() ? text(`Erläuterung: ${B.verflechtungText}`) : undefined,
-  );
-  z.zeile("Gemeinnützigkeit & Interessenkonflikte", folge(text(B.ergaenzendeHinweise, 2), verflechtung));
+  const erlaeuterung = !B.keineVerflechtung && B.verflechtungText.trim() ? text(`Erläuterung: ${B.verflechtungText}`) : undefined;
+  if (privat) {
+    const E = d.einzelfall;
+    z.zeile("Gemeinnützigkeit", text(EINZELFALL_VERMERK));
+    z.zeile("Art der Bedürftigkeit", kaestchen(BEDUERFTIGKEIT.map((b) => ({ an: E.beduerftigkeit.includes(b.id), text: b.label }))));
+    const arten = [...new Set(e.nachweisarten ?? [])];
+    z.zeile("Nachweise der Bedürftigkeit (Art)", text(arten.join("\n"), 2));
+    z.zeile(
+      "Prüfvermerk",
+      inline(["Bedürftigkeit geprüft am", { wert: datumTT(E.geprueftAm), breite: 28 }, "von", { wert: E.geprueftVon, breite: 34 }]),
+    );
+    z.zeile(
+      "Interessenkonflikte",
+      kaestchen(
+        [
+          { an: E.nichtVerwandt, text: NICHT_VERWANDT_TEXT },
+          { an: B.keineVerflechtung, text: VERFLECHTUNG_TEXT },
+        ],
+        erlaeuterung,
+      ),
+    );
+  } else {
+    const teile: Inhalt[] = [kaestchen(STEUER_NACHWEISE.map((s) => ({ an: B.steuerNachweis === s.id, text: s.label })))];
+    if (!B.steuerNachweis || brauchtBescheid(B.steuerNachweis)) teile.push(inline(["Bescheid vom", { wert: datumTT(B.bescheidDatum), breite: 30 }]));
+    if (B.ergaenzendeHinweise.trim()) teile.push(text(`Ergänzende Hinweise: ${B.ergaenzendeHinweise}`));
+    z.zeile("Nachweis der Steuerbegünstigung", folge(...teile));
+    z.zeile("Interessenkonflikte", kaestchen([{ an: B.keineVerflechtung, text: VERFLECHTUNG_TEXT }], erlaeuterung));
+  }
 
   /* ---------- 5. Abschluss & Verwendungsnachweis ---------- */
 

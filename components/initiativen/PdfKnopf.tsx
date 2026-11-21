@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { ladeBlobHerunter } from "@/lib/dokumente";
-import type { Initiative } from "@/lib/initiativeTypen";
+import { nachweisArtLabel, type Initiative } from "@/lib/initiativeTypen";
+
+/** Nur die Arten der Bedürftigkeitsnachweise (keine Inhalte, keine Dateinamen). */
+export function nachweisarten(i: Initiative): string[] {
+  return i.dokumente.filter((d) => d.kategorie === "beduerftigkeit").map((d) => nachweisArtLabel(d.nachweisArt));
+}
 import { Button } from "../ui/Button";
 
 /** PDF „Interne Projektdokumentation – Initiativförderung“ herunterladen. */
@@ -14,7 +19,11 @@ export function InitiativPdfKnopf({ initiative, klein, variante = "sekundaer" }:
     setFehler("");
     try {
       const { erzeugeInitiativPdf, initiativPdfDateiname } = await import("@/lib/pdfInitiative");
-      const blob = await erzeugeInitiativPdf({ daten: initiative.daten, aktenzeichen: initiative.aktenzeichen });
+      const blob = await erzeugeInitiativPdf({
+        daten: initiative.daten,
+        aktenzeichen: initiative.aktenzeichen,
+        nachweisarten: nachweisarten(initiative),
+      });
       ladeBlobHerunter(blob, initiativPdfDateiname(initiative.aktenzeichen, initiative.projektTitel));
     } catch {
       setFehler("Das PDF konnte nicht erstellt werden.");
