@@ -450,7 +450,7 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                       <Textfeld {...feld("finanzen.angebotVom")} label="Kostenvoranschlag / Angebot vom" type="date" />
                     </div>
                     <InitiativUpload initiative={initiative} kategorie="angebot" hinweis="Das Angebot bzw. den Kostenvoranschlag als Grundlage des Förderbetrags." onGeaendert={neuLaden} onErstSpeichern={() => speichern()} />
-                    <Textbereich {...feld("finanzen.auszahlung")} label="Auszahlungsmodalität" rows={3} />
+                    <Textbereich {...feld("finanzen.auszahlung")} label="Auszahlungsmodalität" hinweis={daten.stammdaten.empfaengerArt === "privat" ? "Bei Einzelfallhilfe bitte die eckige Klammer ergänzen oder den Satz entfernen." : undefined} rows={4} />
                   </div>
                 )}
 

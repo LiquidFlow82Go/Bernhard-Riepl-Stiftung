@@ -90,6 +90,14 @@ export function nachweisArtLabel(id: string | null | undefined): string {
 export const NICHT_VERWANDT_TEXT =
   "Die geförderte Person ist nicht mit dem Stifter oder mit Mitgliedern der Stiftungsorgane verwandt.";
 
+/** Auszahlung bei Einzelfallhilfe: vorzugsweise direkt an den Leistungserbringer. */
+export const AUSZAHLUNG_PRIVAT =
+  "Vorzugsweise Begleichung von Rechnungen direkt an den Leistungserbringer (z. B. Kursgebühr, Anschaffung). Eine Überweisung an die geförderte Person nur in begründeten Ausnahmefällen; Begründung: [ ]";
+
+export function auszahlungVorbelegung(art: EmpfaengerArt | ""): string {
+  return art === "privat" ? AUSZAHLUNG_PRIVAT : AUSZAHLUNG_VORBELEGUNG;
+}
+
 export const VERFLECHTUNG_TEXT =
   "Es bestehen keine persönlichen oder wirtschaftlichen Verflechtungen zu Mitgliedern der Stiftungsorgane.";
 
@@ -364,6 +372,10 @@ export function wendeEmpfaengerAn(d: InitiativDaten, neu: EmpfaengerArt): Initia
   const n: InitiativDaten = structuredClone(d);
   const alt = gruppe(d.stammdaten.empfaengerArt);
   n.stammdaten.empfaengerArt = neu;
+  // Auszahlung: Vorbelegung nur ersetzen, wenn der Text noch unverändert ist
+  const auszahlung = n.finanzen.auszahlung.trim();
+  if (!auszahlung || auszahlung === AUSZAHLUNG_VORBELEGUNG || auszahlung === AUSZAHLUNG_PRIVAT)
+    n.finanzen.auszahlung = auszahlungVorbelegung(neu);
   // Öffentliche Einrichtung: „Körperschaft des öffentlichen Rechts“ vorbelegen
   if (neu === "oeffentlich" && !n.beschluss.steuerNachweis) n.beschluss.steuerNachweis = "koerperschaft";
   if (alt && alt !== gruppe(neu)) {
