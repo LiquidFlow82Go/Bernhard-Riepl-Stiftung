@@ -1,7 +1,7 @@
 "use client";
 
 import { berechneSummen, deckungspruefung, formatBetrag, formatIban } from "@/lib/betrag";
-import { Checkbox, JaNeinGruppe, Textbereich, Textfeld } from "../ui/Feld";
+import { Checkbox, FeldReihe, JaNeinGruppe, Textbereich, Textfeld } from "../ui/Feld";
 import { useAntrag, useFeld } from "./AntragKontext";
 import { BetragZeile, Gruppe, SummenZeile } from "./BetragFeld";
 import { DokumenteUpload } from "./DokumenteUpload";
@@ -42,7 +42,7 @@ export function Schritt1() {
         .
       </div>
       <Untertitel>1.1 Bezeichnung der Institution</Untertitel>
-      <div className="grid gap-6 md:grid-cols-2">
+      <FeldReihe ab="md">
         <T pfad="antragsteller.name" label="Name des Antragstellers" autoComplete="organization" />
         <T pfad="antragsteller.rechtsform" label="Rechtsform" placeholder="z. B. e. V., gGmbH, Stiftung" />
         <T pfad="antragsteller.register" label="Nummer Handelsregister bzw. Vereinsregister" />
@@ -54,7 +54,7 @@ export function Schritt1() {
         <T pfad="antragsteller.web" label="Internet-Adresse" inputMode="url" placeholder="www.beispiel.de" />
         <T pfad="antragsteller.vorsitz" label="Geschäftsführer(in) / Vorsitzende(r)" />
         <T pfad="antragsteller.projektverantwortlich" label="Verantwortlich für die Projektbearbeitung" hinweis="Name, Telefon / Telefax, E-Mail" className="md:col-span-2" />
-      </div>
+      </FeldReihe>
       <Untertitel>Institution</Untertitel>
       <div className="grid gap-6">
         <TA pfad="antragsteller.ziele" label="Ziele und Tätigkeit der Institution" rows={4} />
@@ -84,13 +84,13 @@ export function Schritt2() {
   return (
     <>
       <Untertitel>2.1 Kurzbeschreibung</Untertitel>
-      <div className="grid gap-6 md:grid-cols-2">
+      <FeldReihe ab="md">
         <T pfad="projekt.titel" label="Projekttitel" className="md:col-span-2" />
         <T pfad="projekt.zeitraum" label="Zeitraum" placeholder="z. B. 03/2027 bis 09/2027" />
         <T pfad="projekt.ort" label="Förderort" />
         <T pfad="projekt.partner" label="Projektpartner" className="md:col-span-2" />
         <TA pfad="projekt.kurzbeschreibung" label="Kurzbeschreibung des Projektes" rows={5} className="md:col-span-2" />
-      </div>
+      </FeldReihe>
       <Untertitel>2.2 Ausführliche Beschreibung des Projekts</Untertitel>
       <div className="grid gap-6">
         <TA pfad="projekt.ziel" label="Ziel" rows={4} />
@@ -162,11 +162,11 @@ export function Schritt4() {
       </div>
 
       <Untertitel>4.3 Kontoverbindung</Untertitel>
-      <div className="grid gap-6 md:grid-cols-2 max-w-[760px]">
+      <FeldReihe ab="md" className="max-w-[760px]">
         <T pfad="konto.institut" label="Kreditinstitut" className="md:col-span-2" />
         <Textfeld {...iban} label="IBAN" autoComplete="off" spellCheck={false} autoCapitalize="characters" onBlur={() => setze("konto.iban", formatIban(iban.value))} />
         <Textfeld {...bic} label="BIC" autoComplete="off" spellCheck={false} autoCapitalize="characters" onBlur={() => setze("konto.bic", bic.value.replace(/\s/g, "").toUpperCase())} />
-      </div>
+      </FeldReihe>
       <p className="mt-3 text-sm text-neutral-700">IBAN und BIC werden nicht als Entwurf im Browser zwischengespeichert.</p>
 
       <Untertitel>Ort</Untertitel>

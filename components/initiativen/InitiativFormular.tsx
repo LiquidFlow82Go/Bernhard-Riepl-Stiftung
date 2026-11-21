@@ -32,7 +32,7 @@ import { setzeAnPfad } from "../antrag/AntragKontext";
 import { Button, ButtonLink } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Hinweisbox } from "../ui/Diverses";
-import { Checkbox, Fehlertext, Textbereich, Textfeld } from "../ui/Feld";
+import { Checkbox, FeldReihe, Fehlertext, Textbereich, Textfeld } from "../ui/Feld";
 import { InitiativeKennzeichen } from "../stiftungsvorstand/Bereich";
 import { InitiativAnsicht } from "./InitiativAnsicht";
 import { InitiativUpload } from "./InitiativUpload";
@@ -324,15 +324,15 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
               <motion.div key={schritt} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2 }}>
                 {schritt === 1 && (
                   <div className="grid gap-6 max-w-[760px]">
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <div className="flex flex-col gap-2">
-                        <p className="text-sm leading-5 text-neutral-800 font-medium">Aktenzeichen</p>
-                        <p className="h-12 flex items-center rounded-pill border border-neutral-400 bg-neutral-100/60 px-[18px] tabular-nums text-neutral-800">
+                    <FeldReihe>
+                      <div className="feld min-w-0">
+                        <p className="feld-label pb-2 text-sm leading-5 text-neutral-800 font-medium">Aktenzeichen</p>
+                        <p className="feld-eingabe h-12 flex items-center rounded-pill border border-neutral-400 bg-neutral-100/60 px-[18px] tabular-nums text-neutral-800">
                           {initiative?.aktenzeichen ?? <span className="text-neutral-700 italic">wird beim ersten Speichern vergeben</span>}
                         </p>
                       </div>
                       <Textfeld {...feld("stammdaten.datum")} label="Datum" type="date" />
-                    </div>
+                    </FeldReihe>
                     <Textbereich {...feld("stammdaten.titel")} label="Projekttitel" rows={2} />
                     <fieldset
                       className="min-w-0"
@@ -375,25 +375,25 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                     {daten.stammdaten.empfaengerArt === "privat" ? (
                       <fieldset className="grid gap-6 min-w-0">
                         <legend className="text-xl font-display mb-4">Geförderte Person</legend>
-                        <div className="grid gap-6 sm:grid-cols-2">
+                        <FeldReihe>
                           <Textfeld {...feld("stammdaten.vorname")} label="Vorname" autoComplete="off" />
                           <Textfeld {...feld("stammdaten.nachname")} label="Nachname" autoComplete="off" />
-                        </div>
+                        </FeldReihe>
                         <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
-                        <div className="grid gap-6 sm:grid-cols-2">
+                        <FeldReihe>
                           <Textfeld {...feld("stammdaten.email")} label="E-Mail (optional)" type="email" autoComplete="off" />
                           <Textfeld {...feld("stammdaten.telefon")} label="Telefon (optional)" type="tel" autoComplete="off" />
-                        </div>
+                        </FeldReihe>
                       </fieldset>
                     ) : daten.stammdaten.empfaengerArt ? (
                       <fieldset className="grid gap-6 min-w-0">
                         <legend className="text-xl font-display mb-4">Durchführungspartner</legend>
                         <Textfeld {...feld("stammdaten.partnerName")} label="Name der Institution" hinweis="Die Institution, die gefördert wird." autoComplete="off" />
                         <Textfeld {...feld("stammdaten.partnerTraeger")} label="Träger bzw. Rechtsform" placeholder="z. B. Bayerisches Rotes Kreuz – Körperschaft des öffentlichen Rechts" />
-                        <div className="grid gap-6 sm:grid-cols-2">
+                        <FeldReihe>
                           <Textfeld {...feld("stammdaten.ansprechperson")} label="Ansprechperson" autoComplete="off" />
                           <Textfeld {...feld("stammdaten.telefon")} label="Telefon" type="tel" autoComplete="off" />
-                        </div>
+                        </FeldReihe>
                         <Textfeld {...feld("stammdaten.email")} label="E-Mail" type="email" autoComplete="off" />
                         <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
                       </fieldset>
@@ -446,14 +446,14 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                 {schritt === 3 && (
                   <div className="grid gap-6 max-w-[760px]">
                     <Textbereich {...feld("finanzen.gegenstand")} label="Fördergegenstand" rows={2} />
-                    <div className="grid gap-6 sm:grid-cols-2">
+                    <FeldReihe>
                       <BetragEingabe
                         {...feld("finanzen.betrag")}
                         label="Förderbetrag"
                         onBlur={() => setze("finanzen.betrag", normalisiereBetrag(daten.finanzen.betrag))}
                       />
                       <Textfeld {...feld("finanzen.angebotVom")} label="Kostenvoranschlag / Angebot vom" type="date" />
-                    </div>
+                    </FeldReihe>
                     <InitiativUpload initiative={initiative} kategorie="angebot" hinweis="Das Angebot bzw. den Kostenvoranschlag als Grundlage des Förderbetrags." onGeaendert={neuLaden} onErstSpeichern={() => speichern()} />
                     <Textbereich {...feld("finanzen.auszahlung")} label="Auszahlungsmodalität" hinweis={daten.stammdaten.empfaengerArt === "privat" ? "Bei Einzelfallhilfe bitte die eckige Klammer ergänzen oder den Satz entfernen." : undefined} rows={4} />
                   </div>
@@ -462,10 +462,10 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                 {schritt === 4 && (
                   <div className="grid gap-6 max-w-[760px]">
                     <p className="text-sm text-neutral-700">Felder mit „für den Beschluss nötig“ müssen ausgefüllt sein, bevor der Status auf „Beschlossen“ gesetzt werden kann.</p>
-                    <div className="grid gap-6 sm:grid-cols-2">
+                    <FeldReihe>
                       <Textfeld {...feld("beschluss.datum")} label="Beschluss vom" hinweis="für den Beschluss nötig" type="date" />
                       <Textfeld {...feld("beschluss.protokoll")} label="Protokoll / TOP" placeholder="z. B. Protokoll 4/2026, TOP 3" />
-                    </div>
+                    </FeldReihe>
                     {!daten.stammdaten.empfaengerArt && (
                       <Hinweisbox art="warn">
                         Bitte wählen Sie zuerst in Schritt 1 den Empfänger der Förderung – davon hängen die Angaben in diesem Schritt ab.{" "}
@@ -567,10 +567,10 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                           onGeaendert={neuLaden}
                           onErstSpeichern={() => speichern()}
                         />
-                        <div className="grid gap-6 sm:grid-cols-2">
+                        <FeldReihe>
                           <Textfeld {...feld("einzelfall.geprueftAm")} label="Bedürftigkeit geprüft am" hinweis="für den Beschluss nötig" type="date" />
                           <Textfeld {...feld("einzelfall.geprueftVon")} label="von" hinweis="für den Beschluss nötig" autoComplete="off" />
-                        </div>
+                        </FeldReihe>
                         <Checkbox
                           id={initiativFeldId("einzelfall.nichtVerwandt")}
                           checked={daten.einzelfall.nichtVerwandt}
@@ -622,10 +622,12 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                       </Checkbox>
                       <InitiativUpload initiative={initiative} kategorie="beleg_rechnung" onGeaendert={neuLaden} onErstSpeichern={() => speichern()} />
                     </div>
-                    <fieldset className="grid gap-6 sm:grid-cols-2 min-w-0">
+                    <fieldset className="min-w-0">
                       <legend className="text-xl font-display mb-4">Abschlussvermerk: zweckentsprechende Mittelverwendung</legend>
+                      <FeldReihe>
                       <Textfeld {...feld("abschluss.geprueftAm")} label="Geprüft am" type="date" />
                       <Textfeld {...feld("abschluss.kuerzel")} label="Kürzel" hinweis={benutzer?.kuerzel ? `Ihr Kürzel: ${benutzer.kuerzel}` : undefined} autoComplete="off" />
+                      </FeldReihe>
                     </fieldset>
                   </div>
                 )}
@@ -707,8 +709,8 @@ function BetragEingabe({
   pflicht?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 min-w-0">
-      <label htmlFor={id} className="text-sm leading-5 text-neutral-800 font-medium">
+    <div className="feld min-w-0">
+      <label htmlFor={id} className="feld-label pb-2 text-sm leading-5 text-neutral-800 font-medium">
         {label}
         {pflicht && (
           <>
@@ -717,7 +719,7 @@ function BetragEingabe({
           </>
         )}
       </label>
-      <div className="relative">
+      <div className="feld-eingabe relative">
         <input
           id={id}
           name={name}
@@ -735,7 +737,7 @@ function BetragEingabe({
         />
         <span aria-hidden="true" className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-700">€</span>
       </div>
-      <Fehlertext id={`${id}-fehler`} text={fehler} />
+      <Fehlertext id={`${id}-fehler`} text={fehler} className="feld-fehler pt-2" />
     </div>
   );
 }

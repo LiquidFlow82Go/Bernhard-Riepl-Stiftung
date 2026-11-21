@@ -23,7 +23,7 @@ interface Basis {
 
 function Kopf({ id, label, pflicht }: { id: string; label: string; pflicht?: boolean }) {
   return (
-    <label htmlFor={id} className="block text-sm leading-5 text-neutral-800 font-medium">
+    <label htmlFor={id} className="feld-label block pb-2 text-sm leading-5 text-neutral-800 font-medium">
       {label}
       {pflicht && (
         <>
@@ -35,10 +35,10 @@ function Kopf({ id, label, pflicht }: { id: string; label: string; pflicht?: boo
   );
 }
 
-export function Fehlertext({ id, text }: { id: string; text?: string }) {
+export function Fehlertext({ id, text, className = "" }: { id: string; text?: string; className?: string }) {
   if (!text) return null;
   return (
-    <p id={id} className="text-sm leading-5 text-fehler flex gap-1.5 items-start">
+    <p id={id} className={`text-sm leading-5 text-fehler flex gap-1.5 items-start ${className}`}>
       <span aria-hidden="true">!</span>
       {text}
     </p>
@@ -53,18 +53,18 @@ export function Textfeld({
   id, label, hinweis, fehler, pflicht, className = "", ...rest
 }: Basis & Omit<InputHTMLAttributes<HTMLInputElement>, "id">) {
   return (
-    <div className={`flex flex-col gap-2 min-w-0 ${className}`}>
+    <div className={`feld min-w-0 ${className}`}>
       <Kopf id={id} label={label} pflicht={pflicht} />
-      {hinweis && <p id={`${id}-hinweis`} className="text-sm leading-5 text-neutral-700 -mt-1">{hinweis}</p>}
+      {hinweis && <p id={`${id}-hinweis`} className="feld-hinweis pb-2 -mt-1 text-sm leading-5 text-neutral-700">{hinweis}</p>}
       <input
         id={id}
-        className={eingabeKlassen}
+        className={`feld-eingabe ${eingabeKlassen}`}
         aria-invalid={fehler ? true : undefined}
         aria-required={pflicht || undefined}
         aria-describedby={beschrieben(id, hinweis, fehler)}
         {...rest}
       />
-      <Fehlertext id={`${id}-fehler`} text={fehler} />
+      <Fehlertext id={`${id}-fehler`} text={fehler} className="feld-fehler pt-2" />
     </div>
   );
 }
@@ -86,10 +86,10 @@ export function PasswortFeld({
     return () => form.removeEventListener("submit", verbergen, true);
   }, []);
   return (
-    <div className={`flex flex-col gap-2 min-w-0 ${className}`}>
+    <div className={`feld min-w-0 ${className}`}>
       <Kopf id={id} label={label} pflicht={pflicht} />
-      {hinweis && <p id={`${id}-hinweis`} className="text-sm leading-5 text-neutral-700 -mt-1">{hinweis}</p>}
-      <div className="relative">
+      {hinweis && <p id={`${id}-hinweis`} className="feld-hinweis pb-2 -mt-1 text-sm leading-5 text-neutral-700">{hinweis}</p>}
+      <div className="feld-eingabe relative">
         <input
           ref={ref}
           id={id}
@@ -118,7 +118,7 @@ export function PasswortFeld({
           </svg>
         </button>
       </div>
-      <Fehlertext id={`${id}-fehler`} text={fehler} />
+      <Fehlertext id={`${id}-fehler`} text={fehler} className="feld-fehler pt-2" />
     </div>
   );
 }
@@ -134,20 +134,20 @@ export function Textbereich({
     el.style.height = `${el.scrollHeight + 2}px`;
   }, [value]);
   return (
-    <div className={`flex flex-col gap-2 min-w-0 ${className}`}>
+    <div className={`feld min-w-0 ${className}`}>
       <Kopf id={id} label={label} pflicht={pflicht} />
-      {hinweis && <p id={`${id}-hinweis`} className="text-sm leading-5 text-neutral-700 -mt-1">{hinweis}</p>}
+      {hinweis && <p id={`${id}-hinweis`} className="feld-hinweis pb-2 -mt-1 text-sm leading-5 text-neutral-700">{hinweis}</p>}
       <textarea
         ref={ref}
         id={id}
         value={value}
-        className={textKlassen}
+        className={`feld-eingabe ${textKlassen}`}
         aria-invalid={fehler ? true : undefined}
         aria-required={pflicht || undefined}
         aria-describedby={beschrieben(id, hinweis, fehler)}
         {...rest}
       />
-      <Fehlertext id={`${id}-fehler`} text={fehler} />
+      <Fehlertext id={`${id}-fehler`} text={fehler} className="feld-fehler pt-2" />
     </div>
   );
 }
@@ -220,4 +220,14 @@ export function Checkbox({
       <Fehlertext id={`${id}-fehler`} text={fehler} />
     </div>
   );
+}
+
+/**
+ * Mehrere Felder nebeneinander: Eingaben stehen immer auf gleicher Höhe –
+ * auch wenn ein Feld einen Hinweis, eine längere Beschriftung oder eine
+ * Fehlermeldung hat (CSS-Grid mit subgrid, siehe globals.css „.feldreihe“).
+ * Auf schmalen Bildschirmen stehen die Felder untereinander.
+ */
+export function FeldReihe({ ab = "sm", className = "", children }: { ab?: "sm" | "md"; className?: string; children: ReactNode }) {
+  return <div className={`feldreihe feldreihe-${ab} ${className}`}>{children}</div>;
 }
