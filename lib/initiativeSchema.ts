@@ -19,7 +19,12 @@ export interface InitiativRegel {
   schritt: 1 | 2 | 3 | 4 | 5;
   stufe: Stufe;
   schema: z.ZodTypeAny;
+  /** Regel gilt nur, wenn die Bedingung erfüllt ist (z. B. je Empfängerart). */
+  wenn?: (d: InitiativDaten) => boolean;
 }
+
+const istPrivat = (d: InitiativDaten) => d.stammdaten.empfaengerArt === "privat";
+const istInstitution = (d: InitiativDaten) => d.stammdaten.empfaengerArt !== "privat";
 
 const text = (label: string) => z.string().trim().min(1, `Bitte geben Sie „${label}“ an.`);
 const datum = (label: string) =>
@@ -34,7 +39,16 @@ const haken = (meldung: string) => z.literal(true, { error: meldung });
 export const INITIATIV_REGELN: InitiativRegel[] = [
   { pfad: "stammdaten.datum", label: "Datum", schritt: 1, stufe: "formular", schema: datum("Datum") },
   { pfad: "stammdaten.titel", label: "Projekttitel", schritt: 1, stufe: "formular", schema: text("Projekttitel") },
-  { pfad: "stammdaten.partnerName", label: "Name der Institution", schritt: 1, stufe: "formular", schema: text("Name der Institution") },
+  {
+    pfad: "stammdaten.empfaengerArt",
+    label: "Empfänger der Förderung",
+    schritt: 1,
+    stufe: "formular",
+    schema: z.enum(["organisation", "oeffentlich", "privat"], { error: "Bitte wählen Sie den Empfänger der Förderung." }),
+  },
+  { pfad: "stammdaten.partnerName", label: "Name der Institution", schritt: 1, stufe: "formular", schema: text("Name der Institution"), wenn: istInstitution },
+  { pfad: "stammdaten.vorname", label: "Vorname", schritt: 1, stufe: "formular", schema: text("Vorname"), wenn: istPrivat },
+  { pfad: "stammdaten.nachname", label: "Nachname", schritt: 1, stufe: "formular", schema: text("Nachname"), wenn: istPrivat },
   {
     pfad: "zweck.bereiche",
     label: "Bezug zum Stiftungszweck",
@@ -72,8 +86,8 @@ export function wertAn(d: unknown, pfad: string): unknown {
   return pfad.split(".").reduce<unknown>((o, k) => (o && typeof o === "object" ? (o as Record<string, unknown>)[k] : undefined), d);
 }
 
-export function istInitiativPflicht(pfad: string): boolean {
-  return INITIATIV_REGELN.some((r) => r.pfad === pfad && r.stufe === "formular");
+export function istInitiativPflicht(pfad: string, d?: InitiativDaten): boolean {
+  return INITIATIV_REGELN.some((r) => r.pfad === pfad && r.stufe === "formular" && (!d || !r.wenn || r.wenn(d)));
 }
 
 /** Prüft Regeln; optional nur bestimmte Stufen bzw. einen Schritt. */
@@ -83,6 +97,7 @@ export function pruefeInitiative(d: InitiativDaten, o: { stufen?: Stufe[]; schri
   for (const r of INITIATIV_REGELN) {
     if (!stufen.includes(r.stufe)) continue;
     if (o.schritt && r.schritt !== o.schritt) continue;
+    if (r.wenn && !r.wenn(d)) continue;
     const res = r.schema.safeParse(wertAn(d, r.pfad) ?? (r.schema instanceof z.ZodArray ? [] : ""));
     if (!res.success) fehler[r.pfad] = res.error.issues[0]?.message ?? `Bitte prüfen Sie „${r.label}“.`;
   }

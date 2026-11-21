@@ -6,7 +6,9 @@
 import { betrag as betragVon } from "./betrag";
 import { pruefeDatei } from "./dokumente";
 import {
+  partnerAnzeige,
   vervollstaendige,
+  type EmpfaengerArt,
   type InitiativDaten,
   type InitiativDokKategorie,
   type InitiativDokument,
@@ -35,6 +37,7 @@ interface Zeile {
   status: InitiativStatus;
   projekt_titel: string;
   partner_name: string;
+  empfaenger_art?: EmpfaengerArt;
   foerderbetrag: number | string | null;
   daten: Partial<InitiativDaten>;
   erstellt_von: string | null;
@@ -84,6 +87,7 @@ function zuInitiative(z: Zeile): Initiative {
     status: z.status,
     projektTitel: z.projekt_titel,
     partnerName: z.partner_name,
+    empfaengerArt: z.empfaenger_art ?? "organisation",
     foerderbetrag: z.foerderbetrag == null ? null : Number(z.foerderbetrag),
     daten: vervollstaendige(z.daten),
     erstelltVon: eins(z.ersteller),
@@ -127,7 +131,9 @@ function spalten(d: InitiativDaten) {
   return {
     datum: /^\d{4}-\d{2}-\d{2}$/.test(d.stammdaten.datum) ? d.stammdaten.datum : undefined,
     projekt_titel: d.stammdaten.titel.trim().slice(0, 300),
-    partner_name: d.stammdaten.partnerName.trim().slice(0, 300),
+    // Bei Einzelfallhilfe nur „Einzelfallhilfe – M. K.“ in der Listenspalte (Datensparsamkeit)
+    partner_name: partnerAnzeige(d).slice(0, 300),
+    empfaenger_art: d.stammdaten.empfaengerArt || "organisation",
     foerderbetrag: b > 0 ? b : null,
     daten: d,
   };

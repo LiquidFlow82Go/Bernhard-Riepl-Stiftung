@@ -8,6 +8,11 @@ import { ladeBlobHerunter } from "@/lib/dokumente";
 import { ladeInitiative, legeInitiativeAn, speichereInitiative } from "@/lib/initiativen";
 import { initiativFeldId, istInitiativPflicht, pruefeInitiative, regelLabel, regelSchritt, wertAn, type InitiativFehler } from "@/lib/initiativeSchema";
 import {
+  EMPFAENGER,
+  EMPFAENGER_LABEL,
+  verworfeneFelder,
+  wendeEmpfaengerAn,
+  type EmpfaengerArt,
   BELEG_ANGEBOT_TEXT,
   BELEG_RECHNUNG_TEXT,
   SATZUNGSZWECKE,
@@ -19,6 +24,7 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { setzeAnPfad } from "../antrag/AntragKontext";
 import { Button, ButtonLink } from "../ui/Button";
+import { Dialog } from "../ui/Dialog";
 import { Hinweisbox } from "../ui/Diverses";
 import { Checkbox, Fehlertext, Textbereich, Textfeld } from "../ui/Feld";
 import { InitiativeKennzeichen } from "../stiftungsvorstand/Bereich";
@@ -54,6 +60,7 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
   const [hinweis, setHinweis] = useState("");
   const [speichert, setSpeichert] = useState(false);
   const [geaendert, setGeaendert] = useState(false);
+  const [wechsel, setWechsel] = useState<{ neu: EmpfaengerArt; felder: { pfad: string; label: string }[] } | null>(null);
   const titelRef = useRef<HTMLHeadingElement>(null);
   const uebersichtRef = useRef<HTMLDivElement>(null);
   const navigiert = useRef(false);
@@ -104,8 +111,33 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
     value: String(wertAn(daten, pfad) ?? ""),
     onChange: (e: { target: { value: string } }) => setze(pfad, e.target.value),
     fehler: fehler[pfad],
-    pflicht: istInitiativPflicht(pfad),
+    pflicht: istInitiativPflicht(pfad, daten),
   });
+
+  /** Empfängerart wählen; gehen dabei Angaben verloren, erst nachfragen. */
+  function empfaengerWaehlen(neu: EmpfaengerArt) {
+    if (neu === daten.stammdaten.empfaengerArt) return;
+    const weg = verworfeneFelder(daten, neu);
+    if (weg.length) {
+      setWechsel({ neu, felder: weg });
+      return;
+    }
+    setDaten((d) => wendeEmpfaengerAn(d, neu));
+    setGeaendert(true);
+    setFehler((f) => {
+      const n = { ...f };
+      delete n["stammdaten.empfaengerArt"];
+      return n;
+    });
+  }
+
+  function wechselBestaetigen() {
+    if (!wechsel) return;
+    setDaten((d) => wendeEmpfaengerAn(d, wechsel.neu));
+    setGeaendert(true);
+    setHinweis(`Empfänger geändert: ${EMPFAENGER_LABEL[wechsel.neu]}. Ausgeblendete Angaben wurden entfernt.`);
+    setWechsel(null);
+  }
 
   async function neuLaden() {
     if (!initiative) return;
@@ -282,17 +314,72 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
                       <Textfeld {...feld("stammdaten.datum")} label="Datum" type="date" />
                     </div>
                     <Textbereich {...feld("stammdaten.titel")} label="Projekttitel" rows={2} />
-                    <fieldset className="grid gap-6 min-w-0">
-                      <legend className="text-xl font-display mb-4">Durchführungspartner</legend>
-                      <Textfeld {...feld("stammdaten.partnerName")} label="Name der Institution" hinweis="Die Institution, die gefördert wird." autoComplete="off" />
-                      <Textfeld {...feld("stammdaten.partnerTraeger")} label="Träger bzw. Rechtsform" placeholder="z. B. Bayerisches Rotes Kreuz – Körperschaft des öffentlichen Rechts" />
-                      <div className="grid gap-6 sm:grid-cols-2">
-                        <Textfeld {...feld("stammdaten.ansprechperson")} label="Ansprechperson" autoComplete="off" />
-                        <Textfeld {...feld("stammdaten.telefon")} label="Telefon" type="tel" autoComplete="off" />
+                    <fieldset
+                      className="min-w-0"
+                      aria-describedby={fehler["stammdaten.empfaengerArt"] ? `${initiativFeldId("stammdaten.empfaengerArt")}-fehler` : undefined}
+                    >
+                      <legend className="text-base font-medium text-neutral-800">
+                        Empfänger der Förderung
+                        <span aria-hidden="true" className="text-fehler"> *</span>
+                        <span className="sr-only"> (Pflichtfeld)</span>
+                      </legend>
+                      <div className="mt-3 grid gap-3 md:grid-cols-3">
+                        {EMPFAENGER.map((e, n) => {
+                          const an = daten.stammdaten.empfaengerArt === e.id;
+                          return (
+                            <label
+                              key={e.id}
+                              className={`flex items-start gap-3 rounded-[16px] border px-4 py-3 cursor-pointer min-h-12 transition-colors ${an ? "border-[#8a3f0c] bg-[#f6e3c8]" : "border-[#e4c9a5] bg-neutral-100"}`}
+                            >
+                              <input
+                                type="radio"
+                                name="empfaengerArt"
+                                id={n === 0 ? initiativFeldId("stammdaten.empfaengerArt") : undefined}
+                                value={e.id}
+                                checked={an}
+                                onChange={() => empfaengerWaehlen(e.id)}
+                                className="mt-1 size-5 shrink-0 accent-neutral-800 cursor-pointer"
+                              />
+                              <span>
+                                <span className="block text-neutral-800 font-medium">{e.label}</span>
+                                <span className="block text-sm text-neutral-700">{e.beispiel}</span>
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
-                      <Textfeld {...feld("stammdaten.email")} label="E-Mail" type="email" autoComplete="off" />
-                      <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
+                      <div className="mt-2">
+                        <Fehlertext id={`${initiativFeldId("stammdaten.empfaengerArt")}-fehler`} text={fehler["stammdaten.empfaengerArt"]} />
+                      </div>
                     </fieldset>
+                    {daten.stammdaten.empfaengerArt === "privat" ? (
+                      <fieldset className="grid gap-6 min-w-0">
+                        <legend className="text-xl font-display mb-4">Geförderte Person</legend>
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <Textfeld {...feld("stammdaten.vorname")} label="Vorname" autoComplete="off" />
+                          <Textfeld {...feld("stammdaten.nachname")} label="Nachname" autoComplete="off" />
+                        </div>
+                        <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <Textfeld {...feld("stammdaten.email")} label="E-Mail (optional)" type="email" autoComplete="off" />
+                          <Textfeld {...feld("stammdaten.telefon")} label="Telefon (optional)" type="tel" autoComplete="off" />
+                        </div>
+                      </fieldset>
+                    ) : daten.stammdaten.empfaengerArt ? (
+                      <fieldset className="grid gap-6 min-w-0">
+                        <legend className="text-xl font-display mb-4">Durchführungspartner</legend>
+                        <Textfeld {...feld("stammdaten.partnerName")} label="Name der Institution" hinweis="Die Institution, die gefördert wird." autoComplete="off" />
+                        <Textfeld {...feld("stammdaten.partnerTraeger")} label="Träger bzw. Rechtsform" placeholder="z. B. Bayerisches Rotes Kreuz – Körperschaft des öffentlichen Rechts" />
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <Textfeld {...feld("stammdaten.ansprechperson")} label="Ansprechperson" autoComplete="off" />
+                          <Textfeld {...feld("stammdaten.telefon")} label="Telefon" type="tel" autoComplete="off" />
+                        </div>
+                        <Textfeld {...feld("stammdaten.email")} label="E-Mail" type="email" autoComplete="off" />
+                        <Textbereich {...feld("stammdaten.anschrift")} label="Anschrift" rows={2} />
+                      </fieldset>
+                    ) : (
+                      <p className="text-sm text-neutral-700">Nach der Auswahl erscheinen die passenden Angaben zum Empfänger.</p>
+                    )}
                     <Textbereich {...feld("stammdaten.art")} label="Art der Initiative" rows={3} />
                   </div>
                 )}
@@ -450,6 +537,24 @@ export function InitiativFormular({ vorhanden, startSchritt = 1 }: { vorhanden?:
           </form>
         </div>
       </div>
+      <Dialog
+        offen={!!wechsel}
+        onSchliessen={() => setWechsel(null)}
+        titel="Empfängerart ändern?"
+        beschreibung={wechsel ? `Neu: ${EMPFAENGER_LABEL[wechsel.neu]}` : undefined}
+      >
+        <div className="grid gap-6">
+          <p>Diese Angaben gelten für die neue Empfängerart nicht. Sie werden ausgeblendet und beim Speichern nicht übernommen:</p>
+          <ul className="list-disc pl-5">
+            {wechsel?.felder.map((f) => <li key={f.pfad}>{f.label}</li>)}
+          </ul>
+          <p className="text-sm text-neutral-700">Bereits hochgeladene Dateien bleiben in der Akte; im Entwurf können Sie sie entfernen.</p>
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button variante="ghost" onClick={() => setWechsel(null)}>Abbrechen</Button>
+            <Button onClick={wechselBestaetigen}>Empfängerart ändern</Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

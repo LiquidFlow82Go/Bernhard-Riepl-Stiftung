@@ -7,6 +7,7 @@ import { initiativDateiLink } from "@/lib/initiativen";
 import {
   BELEG_ANGEBOT_TEXT,
   BELEG_RECHNUNG_TEXT,
+  EMPFAENGER_LABEL,
   INITIATIV_DOK_LABEL,
   SATZUNGSZWECKE,
   VERFLECHTUNG_TEXT,
@@ -132,9 +133,16 @@ export function InitiativAnsicht({
         <Zeile label="Aktenzeichen" wert={aktenzeichen ?? "wird beim ersten Speichern vergeben"} />
         <Zeile label="Datum" wert={tag(S.datum)} />
         <Zeile label="Projekttitel" wert={S.titel} />
-        <Zeile label="Durchführungspartner" wert={S.partnerName} />
-        <Zeile label="Träger bzw. Rechtsform" wert={S.partnerTraeger} />
-        <Zeile label="Ansprechperson" wert={S.ansprechperson} />
+        <Zeile label="Empfänger der Förderung" wert={S.empfaengerArt ? EMPFAENGER_LABEL[S.empfaengerArt] : ""} />
+        {S.empfaengerArt === "privat" ? (
+          <Zeile label="Geförderte Person" wert={`${S.vorname} ${S.nachname}`.trim()} />
+        ) : (
+          <>
+            <Zeile label="Durchführungspartner" wert={S.partnerName} />
+            <Zeile label="Träger bzw. Rechtsform" wert={S.partnerTraeger} />
+            <Zeile label="Ansprechperson" wert={S.ansprechperson} />
+          </>
+        )}
         <Zeile label="E-Mail" wert={S.email} />
         <Zeile label="Telefon" wert={S.telefon} />
         <Zeile label="Anschrift" wert={S.anschrift} />
