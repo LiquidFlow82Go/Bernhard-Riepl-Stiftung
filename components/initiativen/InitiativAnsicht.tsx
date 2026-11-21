@@ -3,7 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { formatBetrag, parseBetrag } from "@/lib/betrag";
 import { formatGroesse } from "@/lib/dokumente";
-import { initiativDateiLink } from "@/lib/initiativen";
+import { zeigeDatei } from "@/lib/dokumente";
+import { ladeInitiativDatei } from "@/lib/initiativen";
 import {
   BELEG_ANGEBOT_TEXT,
   BELEG_RECHNUNG_TEXT,
@@ -58,22 +59,9 @@ export function DokumentAktion({ d }: { d: InitiativDokument }) {
   const [fehler, setFehler] = useState("");
   async function oeffnen(herunterladen: boolean) {
     setFehler("");
-    const fenster = herunterladen ? null : window.open("about:blank", "_blank");
     try {
-      const url = await initiativDateiLink(d, herunterladen);
-      if (herunterladen) {
-        const a = document.createElement("a");
-        a.href = url;
-        a.rel = "noopener";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } else if (fenster) {
-        fenster.opener = null;
-        fenster.location.href = url;
-      }
+      await zeigeDatei(() => ladeInitiativDatei(d), d.dateiname, d.mimeType, herunterladen);
     } catch (e) {
-      fenster?.close();
       setFehler((e as Error).message);
     }
   }

@@ -199,12 +199,11 @@ export async function entferneInitiativDatei(d: InitiativDokument): Promise<void
   await sb.storage.from(INITIATIV_BUCKET).remove([d.speicherpfad]);
 }
 
-export async function initiativDateiLink(d: InitiativDokument, herunterladen: boolean): Promise<string> {
-  const { data, error } = await supabase()
-    .storage.from(INITIATIV_BUCKET)
-    .createSignedUrl(d.speicherpfad, 120, herunterladen ? { download: d.dateiname } : undefined);
+/** Lädt eine Datei zur Initiative angemeldet herunter (RLS des Buckets gilt). */
+export async function ladeInitiativDatei(d: InitiativDokument): Promise<Blob> {
+  const { data, error } = await supabase().storage.from(INITIATIV_BUCKET).download(d.speicherpfad);
   if (error || !data) throw new Error("Das Dokument konnte nicht geladen werden.");
-  return data.signedUrl;
+  return data;
 }
 
 /* ---------- Server-Routen ---------- */
