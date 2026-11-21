@@ -16,6 +16,8 @@ export interface Benutzer {
   name: string;
   institution?: string;
   rolle: Rolle;
+  /** Kürzel des Vorstandsmitglieds (profiles.kuerzel), z. B. „FS“ */
+  kuerzel?: string;
 }
 
 export type JaNein = "Ja" | "Nein" | "";
