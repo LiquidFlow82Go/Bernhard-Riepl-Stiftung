@@ -4,6 +4,7 @@
  * elektronische Bestätigung statt Unterschriftszeile.
  */
 import { berechneSummen, formatBetrag, parseBetrag } from "./betrag";
+import { clean, ladeLogo } from "./pdfBasis";
 import type { AntragDaten } from "./types";
 
 export interface PdfEingabe {
@@ -14,40 +15,9 @@ export interface PdfEingabe {
   dokumente?: { kategorie: string; dateiname: string }[];
 }
 
-const WIN: Record<string, string> = {
-  "„": '"', "“": '"', "”": '"', "‚": "'", "‘": "'", "’": "'",
-  "–": "-", "—": "-", "…": "...", "€": "EUR", "•": "-", " ": " ", "\t": " ",
-};
-
-function clean(s: unknown): string {
-  const str = String(s ?? "").replace(/\r\n?/g, "\n").replace(/[\u2028\u2029]/g, "\n");
-  let o = "";
-  for (const ch of str) {
-    if (ch === "\n") { o += ch; continue; }
-    if (WIN[ch] !== undefined) { o += WIN[ch]; continue; }
-    const c = ch.charCodeAt(0);
-    if (c < 32 || (c >= 127 && c < 160)) continue;
-    if (c <= 255) { o += ch; continue; }
-    const b = ch.normalize("NFD").charAt(0);
-    o += b && b !== ch && b.charCodeAt(0) <= 255 ? b : "?";
-  }
-  return o;
-}
-
 function pdfAmt(v: string): string {
   const p = parseBetrag(v);
   return p.leer || !p.ok ? "" : `${formatBetrag(p.n)} EUR`;
-}
-
-/** Logo für den PDF-Kopf (dunkle Variante). Fehlt es, entsteht das PDF ohne Logo. */
-async function ladeLogo(): Promise<Uint8Array | null> {
-  try {
-    const r = await fetch("/logo/logo-dunkel.png");
-    if (!r.ok) return null;
-    return new Uint8Array(await r.arrayBuffer());
-  } catch {
-    return null;
-  }
 }
 
 function datumDe(iso?: string): string {
@@ -60,7 +30,7 @@ export async function erzeugeAntragPdf(e: PdfEingabe): Promise<Blob> {
   const tag = (iso: string) =>
     new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
   const fusszeile = e.eingereichtAm ? `Eingereicht am ${tag(e.eingereichtAm)}` : `Entwurf vom ${tag(new Date().toISOString())}`;
-  const [{ jsPDF }, logo] = await Promise.all([import("jspdf"), ladeLogo()]);
+  const [{ jsPDF }, logo] = await Promise.all([import("jspdf"), ladeLogo("dunkel")]);
   const d = e.daten;
   const A = d.antragsteller, P = d.projekt, K = d.kosten, F = d.finanzierung;
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
