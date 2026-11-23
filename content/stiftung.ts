@@ -102,8 +102,8 @@ export const FOERDERBEREICHE = [
   {
     titel: "Hilfe für Menschen in Not",
     text: "Unterstützung notleidender Menschen – unmittelbar oder über gemeinnützige Träger.",
-    bild: "/bilder/zweck-hilfe.jpg",
-    alt: "Junge Helferin reicht einem älteren Mann in einem Wohnzimmer eine Tasse Tee",
+    bild: "/bilder/zweck-hilfe-einsatz.jpg",
+    alt: "Collage: Bergwacht versorgt einen Verletzten im Schnee, Rettungsdienst am Rettungswagen, Feuerwehr bringt eine ältere Frau und ein Kind im Schlauchboot aus dem Hochwasser, Helfer verteilen Hilfsgüter an einem Zeltlager",
   },
 ];
 
